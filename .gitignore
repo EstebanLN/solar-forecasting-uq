@@ -1,0 +1,84 @@
+# =====================
+# Python / bytecode
+# =====================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.ipynb_checkpoints/
+
+# =====================
+# Virtual environments
+# =====================
+.venv/
+venv/
+ENV/
+env/
+
+# =====================
+# Packaging / build
+# =====================
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# =====================
+# Jupyter / notebooks outputs
+# =====================
+*.nbconvert.ipynb
+
+# =====================
+# Data, outputs, logs
+# =====================
+data/
+logs/
+outputs/
+results/
+checkpoints/
+wandb/
+mlruns/
+lightning_logs/
+tensorboard/
+*.log
+
+# =====================
+# Model artifacts
+# =====================
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.tflite
+*.h5
+*.keras
+*.pkl
+*.joblib
+
+# =====================
+# IDE / editor
+# =====================
+.vscode/
+.idea/
+*.iml
+
+# =====================
+# OS / misc
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Secrets (never commit)
+# =====================
+.env
+.env.*
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
