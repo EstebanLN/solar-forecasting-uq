@@ -1,0 +1,1 @@
+ps aux -> procesos corriendo en PC
