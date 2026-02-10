@@ -1,0 +1,43 @@
+experiment:
+  name: "mcmipf_v0_H6h"
+  seed: 42
+  freq: "10min"
+  timezone: "America/Bogota"
+
+sites:
+  uniandes:
+    id: "uniandes"
+    ground_path: "data_raw/Data_Uniandes_tierra.csv"  
+  elpaso:
+    id: "elpaso"
+    ground_path: "data_raw/Data_ElPaso_tierra.csv"
+
+ground_schema:
+  timestamp_col_candidates: ["timestamp", "datetime", "time", "fecha", "Fecha"]
+  ghi_col_candidates: ["ghi", "GHI", "ghi_qc", "ghi_sg_definitive"]
+  ghi_lag1_candidates: ["ghi_lag1", "ghi_qc_lag1", "ghi_sg_definitive_lag1"]
+
+mcmipf:
+  root_dir: "data_processed/GOES_v2/MCMIPF"
+  file_glob: "{YYYY}/{MM}/{YYYYMMDD}_{HH}*MCMIPF*.npz"
+  channels: "auto"
+
+forecast:
+  # 6 horas = 360 min. Con freq=10min → 36 pasos
+  horizon_steps: 36
+
+splits:
+  train:
+    start: "2022-01-01"
+    end:   "2023-12-31"
+  val:
+    start: "2024-01-01"
+    end:   "2024-06-30"
+  test:
+    start: "2024-07-01"
+    end:   "2025-12-31"
+
+output:
+  manifest_dir: "data/manifest"
+  runs_dir: "runs"
+  figures_dir: "runs/figures"
