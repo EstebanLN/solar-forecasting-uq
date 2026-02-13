@@ -1,1 +1,3 @@
 ps aux -> procesos corriendo en PC
+
+source .venv/bin/activate
