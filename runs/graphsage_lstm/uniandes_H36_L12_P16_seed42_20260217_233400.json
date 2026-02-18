@@ -1,0 +1,133 @@
+{
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 42,
+  "debug": {
+    "enabled": false,
+    "train_n": 54508,
+    "val_n": 12407,
+    "test_n": 12075
+  },
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes",
+    "mcmipf_root": "/srv/projects/Proyecto_e_ladino/data_processed/GOES_v2/MCMIPF",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 12,
+    "horizon_steps_H": 36,
+    "history_hours": 2.0,
+    "horizon_hours": 6.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "nodes": 256,
+    "edge_index_shape": [
+      2,
+      1860
+    ]
+  },
+  "target_norm": {
+    "y_mean_train": 180.78839786820285,
+    "y_std_train": 283.1064661153594,
+    "y_percentiles_train": [
+      0.0,
+      2.202,
+      628.0594000000003,
+      858.5459999999997,
+      1088.74274
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54470,
+      "rmse": 419.8303181060779,
+      "mae": 281.04479528180656
+    },
+    "persistence_val": {
+      "n": 12406,
+      "rmse": 378.32913327097435,
+      "mae": 247.05014589714656
+    },
+    "persistence_test": {
+      "n": 12075,
+      "rmse": 389.517844176586,
+      "mae": 250.79533714285714
+    }
+  },
+  "model": {
+    "arch": "GraphSAGE(2 layers) + mean pool + LSTM + MLP head",
+    "in_dim": 16,
+    "hidden_g": 64,
+    "hidden_t": 64,
+    "optimizer": "Adam",
+    "lr": 0.001,
+    "batch_size": 8,
+    "num_workers": 4,
+    "epochs": 30,
+    "train_seconds_total": 16107.11554312706,
+    "final_val": {
+      "n": 12407,
+      "rmse": 258.22551836589747,
+      "mae": 201.95378537830246
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 261.2123320231706,
+      "mae": 200.52839045870132
+    },
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/best_model.pt",
+    "best_epoch": 1,
+    "best_rmse": 258.225518273901
+  },
+  "training_log": [
+    {
+      "epoch": 1,
+      "train_mse": 1.0003934237566956,
+      "val_rmse": 258.225518273901,
+      "val_mae": 201.9537857054434,
+      "epoch_seconds": 2916.3875472545624
+    },
+    {
+      "epoch": 2,
+      "train_mse": 1.0003813138919944,
+      "val_rmse": 258.84072781246175,
+      "val_mae": 205.5523262020851,
+      "epoch_seconds": 2642.9124643802643
+    },
+    {
+      "epoch": 3,
+      "train_mse": 1.0002318003860289,
+      "val_rmse": 258.82422120616405,
+      "val_mae": 205.47875285692447,
+      "epoch_seconds": 2639.8874135017395
+    },
+    {
+      "epoch": 4,
+      "train_mse": 1.0001535762526754,
+      "val_rmse": 258.7292561199214,
+      "val_mae": 205.05543889543574,
+      "epoch_seconds": 2638.263028860092
+    },
+    {
+      "epoch": 5,
+      "train_mse": 1.0001945715777014,
+      "val_rmse": 258.9950336682694,
+      "val_mae": 206.20578556425136,
+      "epoch_seconds": 2633.5520379543304
+    },
+    {
+      "epoch": 6,
+      "train_mse": 1.000153878494323,
+      "val_rmse": 258.9582516616475,
+      "val_mae": 206.05278070787577,
+      "epoch_seconds": 2636.106336593628
+    }
+  ]
+}

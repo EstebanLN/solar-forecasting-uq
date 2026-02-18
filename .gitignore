@@ -134,3 +134,9 @@ Thumbs.db
 *.crt
 *.p12
 secrets/
+
+# =====================
+# Local scripts / text files (do not commit)
+# =====================
+scripts/
+*.txt
