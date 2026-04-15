@@ -125,6 +125,7 @@ Thumbs.db
 # =====================
 # Secrets (never commit)
 # =====================
+.claude
 .env
 .env.*
 *.pem
