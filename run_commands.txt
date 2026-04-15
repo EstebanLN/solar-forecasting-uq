@@ -1,0 +1,117 @@
+================================================================
+COMANDOS DE EJECUCION - Solar Forecasting UQ
+================================================================
+
+PREPARACION
+-----------
+ssh <usuario>@<servidor>
+cd /srv/projects/Proyecto_e_ladino/solar-forecasting-uq
+git pull
+mkdir -p logs
+
+
+================================================================
+SIN NOHUP (terminal que no se va a cerrar / tmux / screen)
+================================================================
+
+-- MODO DEBUG (verificar que todo corre, subconjunto pequeno) --
+
+python scripts/05_resnet_lstm_baseline.py    --site uniandes --seed 42 --debug
+python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42 --debug
+
+
+-- ResNet+LSTM multi-seed (uniandes) --
+
+python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 42
+python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 1
+python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 7
+python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 13
+python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 100
+
+
+-- ResNet+LSTM sitio elpaso --
+
+python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 42
+
+
+-- GraphSAGE+LSTM --
+
+python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42
+python scripts/05_graphsage_lstm_baseline.py --site elpaso   --seed 42
+
+
+-- Optuna HPO --
+
+python scripts/06_resnet_lstm_optuna.py    --site uniandes --seed 42 --n_trials 50
+python scripts/06_graphsage_lstm_optuna.py --site uniandes --seed 42 --n_trials 50
+
+
+================================================================
+CON NOHUP (SSH directo, sin tmux, sesion que se puede cerrar)
+================================================================
+
+-- ResNet+LSTM multi-seed (uniandes) --
+
+nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 42  > logs/resnet_uniandes_s42.log  2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 1   > logs/resnet_uniandes_s1.log   2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 7   > logs/resnet_uniandes_s7.log   2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 13  > logs/resnet_uniandes_s13.log  2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 100 > logs/resnet_uniandes_s100.log 2>&1 &
+
+NOTA: el & al final los lanza en paralelo (compiten por GPU).
+Si la VRAM no alcanza, correr de a uno (quitar el &).
+
+
+-- ResNet+LSTM sitio elpaso --
+
+nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 42 > logs/resnet_elpaso_s42.log 2>&1 &
+
+
+-- GraphSAGE+LSTM --
+
+nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42 > logs/gsage_uniandes_s42.log 2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso   --seed 42 > logs/gsage_elpaso_s42.log   2>&1 &
+
+
+-- Optuna HPO --
+
+nohup python scripts/06_resnet_lstm_optuna.py    --site uniandes --seed 42 --n_trials 50 > logs/optuna_resnet.log    2>&1 &
+nohup python scripts/06_graphsage_lstm_optuna.py --site uniandes --seed 42 --n_trials 50 > logs/optuna_graphsage.log 2>&1 &
+
+
+================================================================
+VERIFICAR QUE ESTA CORRIENDO
+================================================================
+
+nvidia-smi                          <- ver uso de GPU
+jobs -l                             <- ver procesos en background
+tail -f logs/resnet_uniandes_s42.log  <- seguir el log en vivo
+
+
+================================================================
+RESULTADOS
+================================================================
+
+Cada corrida guarda automaticamente en:
+  runs/resnet_lstm/uniandes_H36_L24_P16_seed42_<timestamp>/summary.json
+  runs/resnet_lstm/uniandes_H36_L24_P16_seed42_<timestamp>/best_model.pt
+
+Subir resultados al repo (solo los summary.json, los .pt no se suben):
+  git add runs/
+  git commit -m "Add runs"
+  git push
+
+
+================================================================
+ARGUMENTOS DISPONIBLES (todos los scripts)
+================================================================
+
+--site          uniandes o elpaso         (default: uniandes)
+--seed          numero entero             (default: 42)
+--patch         tamano del patch en px    (default: 16)
+--debug         flag, sin valor           subconjunto pequeno
+--n_trials      trials de Optuna          (default: 30, solo scripts 06)
+--num_workers   workers del DataLoader    (default: 4)
+--day_threshold umbral dia en W/m2        (default: 20.0)
+
+Ver todos: python scripts/05_resnet_lstm_baseline.py --help
