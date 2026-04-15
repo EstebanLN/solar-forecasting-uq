@@ -28,9 +28,10 @@ dist/
 pip-wheel-metadata/
 
 # =====================
-# Jupyter / notebooks outputs
+# Jupyter outputs
 # =====================
 *.nbconvert.ipynb
+*.out.ipynb
 
 # =====================
 # Project data (DO NOT COMMIT)
@@ -44,10 +45,8 @@ processed/
 interim/
 external/
 outputs/
-results/
 checkpoints/
 artifacts/
-models/
 logs/
 wandb/
 mlruns/
@@ -75,7 +74,7 @@ tensorboard/
 *.sav
 *.mat
 
-# Satellite / image / raster (often huge)
+# Satellite / image / raster
 *.png
 *.jpg
 *.jpeg
@@ -85,12 +84,11 @@ tensorboard/
 *.gif
 *.webp
 *.bmp
-*.nc
 *.grib
 *.grb
 *.hdf
 
-# Compressed archives / dumps
+# Compressed archives
 *.zip
 *.tar
 *.tar.gz
@@ -102,7 +100,7 @@ tensorboard/
 *.xz
 
 # =====================
-# Model artifacts (also usually huge)
+# Model checkpoints (usually large — stored on server)
 # =====================
 *.pt
 *.pth
@@ -134,14 +132,3 @@ Thumbs.db
 *.crt
 *.p12
 secrets/
-
-# =====================
-# Local scripts / text files (do not commit)
-# =====================
-scripts/
-*.txt
-
-# =====================
-# IA
-# =====================
-*.md

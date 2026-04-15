@@ -7,7 +7,7 @@ experiment:
 sites:
   uniandes:
     id: "uniandes"
-    ground_path: "data_raw/Data_Uniandes_tierra.csv"  
+    ground_path: "data_raw/Data_Uniandes_tierra.csv"
   elpaso:
     id: "elpaso"
     ground_path: "data_raw/Data_ElPaso_tierra.csv"
@@ -25,6 +25,18 @@ mcmipf:
 forecast:
   # 6 horas = 360 min. Con freq=10min → 36 pasos
   horizon_steps: 36
+  horizon_hours: 6.0
+
+history:
+  # 4 horas = 240 min. Con freq=10min → 24 pasos
+  # NOTE: manifests were built with L=24 (authoritative). This field must stay
+  # consistent with the manifest build notebook (04_Manifest Build.ipynb).
+  history_steps: 24
+  history_hours: 4.0
+
+patch:
+  size: 16         # pixels, must be even
+  channels: 16     # GOES MCMIPF channels used
 
 splits:
   train:
@@ -38,6 +50,8 @@ splits:
     end:   "2025-12-31"
 
 output:
-  manifest_dir: "data/manifest"
-  runs_dir: "runs"
-  figures_dir: "runs/figures"
+  manifest_dir: "data/datasets/manifest_v1"
+  patches_dir:  "data/patches_v1"
+  ground_dir:   "data/ground_aligned"
+  runs_dir:     "runs"
+  figures_dir:  "runs/figures"
