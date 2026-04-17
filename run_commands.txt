@@ -9,115 +9,396 @@ cd /srv/projects/Proyecto_e_ladino
 git pull
 mkdir -p logs
 
+NOTA: usar siempre .venv/bin/python (tiene todas las dependencias).
+
 
 ================================================================
 SIN NOHUP (terminal que no se va a cerrar / tmux / screen)
 ================================================================
 
--- MODO DEBUG (verificar que todo corre, subconjunto pequeno) --
+-- MODO DEBUG --
 
-python scripts/05_resnet_lstm_baseline.py    --site uniandes --seed 42 --debug
-python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42 --debug
+.venv/bin/python scripts/05_resnet_lstm_baseline.py    --site uniandes --hours_ahead 6 --seed 42 --debug
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 42 --debug
 
+-- Generar manifests (una sola vez, todos los horizontes y sitios) --
 
--- ResNet+LSTM multi-seed (uniandes) --
-
-python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 42
-python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 1
-python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 7
-python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 13
-python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 100
-
-
--- ResNet+LSTM sitio elpaso --
-
-python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 42
-
-
--- GraphSAGE+LSTM --
-
-python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42
-python scripts/05_graphsage_lstm_baseline.py --site elpaso   --seed 42
-
-
--- Optuna HPO --
-
-python scripts/06_resnet_lstm_optuna.py    --site uniandes --seed 42 --n_trials 50
-python scripts/06_graphsage_lstm_optuna.py --site uniandes --seed 42 --n_trials 50
+.venv/bin/python scripts/04_build_manifests.py --sites uniandes elpaso --horizons 1 3 6
 
 
 ================================================================
-CON NOHUP (SSH directo, sin tmux, sesion que se puede cerrar)
+05 ResNet+LSTM — SIN NOHUP
 ================================================================
 
--- ResNet+LSTM multi-seed (uniandes) --
+-- uniandes --
 
-nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 42  > logs/resnet_uniandes_s42.log  2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 1   > logs/resnet_uniandes_s1.log   2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 7   > logs/resnet_uniandes_s7.log   2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 13  > logs/resnet_uniandes_s13.log  2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site uniandes --seed 100 > logs/resnet_uniandes_s100.log 2>&1 &
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 42
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 1
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 7
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 13
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 100
 
-NOTA: el & al final los lanza en paralelo (compiten por GPU).
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 42
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 1
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 7
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 13
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 100
+
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 42
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 1
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 7
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 13
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 100
+
+-- elpaso --
+
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 42
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 1
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 7
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 13
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 100
+
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 42
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 1
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 7
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 13
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 100
+
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 42
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 1
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 7
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 13
+.venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 100
+
+
+================================================================
+05 GraphSAGE+LSTM — SIN NOHUP
+================================================================
+
+-- uniandes --
+
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 42
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 1
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 7
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 13
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 100
+
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 42
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 1
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 7
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 13
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 100
+
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 42
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 1
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 7
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 13
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 100
+
+-- elpaso --
+
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 42
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 1
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 7
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 13
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 100
+
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 42
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 1
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 7
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 13
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 100
+
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 42
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 1
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 7
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 13
+.venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 100
+
+
+================================================================
+06 Optuna HPO — SIN NOHUP
+================================================================
+
+-- uniandes --
+
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 100 --n_trials 50
+
+-- elpaso --
+
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 100 --n_trials 50
+
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 42  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 1   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 7   --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 13  --n_trials 50
+.venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 100 --n_trials 50
+
+
+================================================================
+05 ResNet+LSTM — CON NOHUP
+================================================================
+
+NOTA: el & al final lanza en paralelo (compiten por GPU).
 Si la VRAM no alcanza, correr de a uno (quitar el &).
 
+-- uniandes —
 
--- ResNet+LSTM sitio elpaso --
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 42  > logs/resnet_uniandes_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 1   > logs/resnet_uniandes_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 7   > logs/resnet_uniandes_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 13  > logs/resnet_uniandes_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 100 > logs/resnet_uniandes_h1_s100.log 2>&1 &
 
-nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 42  > logs/resnet_elpaso_s42.log  2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 1   > logs/resnet_elpaso_s1.log   2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 7   > logs/resnet_elpaso_s7.log   2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 13  > logs/resnet_elpaso_s13.log  2>&1 &
-nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 100 > logs/resnet_elpaso_s100.log 2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 42  > logs/resnet_uniandes_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 1   > logs/resnet_uniandes_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 7   > logs/resnet_uniandes_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 13  > logs/resnet_uniandes_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 100 > logs/resnet_uniandes_h3_s100.log 2>&1 &
 
--- GraphSAGE+LSTM --
-- uniandes
-nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42  > logs/gsage_uniandes_s42.log  2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 1   > logs/gsage_uniandes_s1.log   2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 7   > logs/gsage_uniandes_s7.log   2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 13  > logs/gsage_uniandes_s13.log  2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 100 > logs/gsage_uniandes_s100.log 2>&1 &
-- elpaso
-nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 42  > logs/gsage_elpaso_s42.log  2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 1   > logs/gsage_elpaso_s1.log   2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 7   > logs/gsage_elpaso_s7.log   2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 13  > logs/gsage_elpaso_s13.log  2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 100 > logs/gsage_elpaso_s100.log 2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 42  > logs/resnet_uniandes_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 1   > logs/resnet_uniandes_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 7   > logs/resnet_uniandes_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 13  > logs/resnet_uniandes_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 100 > logs/resnet_uniandes_h6_s100.log 2>&1 &
 
--- Optuna HPO --
+-- elpaso --
 
-nohup python scripts/06_resnet_lstm_optuna.py    --site uniandes --seed 42 --n_trials 50 > logs/optuna_resnet.log    2>&1 &
-nohup python scripts/06_graphsage_lstm_optuna.py --site uniandes --seed 42 --n_trials 50 > logs/optuna_graphsage.log 2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 42  > logs/resnet_elpaso_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 1   > logs/resnet_elpaso_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 7   > logs/resnet_elpaso_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 13  > logs/resnet_elpaso_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 100 > logs/resnet_elpaso_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 42  > logs/resnet_elpaso_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 1   > logs/resnet_elpaso_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 7   > logs/resnet_elpaso_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 13  > logs/resnet_elpaso_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 100 > logs/resnet_elpaso_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 42  > logs/resnet_elpaso_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 1   > logs/resnet_elpaso_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 7   > logs/resnet_elpaso_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 13  > logs/resnet_elpaso_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_resnet_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 100 > logs/resnet_elpaso_h6_s100.log 2>&1 &
+
+
+================================================================
+05 GraphSAGE+LSTM — CON NOHUP
+================================================================
+
+-- uniandes --
+
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 42  > logs/gsage_uniandes_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 1   > logs/gsage_uniandes_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 7   > logs/gsage_uniandes_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 13  > logs/gsage_uniandes_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 1 --seed 100 > logs/gsage_uniandes_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 42  > logs/gsage_uniandes_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 1   > logs/gsage_uniandes_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 7   > logs/gsage_uniandes_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 13  > logs/gsage_uniandes_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 3 --seed 100 > logs/gsage_uniandes_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 42  > logs/gsage_uniandes_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 1   > logs/gsage_uniandes_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 7   > logs/gsage_uniandes_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 13  > logs/gsage_uniandes_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site uniandes --hours_ahead 6 --seed 100 > logs/gsage_uniandes_h6_s100.log 2>&1 &
+
+-- elpaso --
+
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 42  > logs/gsage_elpaso_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 1   > logs/gsage_elpaso_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 7   > logs/gsage_elpaso_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 13  > logs/gsage_elpaso_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 1 --seed 100 > logs/gsage_elpaso_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 42  > logs/gsage_elpaso_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 1   > logs/gsage_elpaso_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 7   > logs/gsage_elpaso_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 13  > logs/gsage_elpaso_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 3 --seed 100 > logs/gsage_elpaso_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 42  > logs/gsage_elpaso_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 1   > logs/gsage_elpaso_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 7   > logs/gsage_elpaso_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 13  > logs/gsage_elpaso_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/05_graphsage_lstm_baseline.py --site elpaso --hours_ahead 6 --seed 100 > logs/gsage_elpaso_h6_s100.log 2>&1 &
+
+
+================================================================
+06 Optuna HPO — CON NOHUP
+================================================================
+
+-- uniandes --
+
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 42  --n_trials 50 > logs/optuna_resnet_uniandes_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 1   --n_trials 50 > logs/optuna_resnet_uniandes_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 7   --n_trials 50 > logs/optuna_resnet_uniandes_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 13  --n_trials 50 > logs/optuna_resnet_uniandes_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 1 --seed 100 --n_trials 50 > logs/optuna_resnet_uniandes_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 42  --n_trials 50 > logs/optuna_resnet_uniandes_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 1   --n_trials 50 > logs/optuna_resnet_uniandes_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 7   --n_trials 50 > logs/optuna_resnet_uniandes_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 13  --n_trials 50 > logs/optuna_resnet_uniandes_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 3 --seed 100 --n_trials 50 > logs/optuna_resnet_uniandes_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 42  --n_trials 50 > logs/optuna_resnet_uniandes_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 1   --n_trials 50 > logs/optuna_resnet_uniandes_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 7   --n_trials 50 > logs/optuna_resnet_uniandes_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 13  --n_trials 50 > logs/optuna_resnet_uniandes_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site uniandes --hours_ahead 6 --seed 100 --n_trials 50 > logs/optuna_resnet_uniandes_h6_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 42  --n_trials 50 > logs/optuna_gsage_uniandes_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 1   --n_trials 50 > logs/optuna_gsage_uniandes_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 7   --n_trials 50 > logs/optuna_gsage_uniandes_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 13  --n_trials 50 > logs/optuna_gsage_uniandes_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 1 --seed 100 --n_trials 50 > logs/optuna_gsage_uniandes_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 42  --n_trials 50 > logs/optuna_gsage_uniandes_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 1   --n_trials 50 > logs/optuna_gsage_uniandes_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 7   --n_trials 50 > logs/optuna_gsage_uniandes_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 13  --n_trials 50 > logs/optuna_gsage_uniandes_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 3 --seed 100 --n_trials 50 > logs/optuna_gsage_uniandes_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 42  --n_trials 50 > logs/optuna_gsage_uniandes_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 1   --n_trials 50 > logs/optuna_gsage_uniandes_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 7   --n_trials 50 > logs/optuna_gsage_uniandes_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 13  --n_trials 50 > logs/optuna_gsage_uniandes_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site uniandes --hours_ahead 6 --seed 100 --n_trials 50 > logs/optuna_gsage_uniandes_h6_s100.log 2>&1 &
+
+-- elpaso --
+
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 42  --n_trials 50 > logs/optuna_resnet_elpaso_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 1   --n_trials 50 > logs/optuna_resnet_elpaso_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 7   --n_trials 50 > logs/optuna_resnet_elpaso_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 13  --n_trials 50 > logs/optuna_resnet_elpaso_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 1 --seed 100 --n_trials 50 > logs/optuna_resnet_elpaso_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 42  --n_trials 50 > logs/optuna_resnet_elpaso_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 1   --n_trials 50 > logs/optuna_resnet_elpaso_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 7   --n_trials 50 > logs/optuna_resnet_elpaso_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 13  --n_trials 50 > logs/optuna_resnet_elpaso_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 3 --seed 100 --n_trials 50 > logs/optuna_resnet_elpaso_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 42  --n_trials 50 > logs/optuna_resnet_elpaso_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 1   --n_trials 50 > logs/optuna_resnet_elpaso_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 7   --n_trials 50 > logs/optuna_resnet_elpaso_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 13  --n_trials 50 > logs/optuna_resnet_elpaso_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_resnet_lstm_optuna.py    --site elpaso --hours_ahead 6 --seed 100 --n_trials 50 > logs/optuna_resnet_elpaso_h6_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 42  --n_trials 50 > logs/optuna_gsage_elpaso_h1_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 1   --n_trials 50 > logs/optuna_gsage_elpaso_h1_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 7   --n_trials 50 > logs/optuna_gsage_elpaso_h1_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 13  --n_trials 50 > logs/optuna_gsage_elpaso_h1_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 1 --seed 100 --n_trials 50 > logs/optuna_gsage_elpaso_h1_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 42  --n_trials 50 > logs/optuna_gsage_elpaso_h3_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 1   --n_trials 50 > logs/optuna_gsage_elpaso_h3_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 7   --n_trials 50 > logs/optuna_gsage_elpaso_h3_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 13  --n_trials 50 > logs/optuna_gsage_elpaso_h3_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 3 --seed 100 --n_trials 50 > logs/optuna_gsage_elpaso_h3_s100.log 2>&1 &
+
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 42  --n_trials 50 > logs/optuna_gsage_elpaso_h6_s42.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 1   --n_trials 50 > logs/optuna_gsage_elpaso_h6_s1.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 7   --n_trials 50 > logs/optuna_gsage_elpaso_h6_s7.log   2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 13  --n_trials 50 > logs/optuna_gsage_elpaso_h6_s13.log  2>&1 &
+nohup .venv/bin/python scripts/06_graphsage_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 100 --n_trials 50 > logs/optuna_gsage_elpaso_h6_s100.log 2>&1 &
 
 
 ================================================================
 VERIFICAR QUE ESTA CORRIENDO
 ================================================================
 
-nvidia-smi                          <- ver uso de GPU
-jobs -l                             <- ver procesos en background
-tail -f logs/resnet_uniandes_s42.log  <- seguir el log en vivo
+nvidia-smi
+jobs -l
+tail -f logs/resnet_uniandes_h6_s42.log
 
 
 ================================================================
 RESULTADOS
 ================================================================
 
-Cada corrida guarda automaticamente en:
-  runs/resnet_lstm/uniandes_H36_L24_P16_seed42_<timestamp>/summary.json
-  runs/resnet_lstm/uniandes_H36_L24_P16_seed42_<timestamp>/best_model.pt
+Cada corrida guarda en:
+  runs/resnet_lstm/{site}_H{H}_L24_P16_seed{seed}_{timestamp}/summary.json
+  runs/resnet_lstm/{site}_H{H}_L24_P16_seed{seed}_{timestamp}/best_model.pt
 
-Subir resultados al repo (solo los summary.json, los .pt no se suben):
-  git add runs/
-  git commit -m "Add runs"
-  git push
+H=6  -> H=36 pasos
+H=3  -> H=18 pasos
+H=1  -> H=6  pasos
 
 
 ================================================================
-ARGUMENTOS DISPONIBLES (todos los scripts)
+ARGUMENTOS DISPONIBLES (todos los scripts 05/06)
 ================================================================
 
 --site          uniandes o elpaso         (default: uniandes)
+--hours_ahead   1, 3 o 6 horas            (default: 6)
 --seed          numero entero             (default: 42)
 --patch         tamano del patch en px    (default: 16)
 --debug         flag, sin valor           subconjunto pequeno
@@ -125,4 +406,4 @@ ARGUMENTOS DISPONIBLES (todos los scripts)
 --num_workers   workers del DataLoader    (default: 4)
 --day_threshold umbral dia en W/m2        (default: 20.0)
 
-Ver todos: python scripts/05_resnet_lstm_baseline.py --help
+Ver todos: .venv/bin/python scripts/05_resnet_lstm_baseline.py --help

@@ -42,6 +42,7 @@ from solar_uq.train import seed_everything, train_one_model, eval_model
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="ResNet+LSTM baseline")
     p.add_argument("--site",         default="uniandes", choices=["uniandes", "elpaso"])
+    p.add_argument("--hours_ahead",  type=int,   default=6, choices=[1, 3, 6])
     p.add_argument("--seed",         type=int,   default=42)
     p.add_argument("--patch",        type=int,   default=16)
     p.add_argument("--debug",        action="store_true")
@@ -73,14 +74,14 @@ def main() -> None:
     RUNS_ROOT    = PROJECT_ROOT / "runs" / "resnet_lstm"
     RUNS_ROOT.mkdir(parents=True, exist_ok=True)
 
-    SITE_DIR = DATASET_ROOT / args.site
+    SITE_DIR = DATASET_ROOT / args.site / f"h{args.hours_ahead}"
     assert SITE_DIR.exists(), f"Missing dataset dir: {SITE_DIR}"
 
     PATCHES_ROOT = PROJECT_ROOT / "data" / "patches_v1" / args.site / f"P{args.patch}"
     assert PATCHES_ROOT.exists(), f"Missing patch store: {PATCHES_ROOT}"
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"DEVICE={DEVICE} | site={args.site} | seed={args.seed}")
+    print(f"DEVICE={DEVICE} | site={args.site} | hours_ahead={args.hours_ahead} | seed={args.seed}")
 
     # Dataset meta (for FREQ_MIN, H, spatial info)
     with open(SITE_DIR / "dataset_meta.json", encoding="utf-8") as f:
