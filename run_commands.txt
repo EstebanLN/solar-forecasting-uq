@@ -5,7 +5,7 @@ COMANDOS DE EJECUCION - Solar Forecasting UQ
 PREPARACION
 -----------
 ssh <usuario>@<servidor>
-cd /srv/projects/Proyecto_e_ladino/solar-forecasting-uq
+cd /srv/projects/Proyecto_e_ladino
 git pull
 mkdir -p logs
 
@@ -64,14 +64,25 @@ Si la VRAM no alcanza, correr de a uno (quitar el &).
 
 -- ResNet+LSTM sitio elpaso --
 
-nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 42 > logs/resnet_elpaso_s42.log 2>&1 &
-
+nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 42  > logs/resnet_elpaso_s42.log  2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 1   > logs/resnet_elpaso_s1.log   2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 7   > logs/resnet_elpaso_s7.log   2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 13  > logs/resnet_elpaso_s13.log  2>&1 &
+nohup python scripts/05_resnet_lstm_baseline.py --site elpaso --seed 100 > logs/resnet_elpaso_s100.log 2>&1 &
 
 -- GraphSAGE+LSTM --
-
-nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42 > logs/gsage_uniandes_s42.log 2>&1 &
-nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso   --seed 42 > logs/gsage_elpaso_s42.log   2>&1 &
-
+- uniandes
+nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 42  > logs/gsage_uniandes_s42.log  2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 1   > logs/gsage_uniandes_s1.log   2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 7   > logs/gsage_uniandes_s7.log   2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 13  > logs/gsage_uniandes_s13.log  2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site uniandes --seed 100 > logs/gsage_uniandes_s100.log 2>&1 &
+- elpaso
+nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 42  > logs/gsage_elpaso_s42.log  2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 1   > logs/gsage_elpaso_s1.log   2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 7   > logs/gsage_elpaso_s7.log   2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 13  > logs/gsage_elpaso_s13.log  2>&1 &
+nohup python scripts/05_graphsage_lstm_baseline.py --site elpaso --seed 100 > logs/gsage_elpaso_s100.log 2>&1 &
 
 -- Optuna HPO --
 
