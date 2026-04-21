@@ -8,10 +8,11 @@
 #   bash run_sequential.sh [baseline|optuna|all]   (default: all)
 #   bash run_sequential.sh baseline 2>&1 | tee logs/run_sequential.out
 # ================================================================
-set -euo pipefail
+set -uo pipefail   # sin -e: un run fallido loguea el error y sigue al siguiente
 
 GROUP="${1:-all}"
 mkdir -p logs
+FAILED_RUNS=()   # acumula los que fallen para reportar al final
 
 # ----------------------------------------------------------------
 # Helper: devuelve 0 si ya existe un run completo para esta combo
@@ -50,11 +51,15 @@ run_one() {
 
     local logfile="logs/${label}_${site}_h${hours}_s${seed}.log"
     echo "[RUN ] ${label} site=${site} h${hours} seed${seed} → ${logfile}"
-    .venv/bin/python "$script" \
-        --site "$site" --hours_ahead "$hours" --seed "$seed" \
-        "${extra[@]}" \
-        > "$logfile" 2>&1
-    echo "[DONE] ${label} site=${site} h${hours} seed${seed}"
+    if .venv/bin/python "$script" \
+            --site "$site" --hours_ahead "$hours" --seed "$seed" \
+            "${extra[@]}" \
+            > "$logfile" 2>&1; then
+        echo "[DONE] ${label} site=${site} h${hours} seed${seed}"
+    else
+        echo "[FAIL] ${label} site=${site} h${hours} seed${seed} — ver ${logfile}"
+        FAILED_RUNS+=("${label} ${site} h${hours} seed${seed}")
+    fi
 }
 
 # ----------------------------------------------------------------
@@ -153,3 +158,9 @@ esac
 
 echo ""
 echo "=== Completado ==="
+if [ ${#FAILED_RUNS[@]} -gt 0 ]; then
+    echo "Runs con error (${#FAILED_RUNS[@]}):"
+    for r in "${FAILED_RUNS[@]}"; do echo "  - $r"; done
+else
+    echo "Sin errores."
+fi
