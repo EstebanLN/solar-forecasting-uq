@@ -50,10 +50,10 @@ SITE_META: dict[str, dict] = {
         "tz":       "America/Bogota",
     },
     "elpaso": {
-        # TODO: confirm exact coordinates for El Paso measurement site
-        "lat":       None,
-        "lon":       None,
-        "elevation": None,
+        # El Paso, César — centro del municipio (rango confirmado por usuario)
+        "lat":       9.737,
+        "lon":      -73.695,
+        "elevation": 50,
         "tz":       "America/Bogota",
     },
 }
