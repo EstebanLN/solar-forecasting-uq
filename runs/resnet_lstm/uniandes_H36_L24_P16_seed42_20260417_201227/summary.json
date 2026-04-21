@@ -1,0 +1,205 @@
+{
+  "run_name": "uniandes_H36_L24_P16_seed42_20260417_201227",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 42,
+  "debug": true,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h6",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm/uniandes_H36_L24_P16_seed42_20260417_201227"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 36,
+    "history_hours": 4.0,
+    "horizon_hours": 6.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 185.174842,
+    "y_std_train": 285.75776064421865,
+    "y_percentiles_train": [
+      0.0,
+      4.434,
+      637.8861999999998,
+      867.6574999999995,
+      1086.7764399999994
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 3997,
+      "rmse": 424.2903696679784,
+      "mae": 285.3790507880911,
+      "n_day": 1886,
+      "rmse_day": 508.2042275596365,
+      "mae_day": 407.47548144220576,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 1200,
+      "rmse": 393.7344387875962,
+      "mae": 260.43443833333333,
+      "n_day": 532,
+      "rmse_day": 479.89555427628505,
+      "mae_day": 387.1580112781955,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 1200,
+      "rmse": 375.73947005302756,
+      "mae": 242.58087166666664,
+      "n_day": 560,
+      "rmse_day": 460.11615944985647,
+      "mae_day": 358.6953571428572,
+      "day_threshold": 20.0
+    }
+  },
+  "model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "base": 32,
+    "emb_dim": 128,
+    "hidden_t": 128,
+    "dropout": 0.1,
+    "optimizer": "AdamW",
+    "lr_init": 0.002,
+    "weight_decay": 0.0001,
+    "batch_size": 16,
+    "num_workers": 4,
+    "use_amp": true,
+    "grad_clip_norm": 1.0,
+    "epochs_max": 30,
+    "patience": 8,
+    "day_threshold": 20.0,
+    "best_epoch": 1,
+    "best_val_rmse_day": 328.09098468348935,
+    "train_seconds_total": 131.67922377586365,
+    "n_params": 864577,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm/uniandes_H36_L24_P16_seed42_20260417_201227/best_model.pt",
+    "final_val": {
+      "n": 1200,
+      "rmse": 276.87581929391865,
+      "mae": 230.5822047106425,
+      "n_day": 532,
+      "rmse_day": 328.09098468348935,
+      "mae_day": 236.62682277994944,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.2967955250587536,
+      "skill_day_vs_persistence": 0.31632835153417493
+    },
+    "final_test": {
+      "n": 1200,
+      "rmse": 278.17218117781323,
+      "mae": 231.7087210845947,
+      "n_day": 560,
+      "rmse_day": 316.1874830283958,
+      "mae_day": 223.39083290100098,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.2596673936369942,
+      "skill_day_vs_persistence": 0.31280943619444157
+    }
+  },
+  "training_log": [
+    {
+      "epoch": 1,
+      "train_mse_norm": 1.0035025432109832,
+      "val_rmse_phys": 276.87581929391865,
+      "val_mae_phys": 230.5822047106425,
+      "val_rmse_day_phys": 328.09098468348935,
+      "val_mae_day_phys": 236.62682277994944,
+      "lr": 0.002,
+      "epoch_seconds": 16.621372938156128
+    },
+    {
+      "epoch": 2,
+      "train_mse_norm": 1.000132628440857,
+      "val_rmse_phys": 272.27416130969965,
+      "val_mae_phys": 212.9757903353373,
+      "val_rmse_day_phys": 353.380853498198,
+      "val_mae_day_phys": 250.28063163183685,
+      "lr": 0.002,
+      "epoch_seconds": 14.346044540405273
+    },
+    {
+      "epoch": 3,
+      "train_mse_norm": 0.9989031932353973,
+      "val_rmse_phys": 271.9564346255236,
+      "val_mae_phys": 210.01268255233765,
+      "val_rmse_day_phys": 357.9177339616934,
+      "val_mae_day_phys": 253.23436322606597,
+      "lr": 0.002,
+      "epoch_seconds": 14.289991617202759
+    },
+    {
+      "epoch": 4,
+      "train_mse_norm": 0.9982303327918053,
+      "val_rmse_phys": 272.5531473870316,
+      "val_mae_phys": 213.6350673230489,
+      "val_rmse_day_phys": 353.41192763770215,
+      "val_mae_day_phys": 250.46052850995744,
+      "lr": 0.002,
+      "epoch_seconds": 14.368885040283203
+    },
+    {
+      "epoch": 5,
+      "train_mse_norm": 1.0007385481595994,
+      "val_rmse_phys": 272.7116572562237,
+      "val_mae_phys": 214.52992640813193,
+      "val_rmse_day_phys": 352.2650615116877,
+      "val_mae_day_phys": 249.7703983192157,
+      "lr": 0.001,
+      "epoch_seconds": 14.425264835357666
+    },
+    {
+      "epoch": 6,
+      "train_mse_norm": 1.0003186222314835,
+      "val_rmse_phys": 272.4158029124672,
+      "val_mae_phys": 212.78454899470012,
+      "val_rmse_day_phys": 354.50801497867167,
+      "val_mae_day_phys": 251.11945054764138,
+      "lr": 0.001,
+      "epoch_seconds": 14.441201210021973
+    },
+    {
+      "epoch": 7,
+      "train_mse_norm": 1.0008169872760773,
+      "val_rmse_phys": 272.3831088977383,
+      "val_mae_phys": 212.56711758295694,
+      "val_rmse_day_phys": 354.7916553136675,
+      "val_mae_day_phys": 251.29212158604673,
+      "lr": 0.001,
+      "epoch_seconds": 14.355946779251099
+    },
+    {
+      "epoch": 8,
+      "train_mse_norm": 1.0002805514335633,
+      "val_rmse_phys": 272.32113906605497,
+      "val_mae_phys": 212.43138771692912,
+      "val_rmse_day_phys": 354.8689278685461,
+      "val_mae_day_phys": 251.3473156376889,
+      "lr": 0.001,
+      "epoch_seconds": 14.371137619018555
+    },
+    {
+      "epoch": 9,
+      "train_mse_norm": 1.0005070600509645,
+      "val_rmse_phys": 270.4592016804688,
+      "val_mae_phys": 200.80521008173625,
+      "val_rmse_day_phys": 366.61398528856955,
+      "val_mae_day_phys": 258.17886193354326,
+      "lr": 0.0005,
+      "epoch_seconds": 14.457946538925171
+    }
+  ]
+}

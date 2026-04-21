@@ -78,6 +78,24 @@ def _parse_history_ts(raw) -> List[str]:
     return list(raw)
 
 
+def filter_missing_patches(manifest: pd.DataFrame, patches_root: Path) -> pd.DataFrame:
+    """Drop manifest rows where any history_ts patch file is absent on disk."""
+    patches_root = Path(patches_root)
+
+    def _all_present(row) -> bool:
+        for ts_str in _parse_history_ts(row["history_ts"]):
+            t = pd.to_datetime(ts_str, utc=True)
+            if not patch_path_for_timestamp(t, patches_root).exists():
+                return False
+        return True
+
+    mask = manifest.apply(_all_present, axis=1)
+    n_dropped = (~mask).sum()
+    if n_dropped:
+        print(f"[data] Dropped {n_dropped}/{len(manifest)} samples with missing patches.")
+    return manifest[mask].reset_index(drop=True)
+
+
 # ---------------------------------------------------------------------------
 # Datasets
 # ---------------------------------------------------------------------------
@@ -94,8 +112,8 @@ class PatchSeqDataset(Dataset):
         patches_root: Path,
         normalizer: TargetNormalizer,
     ):
-        self.man = manifest.reset_index(drop=True)
         self.patches_root = Path(patches_root)
+        self.man = filter_missing_patches(manifest, self.patches_root)
         self.normalizer = normalizer
 
     def __len__(self) -> int:
@@ -136,8 +154,8 @@ class GraphSeqDataset(Dataset):
         patches_root: Path,
         normalizer: TargetNormalizer,
     ):
-        self.man = manifest.reset_index(drop=True)
         self.patches_root = Path(patches_root)
+        self.man = filter_missing_patches(manifest, self.patches_root)
         self.normalizer = normalizer
 
     def __len__(self) -> int:
