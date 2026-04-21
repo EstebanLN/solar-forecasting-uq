@@ -38,16 +38,7 @@ patch:
   size: 16         # pixels, must be even
   channels: 16     # GOES MCMIPF channels used
 
-splits:
-  train:
-    start: "2022-01-01"
-    end:   "2023-12-31"
-  val:
-    start: "2024-01-01"
-    end:   "2024-06-30"
-  test:
-    start: "2024-07-01"
-    end:   "2025-12-31"
+# Splits are defined per-site in scripts/04_build_manifests.py (authoritative).
 
 output:
   manifest_dir: "data/datasets/manifest_v1"
