@@ -1,0 +1,210 @@
+{
+  "run_name": "uniandes_H18_L24_P16_seed100_20260423_083138",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 100,
+  "debug": false,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h3",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm/uniandes_H18_L24_P16_seed100_20260423_083138"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "n_nodes": 256,
+    "n_edges": 1860,
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 176.12705206594896,
+    "y_std_train": 279.60664470861093,
+    "y_percentiles_train": [
+      0.0,
+      1.45,
+      614.2736,
+      846.2329999999998,
+      1086.98496
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54507,
+      "rmse": 297.47920806960843,
+      "mae": 176.6130889610509,
+      "n_day": 24893,
+      "rmse_day": 406.97961339298257,
+      "mae_day": 319.8906504639858,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 12424,
+      "rmse": 279.2358520044971,
+      "mae": 159.75912910495813,
+      "n_day": 5363,
+      "rmse_day": 388.4280430826495,
+      "mae_day": 303.88528883087827,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "model": {
+    "arch": "GraphSAGE_LSTM (improved)",
+    "hidden_g": 64,
+    "n_sage_layers": 2,
+    "hidden_t": 96,
+    "n_lstm_layers": 1,
+    "dropout_head": 0.1,
+    "input_bn": true,
+    "concat_agg": true,
+    "optimizer": "AdamW",
+    "lr_init": 0.0001,
+    "weight_decay": 0.0001,
+    "batch_size": 8,
+    "num_workers": 4,
+    "use_amp": true,
+    "grad_clip_norm": 1.0,
+    "epochs_max": 30,
+    "patience": 8,
+    "day_threshold": 20.0,
+    "best_epoch": 1,
+    "best_val_rmse_day": 267.9222226950485,
+    "train_seconds_total": 1531.4143376350403,
+    "n_params": 82145,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm/uniandes_H18_L24_P16_seed100_20260423_083138/best_model.pt",
+    "final_val": {
+      "n": 12407,
+      "rmse": 188.69856264249248,
+      "mae": 130.10472346078555,
+      "n_day": 5356,
+      "rmse_day": 267.92222375774173,
+      "mae_day": 210.61716482406058,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.32423232443857963,
+      "skill_day_vs_persistence": 0.3102397508906619
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 190.17360703604382,
+      "mae": 138.93170659730646,
+      "n_day": 5402,
+      "rmse_day": 258.69709877353193,
+      "mae_day": 205.53105437142105,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.34392655908568615,
+      "skill_day_vs_persistence": 0.3612620330853108
+    }
+  },
+  "training_log": [
+    {
+      "epoch": 1,
+      "train_mse_norm": 0.5459015596995959,
+      "val_rmse_phys": 188.69856168827636,
+      "val_mae_phys": 130.1047235499499,
+      "val_rmse_day_phys": 267.9222226950485,
+      "val_mae_day_phys": 210.6171662527915,
+      "lr": 0.0001,
+      "epoch_seconds": 170.12608766555786
+    },
+    {
+      "epoch": 2,
+      "train_mse_norm": 0.46398023240600045,
+      "val_rmse_phys": 185.306702014598,
+      "val_mae_phys": 124.35864317152918,
+      "val_rmse_day_phys": 270.1874045392972,
+      "val_mae_day_phys": 219.78672809615074,
+      "lr": 0.0001,
+      "epoch_seconds": 169.78569626808167
+    },
+    {
+      "epoch": 3,
+      "train_mse_norm": 0.4351343981737377,
+      "val_rmse_phys": 190.59258822788743,
+      "val_mae_phys": 114.14262513675476,
+      "val_rmse_day_phys": 284.8923304200789,
+      "val_mae_day_phys": 226.01907331396876,
+      "lr": 0.0001,
+      "epoch_seconds": 170.86629629135132
+    },
+    {
+      "epoch": 4,
+      "train_mse_norm": 0.424382776277449,
+      "val_rmse_phys": 188.31099865945504,
+      "val_mae_phys": 117.12544559304428,
+      "val_rmse_day_phys": 278.220787597148,
+      "val_mae_day_phys": 223.73623048128522,
+      "lr": 0.0001,
+      "epoch_seconds": 170.33100366592407
+    },
+    {
+      "epoch": 5,
+      "train_mse_norm": 0.4159605781820751,
+      "val_rmse_phys": 194.6726518707217,
+      "val_mae_phys": 119.70426583030678,
+      "val_rmse_day_phys": 288.44258740857146,
+      "val_mae_day_phys": 227.2481889860055,
+      "lr": 5e-05,
+      "epoch_seconds": 169.69766497612
+    },
+    {
+      "epoch": 6,
+      "train_mse_norm": 0.3992338020830151,
+      "val_rmse_phys": 185.96897497265928,
+      "val_mae_phys": 109.44687508018643,
+      "val_rmse_day_phys": 278.53249997534516,
+      "val_mae_day_phys": 217.2910080853463,
+      "lr": 5e-05,
+      "epoch_seconds": 169.97432041168213
+    },
+    {
+      "epoch": 7,
+      "train_mse_norm": 0.39004774043854396,
+      "val_rmse_phys": 181.89153952832584,
+      "val_mae_phys": 108.87412648136805,
+      "val_rmse_day_phys": 271.3523569749186,
+      "val_mae_day_phys": 216.90032738620795,
+      "lr": 5e-05,
+      "epoch_seconds": 169.68991351127625
+    },
+    {
+      "epoch": 8,
+      "train_mse_norm": 0.3902016940653607,
+      "val_rmse_phys": 187.67384022278603,
+      "val_mae_phys": 107.82906985626873,
+      "val_rmse_day_phys": 281.5984480995656,
+      "val_mae_day_phys": 224.95251836769611,
+      "lr": 5e-05,
+      "epoch_seconds": 170.62225532531738
+    },
+    {
+      "epoch": 9,
+      "train_mse_norm": 0.3876236925961707,
+      "val_rmse_phys": 187.37977652099698,
+      "val_mae_phys": 111.31219402050966,
+      "val_rmse_day_phys": 279.6263970440477,
+      "val_mae_day_phys": 218.9791828309359,
+      "lr": 2.5e-05,
+      "epoch_seconds": 170.3207130432129
+    }
+  ]
+}
