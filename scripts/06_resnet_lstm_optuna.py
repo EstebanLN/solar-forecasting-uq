@@ -184,6 +184,7 @@ def main() -> None:
     study.optimize(
         make_objective(train_ds, val_ds, normalizer, DEVICE, args.seed, args.day_threshold, USE_AMP),
         n_trials=args.n_trials,
+        n_jobs=2,
         show_progress_bar=True,
     )
 
