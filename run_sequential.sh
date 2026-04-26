@@ -5,12 +5,13 @@
 # Saltea automáticamente cualquier run que ya tenga summary.json.
 #
 # Uso:
-#   bash run_sequential.sh [baseline|optuna|all]   (default: all)
-#   bash run_sequential.sh baseline 2>&1 | tee logs/run_sequential.out
+#   bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|all] [uniandes|elpaso|all]
+#   bash run_sequential.sh resnet_optuna uniandes   # solo resnet, solo uniandes
 # ================================================================
 set -uo pipefail   # sin -e: un run fallido loguea el error y sigue al siguiente
 
 GROUP="${1:-all}"
+SITE_FILTER="${2:-all}"   # "uniandes", "elpaso", o "all"
 mkdir -p logs
 FAILED_RUNS=()   # acumula los que fallen para reportar al final
 
@@ -41,7 +42,6 @@ PYEOF
 run_one() {
     local label=$1 runs_dir=$2 script=$3 site=$4 hours=$5 seed=$6
     shift 6
-    # extra args opcionales (e.g. --n_trials 50)
     local extra=("$@")
 
     if already_done "$runs_dir" "$site" "$hours" "$seed"; then
@@ -69,6 +69,7 @@ run_baseline_resnet() {
     echo ""
     echo "=== ResNet+LSTM baseline (30 runs) ==="
     for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
             for seed in 42 1 7 13 100; do
                 run_one "resnet" "runs/resnet_lstm" \
@@ -86,6 +87,7 @@ run_baseline_gsage() {
     echo ""
     echo "=== GraphSAGE+LSTM baseline (30 runs) ==="
     for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
             for seed in 42 1 7 13 100; do
                 run_one "gsage" "runs/graphsage_lstm" \
@@ -97,36 +99,38 @@ run_baseline_gsage() {
 }
 
 # ----------------------------------------------------------------
-# Optuna: ResNet+LSTM  (30 runs × 50 trials)
+# Optuna: ResNet+LSTM  (24 runs × 20 trials, n_jobs=2)
 # ----------------------------------------------------------------
 run_optuna_resnet() {
     echo ""
-    echo "=== ResNet+LSTM Optuna (30 runs) ==="
+    echo "=== ResNet+LSTM Optuna [site=${SITE_FILTER}] ==="
     for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
-            for seed in 42 1 7 13 100; do
+            for seed in 42 1 7 13; do
                 run_one "optuna_resnet" "runs/resnet_lstm_optuna" \
                     "scripts/06_resnet_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
-                    --n_trials 50
+                    --n_trials 20
             done
         done
     done
 }
 
 # ----------------------------------------------------------------
-# Optuna: GraphSAGE+LSTM  (30 runs × 50 trials)
+# Optuna: GraphSAGE+LSTM  (24 runs × 20 trials, n_jobs=2)
 # ----------------------------------------------------------------
 run_optuna_gsage() {
     echo ""
-    echo "=== GraphSAGE+LSTM Optuna (30 runs) ==="
+    echo "=== GraphSAGE+LSTM Optuna [site=${SITE_FILTER}] ==="
     for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
-            for seed in 42 1 7 13 100; do
+            for seed in 42 1 7 13; do
                 run_one "optuna_gsage" "runs/graphsage_lstm_optuna" \
                     "scripts/06_graphsage_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
-                    --n_trials 50
+                    --n_trials 20
             done
         done
     done
@@ -144,6 +148,12 @@ case "$GROUP" in
         run_optuna_resnet
         run_optuna_gsage
         ;;
+    resnet_optuna)
+        run_optuna_resnet
+        ;;
+    gsage_optuna)
+        run_optuna_gsage
+        ;;
     all)
         run_baseline_resnet
         run_baseline_gsage
@@ -151,7 +161,7 @@ case "$GROUP" in
         run_optuna_gsage
         ;;
     *)
-        echo "Uso: bash run_sequential.sh [baseline|optuna|all]"
+        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|all] [uniandes|elpaso|all]"
         exit 1
         ;;
 esac
