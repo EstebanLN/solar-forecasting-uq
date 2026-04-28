@@ -289,7 +289,14 @@ def main() -> None:
             "model_state":       best_model.state_dict(),
             "best_val_rmse_day": out["best_val_rmse_day"],
             "meta": {
-                "arch": "GraphSAGE_LSTM", "site": args.site, "patch": args.patch,
+                "arch": "GraphSAGE_LSTM",
+                "arch_hparams": {
+                    "hidden_g": bp["hidden_g"], "n_sage_layers": bp["n_sage_layers"],
+                    "hidden_t": bp["hidden_t"], "n_lstm_layers": bp["n_lstm_layers"],
+                    "dropout_head": bp["dropout_head"],
+                    "input_bn": bp["input_bn"], "concat_agg": bp["concat_agg"],
+                },
+                "site": args.site, "patch": args.patch,
                 "L": L, "H": H, "seed": args.seed,
                 "y_mean_train": normalizer.mean, "y_std_train": normalizer.std,
             },

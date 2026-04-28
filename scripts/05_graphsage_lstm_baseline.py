@@ -207,6 +207,12 @@ def main() -> None:
             "best_val_rmse_day": out["best_val_rmse_day"],
             "meta": {
                 "arch": "GraphSAGE_LSTM",
+                "arch_hparams": {
+                    "hidden_g": args.hidden_g, "n_sage_layers": args.n_sage_layers,
+                    "hidden_t": args.hidden_t, "n_lstm_layers": args.n_lstm_layers,
+                    "dropout_head": args.dropout_head,
+                    "input_bn": args.input_bn, "concat_agg": args.concat_agg,
+                },
                 "site": args.site, "patch": args.patch, "L": L, "H": H, "seed": args.seed,
                 "y_mean_train": normalizer.mean, "y_std_train": normalizer.std,
             },

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import random
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import torch
@@ -64,6 +64,31 @@ def eval_model(
     yhat_phys = normalizer.denormalize(yhat_arr)
 
     return metrics_from_arrays(y_phys, yhat_phys, day_threshold=day_threshold)
+
+
+@torch.no_grad()
+def collect_predictions(
+    model: nn.Module,
+    loader: DataLoader,
+    normalizer: TargetNormalizer,
+    device: str = "cpu",
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Return (y_true, y_pred) arrays in physical units (W/m²).
+
+    Companion to eval_model — use this when you need the raw arrays
+    (e.g. for conformal calibration) rather than aggregated metrics.
+    """
+    model.eval()
+    ys: list = []
+    yhats: list = []
+    for x_seq, y in loader:
+        x_seq = x_seq.to(device, non_blocking=True)
+        yhat  = model(x_seq)
+        ys.append(y.numpy())
+        yhats.append(yhat.detach().cpu().numpy())
+    y_phys    = normalizer.denormalize(np.concatenate(ys))
+    yhat_phys = normalizer.denormalize(np.concatenate(yhats))
+    return y_phys, yhat_phys
 
 
 # ---------------------------------------------------------------------------

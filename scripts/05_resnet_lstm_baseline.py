@@ -187,6 +187,10 @@ def main() -> None:
             "best_val_rmse_day": out["best_val_rmse_day"],
             "meta": {
                 "arch": "ResNetLSTM",
+                "arch_hparams": {
+                    "base": args.base, "emb_dim": args.emb_dim,
+                    "hidden_t": args.hidden_t, "dropout": args.dropout,
+                },
                 "site": args.site, "patch": args.patch, "L": L, "H": H, "seed": args.seed,
                 "y_mean_train": normalizer.mean, "y_std_train": normalizer.std,
             },
