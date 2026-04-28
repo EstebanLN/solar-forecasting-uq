@@ -261,7 +261,12 @@ def main() -> None:
             "model_state":       best_model.state_dict(),
             "best_val_rmse_day": out["best_val_rmse_day"],
             "meta": {
-                "arch": "ResNetLSTM", "site": args.site, "patch": args.patch,
+                "arch": "ResNetLSTM",
+                "arch_hparams": {
+                    "base": bp["base"], "emb_dim": bp["emb_dim"],
+                    "hidden_t": bp["hidden_t"], "dropout": bp["dropout"],
+                },
+                "site": args.site, "patch": args.patch,
                 "L": L, "H": H, "seed": args.seed,
                 "y_mean_train": normalizer.mean, "y_std_train": normalizer.std,
             },
