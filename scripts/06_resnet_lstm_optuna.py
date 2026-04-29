@@ -186,6 +186,7 @@ def main() -> None:
         n_trials=args.n_trials,
         n_jobs=2,
         show_progress_bar=True,
+        catch=(AssertionError,),
     )
 
     best = study.best_trial
