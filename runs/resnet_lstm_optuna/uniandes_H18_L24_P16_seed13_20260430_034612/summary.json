@@ -1,0 +1,114 @@
+{
+  "run_name": "uniandes_H18_L24_P16_seed13_20260430_034612",
+  "study_name": "resnet_lstm_uniandes_P16",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 13,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h3",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_optuna/uniandes_H18_L24_P16_seed13_20260430_034612"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 176.12705206594896,
+    "y_std_train": 279.60664470861093,
+    "y_percentiles_train": [
+      0.0,
+      1.45,
+      614.2736,
+      846.2329999999998,
+      1086.98496
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54507,
+      "rmse": 297.47920806960843,
+      "mae": 176.6130889610509,
+      "n_day": 24893,
+      "rmse_day": 406.97961339298257,
+      "mae_day": 319.8906504639858,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 12424,
+      "rmse": 279.2358520044971,
+      "mae": 159.75912910495813,
+      "n_day": 5363,
+      "rmse_day": 388.4280430826495,
+      "mae_day": 303.88528883087827,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 20,
+    "best_trial_number": 15,
+    "best_value_val_rmse_day": 255.82419466816972,
+    "best_params": {
+      "base": 48,
+      "emb_dim": 64,
+      "hidden_t": 192,
+      "dropout": 0.3,
+      "lr": 0.0014676959069164425,
+      "weight_decay": 5.497730142865018e-06,
+      "batch_size": 16
+    }
+  },
+  "best_model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "best_epoch": 11,
+    "train_seconds_total": 5007.846794843674,
+    "n_params": 1815649,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_optuna/uniandes_H18_L24_P16_seed13_20260430_034612/best_model.pt",
+    "final_val": {
+      "n": 12407,
+      "rmse": 220.81364057356228,
+      "mae": 156.74935250871465,
+      "n_day": 5356,
+      "rmse_day": 255.83283002021318,
+      "mae_day": 201.01834158722903,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.20922174216366285,
+      "skill_day_vs_persistence": 0.3413636461727442
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 218.96851553609585,
+      "mae": 158.72009003949213,
+      "n_day": 5402,
+      "rmse_day": 248.9694992322273,
+      "mae_day": 198.77610536170687,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.24458798632116263,
+      "skill_day_vs_persistence": 0.3852800339961463
+    }
+  }
+}
