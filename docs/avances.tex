@@ -1,0 +1,659 @@
+\documentclass[12pt,a4paper]{article}
+
+% ----- Encoding & language -----
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+% ----- Layout & typography -----
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{setspace}
+\onehalfspacing
+
+% ----- Math -----
+\usepackage{amsmath,amssymb}
+
+% ----- Tables -----
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{colortbl}
+
+% ----- Graphics & floats -----
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+
+% ----- Hyperlinks -----
+\usepackage[colorlinks=true, linkcolor=blue!60!black, citecolor=blue!60!black, urlcolor=blue]{hyperref}
+
+% ----- Bibliography -----
+\usepackage{natbib}
+
+% ----- Misc -----
+\usepackage{enumitem}
+
+% ================================================================
+\title{\textbf{Informe de Avances}\\[0.4em]
+       \large Predicción de Irradiancia Solar Horizontal Global (GHI)\\
+       con Modelos de Aprendizaje Profundo y Cuantificación de Incertidumbre}
+\author{Esteban Ladino}
+\date{Abril 2026}
+% ================================================================
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ================================================================
+\section{Descripción del Problema}
+% ================================================================
+
+El objetivo general del trabajo es construir un sistema de predicción de la
+\textit{irradiancia solar horizontal global} (GHI, por sus siglas en inglés) con
+horizontes de pronóstico de 1, 3 y 6 horas, integrando imágenes satelitales como
+entrada espacial y series de tiempo de mediciones de superficie como entrada temporal.
+Adicionalmente, se busca dotar al sistema de mecanismos de
+\textbf{cuantificación de incertidumbre} (UQ) para producir intervalos de predicción
+bien calibrados.
+
+El problema es relevante porque la variabilidad de la irradiancia solar
+---debida principalmente a la nubosidad--- es uno de los principales obstáculos
+para la integración de energía fotovoltaica a la red eléctrica.
+Pronósticos confiables, junto con estimaciones de incertidumbre, permiten
+planificar mejor la operación del sistema.
+
+% ================================================================
+\section{Datos}
+% ================================================================
+
+\subsection{Sitios de estudio}
+
+Se trabaja con dos estaciones de medición:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{El Paso} (César, Colombia): lat~$9.737°$N, lon~$73.695°$O,
+        elevación~$\approx50$\,m s.n.m. Clima semiárido tropical, alta irradiancia
+        media y baja nubosidad convectiva respecto a la zona andina.
+  \item \textbf{Uniandes} (Bogotá, Colombia): lat~$4.602°$N, lon~$74.066°$O,
+        elevación~$\approx2600$\,m s.n.m. Clima de montaña ecuatorial con alta
+        variabilidad intradiaria por nubes convectivas.
+\end{itemize}
+
+\subsection{Fuentes de datos}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Mediciones de superficie:} Irradiancia GHI a resolución de 10\,minutos,
+        UTC, almacenadas en archivos Parquet alineados temporalmente.
+  \item \textbf{Imágenes satelitales:} Producto ABI-L2-MCMIPF del satélite GOES-16,
+        mosaicos de 256$\times$256 píxeles centrados en cada estación;
+        parches de $16\times16$ píxeles ($P=16$) extraídos para el entrenamiento.
+\end{itemize}
+
+\subsection{Partición temporal}
+
+Para evitar fuga de información, los conjuntos se definen por bloques calendáricos
+continuos. La Tabla~\ref{tab:splits} resume las fechas por sitio.
+
+\begin{table}[H]
+  \centering
+  \caption{Partición temporal por sitio (formato AAAA-MM-DD).}
+  \label{tab:splits}
+  \begin{tabular}{llccc}
+    \toprule
+    \textbf{Sitio} & \textbf{Split} & \textbf{Inicio} & \textbf{Fin} & \textbf{Observaciones} \\
+    \midrule
+    \multirow{3}{*}{El Paso}   & Entrenamiento & 2022-03-01 & 2023-06-30 & 69\,984 \\
+                                & Validación    & 2023-07-01 & 2023-10-31 & 17\,568 \\
+                                & Prueba        & 2023-11-01 & 2024-03-07 & 18\,288 \\
+    \midrule
+    \multirow{3}{*}{Uniandes}  & Entrenamiento & 2023-09-01 & 2024-09-30 & 56\,850 \\
+                                & Validación    & 2024-10-01 & 2024-12-31 & 13\,104 \\
+                                & Prueba        & 2025-01-01 & 2025-03-28 & 12\,384 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Las observaciones están a resolución de 10\,minutos. La ventana de historia
+para los modelos de aprendizaje profundo es $L = 24$ pasos (4\,horas).
+
+% ================================================================
+\section{Métricas de Evaluación}
+% ================================================================
+
+La métrica principal es el \textbf{RMSE diurno} ($\text{RMSE}_\text{day}$),
+calculado únicamente sobre las muestras del conjunto de prueba con
+$\text{GHI}_\text{obs} \geq 20\,\text{W/m}^2$ para excluir horas nocturnas donde
+todos los modelos predicen cero.
+
+El desempeño relativo se expresa como el \textbf{puntaje de habilidad}
+(\textit{skill score}) respecto a la persistencia:
+
+\begin{equation}
+  \text{Skill}_\text{day} = 1 - \frac{\text{RMSE}_\text{day}(\text{modelo})}
+                                      {\text{RMSE}_\text{day}(\text{persistencia})}
+\end{equation}
+
+Un valor de $\text{Skill}_\text{day} = 0$ indica que el modelo es equivalente
+a la persistencia; valores positivos representan mejora; valores negativos,
+deterioro.
+
+% ================================================================
+\section{Modelos}
+% ================================================================
+
+\subsection{Línea base de persistencia}
+
+El modelo de persistencia predice que la irradiancia en el horizonte $H$ es igual
+a la última observación disponible:
+\begin{equation}
+  \hat{y}(t+H) = \text{GHI}(t)
+\end{equation}
+Este es el punto de referencia estándar en la literatura de pronóstico solar de
+corto plazo. Por definición, $\text{Skill}_\text{day} = 0$ para este modelo.
+
+% ------------------------------------------------------------
+\subsection{SARIMA sobre índice de cielo claro}
+\label{sec:sarima}
+% ------------------------------------------------------------
+
+\subsubsection{Motivación}
+
+Los modelos ARIMA clásicos no capturan directamente la fuerte estacionalidad diurna
+de la GHI (el ciclo de día/noche y la envolvente de cielo claro determinista).
+Para aislar el componente estocástico ---la variabilidad por nubes---
+se trabaja sobre el \textbf{índice de cielo claro} $k_t$:
+
+\begin{equation}
+  k_t = \frac{\text{GHI}_t}{\text{GHI}_{\text{cs},t}}, \quad
+  \text{con} \; k_t = 0 \; \text{si} \; \text{GHI}_{\text{cs},t} < 10\,\text{W/m}^2
+\end{equation}
+
+donde $\text{GHI}_{\text{cs}}$ se calcula con el modelo de Ineichen implementado
+en \texttt{pvlib}. El índice $k_t \in [0, 1.5]$ es más estacionario que la GHI
+en bruto y admite modelado estadístico.
+
+\subsubsection{Resolución temporal}
+
+Los datos de superficie están a 10\,min, lo que correspondería a
+$m = 144$ para capturar la estacionalidad diaria.
+Ajustar un modelo SARIMAX con $m = 144$ sobre dos años de datos (más de 100\,000
+observaciones) es computacionalmente inviable: el número de parámetros del estado
+de espacio crece cuadráticamente y los tiempos de ajuste superan horas.
+Por ello, se remuestrea $k_t$ a resolución horaria, reduciendo $m$ a $\mathbf{24}$
+(ciclo diario de 24 horas), que es el estándar en la literatura de predicción solar
+estadística.
+
+\subsubsection{Selección de los órdenes del modelo}
+
+El modelo ajustado es $\text{SARIMAX}(p, d, q)(P, D, Q)_{m}$. Los parámetros
+se determinaron de la siguiente manera:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{$m = 24$}: periodo estacional natural para datos horarios
+        (un ciclo completo de 24 horas).
+
+  \item \textbf{$D = 1$}: una diferenciación estacional elimina la tendencia
+        periódica residual del índice $k_t$.
+        La función de autocorrelación (ACF) de $k_t$ sin diferenciar muestra
+        decaimiento lento en múltiplos de 24~lags, indicando no-estacionariedad
+        estacional; tras aplicar $\Delta_{24}$, el ACF decae rápidamente.
+
+  \item \textbf{$d = 1$}: una diferenciación ordinaria ($\nabla k_t$) elimina
+        la deriva de baja frecuencia asociada a cambios estacionales del año.
+        La prueba ADF (\textit{Augmented Dickey-Fuller}) confirma la estacionariedad
+        de $\nabla \Delta_{24} k_t$.
+
+  \item \textbf{$p = 2$, $q = 2$}: órdenes AR y MA no estacionales de orden 2.
+        El PACF de la serie diferenciada muestra cortes significativos en los
+        lags~1 y~2, motivando $p = 2$; análogamente, el ACF decae tras el lag~2,
+        sugiriendo $q = 2$. Órdenes mayores no mejoran el AIC y aumentan el riesgo
+        de sobreajuste.
+
+  \item \textbf{$P = 1$, $Q = 1$}: términos AR y MA estacionales mínimos.
+        Capturan la autocorrelación residual al lag~24 sin sobre-parametrizar.
+        El AIC confirma que agregar $P = 2$ o $Q = 2$ no reduce el criterio
+        de información significativamente.
+\end{itemize}
+
+El modelo final es:
+\begin{equation}
+  \boxed{
+    \text{SARIMAX}(2,1,2)(1,1,1)_{24}
+  }
+\end{equation}
+
+El ajuste se realiza sobre toda la ventana de entrenamiento de cada sitio;
+la predicción fuera de muestra (\textit{forecast}) cubre el período de prueba.
+La conversión de regreso a GHI se realiza multiplicando por el cielo claro:
+$\hat{\text{GHI}}(t) = \hat{k}(t) \cdot \text{GHI}_{\text{cs}}(t)$.
+
+% ------------------------------------------------------------
+\subsection{ResNet + LSTM}
+% ------------------------------------------------------------
+
+Arquitectura codificador-decodificador que combina:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Codificador espacial (ResNet pequeño):} Red convolucional residual
+        que procesa cada parche satelital $16\times16$ y produce un embedding de
+        128 dimensiones. Configuración base: \texttt{base=32}, \texttt{emb\_dim=128}.
+  \item \textbf{Decodificador temporal (LSTM):} Toma la secuencia de $L = 24$ embeddings
+        espaciales y produce la predicción en el horizonte $H$.
+        Configuración: \texttt{hidden\_t=128}, \texttt{dropout=0.10}.
+\end{itemize}
+
+Cada experimento corre con cinco semillas independientes ($\{42, 1, 7, 13, 100\}$),
+por lo que los resultados se reportan como media $\pm$ desviación estándar.
+
+% ------------------------------------------------------------
+\subsection{GraphSAGE + LSTM}
+% ------------------------------------------------------------
+
+Variante que reemplaza el codificador convolucional por una red de grafos:
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{Codificador espacial (GraphSAGE):} Los píxeles del parche se modelan
+        como un grafo con conectividad de 8~vecinos. Las capas GraphSAGE agregan
+        información de la vecindad local y producen un embedding del grafo.
+        Configuración: \texttt{hidden\_g=64}, \texttt{n\_layers=2}.
+  \item \textbf{Decodificador temporal (LSTM):} Igual al ResNet+LSTM.
+        \texttt{n\_lstm\_layers=1}, \texttt{dropout\_head=0.10}.
+\end{itemize}
+
+La motivación es que los grafos pueden capturar relaciones espaciales
+no regulares entre píxeles (p.\,ej., frentes nubosos con forma irregular)
+sin asumir la estructura de traslación invariante de las CNN.
+
+% ------------------------------------------------------------
+\subsection{Optimización de hiperparámetros (Optuna)}
+% ------------------------------------------------------------
+
+Para ambas arquitecturas se realiza una búsqueda de hiperparámetros con
+\textbf{Optuna}, bajo un esquema multi-objetivo que minimiza simultáneamente
+el RMSE de validación y el número de parámetros del modelo. Cada búsqueda
+utiliza 20 \textit{trials} con $n\_\text{jobs}=2$ trabajos paralelos.
+
+El espacio de búsqueda incluye: dimensión del embedding, número de capas,
+tamaño oculto del LSTM, tasa de dropout y tasa de aprendizaje.
+
+% ================================================================
+\section{Cuantificación de Incertidumbre: Predicción Conforme (Split~CP)}
+\label{sec:conformal}
+% ================================================================
+
+\subsection{Motivación}
+
+Los modelos DL entrenados hasta ahora producen únicamente una predicción puntual
+$\hat{y}(t+H)$. En la práctica, el operador de la red eléctrica necesita también
+una estimación de la incertidumbre asociada: ¿qué tan probable es que la GHI real
+caiga dentro de un intervalo dado? La cuantificación de incertidumbre (UQ) permite
+construir intervalos de predicción con garantías probabilísticas formales.
+
+La \textbf{Predicción Conforme} (\textit{Conformal Prediction}, CP) ofrece una de
+las pocas vías para obtener garantías de cobertura \emph{exactas en muestra finita},
+sin supuestos distribucionales sobre los residuos del modelo, siempre que las
+muestras de calibración y prueba sean intercambiables (condición debil que se
+satisface en datos i.i.d.\ y, aproximadamente, en series de tiempo estacionarias).
+
+\subsection{Predicción Conforme por División (\textit{Split CP})}
+
+La variante implementada es \textbf{Split CP} (también llamada CP Inductiva),
+que divide el proceso en dos etapas independientes:
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Etapa de calibración:} Se usa el conjunto de validación
+        (separado del entrenamiento) para calcular el umbral de cobertura.
+  \item \textbf{Etapa de predicción:} Se aplica el umbral sobre el conjunto
+        de prueba para construir intervalos.
+\end{enumerate}
+
+Este diseño garantiza que la calibración no contamina el ajuste del modelo y
+que los intervalos heredan las garantías teóricas de CP.
+
+\subsubsection{Puntuación de no-conformidad}
+
+Se adopta el \textbf{residuo absoluto} como puntuación de no-conformidad:
+
+\begin{equation}
+  s_i = \bigl|y_i - \hat{y}_i\bigr| \quad [\text{W/m}^2]
+\end{equation}
+
+donde $y_i$ es la GHI observada e $\hat{y}_i$ es la predicción del modelo DL
+(ResNet+LSTM o GraphSAGE+LSTM). Se calcula $s_i$ para cada observación del
+conjunto de validación.
+
+\subsubsection{Calibración}
+
+Dado un nivel de miscobertua $\alpha$ (p.\,ej.\ $\alpha = 0.10$ para intervalos
+del 90\,\%), el cuantil conforme $\hat{q}$ se obtiene como:
+
+\begin{equation}
+  \hat{q} = \text{Quantile}\!\left(
+      \{s_i\}_{i=1}^{n_\text{cal}},\;
+      \frac{\lceil (n_\text{cal}+1)(1-\alpha)\rceil}{n_\text{cal}}
+    \right)
+  \label{eq:qhat}
+\end{equation}
+
+La corrección $\lceil(n_\text{cal}+1)(1-\alpha)\rceil/n_\text{cal}$ (en lugar de
+$1-\alpha$ directamente) garantiza cobertura marginal \emph{exacta} $\geq 1-\alpha$
+en muestra finita bajo intercambiabilidad \citep{vovk2005, angelopoulos2023}.
+
+\subsubsection{Intervalo de predicción}
+
+Para cada nueva observación de prueba con predicción puntual $\hat{y}(t+H)$,
+el intervalo de predicción al nivel $1-\alpha$ es:
+
+\begin{equation}
+  \mathcal{C}_{1-\alpha}(x) = \bigl[\hat{y}(t+H) - \hat{q},\;\; \hat{y}(t+H) + \hat{q}\bigr]
+  \label{eq:interval}
+\end{equation}
+
+El intervalo es \textbf{simétrico y de ancho fijo} $2\hat{q}$ para todos los
+puntos del conjunto de prueba, independientemente de la confianza local del modelo.
+
+\subsubsection{Garantía teórica}
+
+Bajo intercambiabilidad, la probabilidad de que la observación real quede dentro
+del intervalo satisface:
+
+\begin{equation}
+  1 - \alpha \;\leq\; \mathbb{P}\bigl(Y_{n+1} \in \mathcal{C}_{1-\alpha}(X_{n+1})\bigr)
+               \;\leq\; 1 - \alpha + \frac{1}{n_\text{cal}+1}
+\end{equation}
+
+El exceso de cobertura $1/(n_\text{cal}+1)$ es despreciable para los tamaños de
+calibración que tenemos ($n_\text{cal} \approx 13\,000$--$17\,000$ observaciones).
+
+\subsection{Protocolo experimental}
+
+El script \texttt{scripts/07\_conformal\_explore.py} implementa el siguiente flujo
+sobre cualquier run ya entrenado (baseline u Optuna):
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item Cargar el checkpoint \texttt{best\_model.pt} y reconstruir la arquitectura
+        exacta a partir de los \texttt{arch\_hparams} guardados en los metadatos
+        del checkpoint (o usando los defaults del CLI para runs anteriores).
+  \item Ejecutar inferencia en modo \texttt{eval()} sobre el conjunto de validación:
+        obtener vectores $\mathbf{y}_\text{val}$ e $\hat{\mathbf{y}}_\text{val}$.
+  \item Ejecutar inferencia sobre el conjunto de prueba:
+        $\mathbf{y}_\text{test}$ e $\hat{\mathbf{y}}_\text{test}$.
+  \item Calibrar \texttt{SplitCP} con $(\mathbf{y}_\text{val}, \hat{\mathbf{y}}_\text{val})$
+        para cada nivel $\alpha \in \{0.05, 0.10, 0.20\}$ (ecuación~\ref{eq:qhat}).
+  \item Evaluar sobre el test set (ecuación~\ref{eq:interval}) y reportar:
+        \begin{itemize}
+          \item Cobertura total: $\hat{\text{cov}} = \tfrac{1}{n}\sum_i \mathbf{1}[y_i \in \mathcal{C}]$
+          \item Cobertura diurna: ídem restringida a $y_i \geq 20\,\text{W/m}^2$
+          \item Ancho medio total: $\overline{w} = 2\hat{q}$
+          \item Ancho medio diurno (más relevante operacionalmente)
+        \end{itemize}
+  \item Guardar resultados en \texttt{<run\_dir>/conformal\_splitcp.json}.
+\end{enumerate}
+
+\subsection{Limitación: intervalos no adaptativos}
+
+El intervalo de la ecuación~\ref{eq:interval} tiene ancho \emph{constante}: no
+distingue entre momentos del día con alta variabilidad (mediodía, paso de nubes)
+y momentos más predecibles (amanecer, día despejado). En consecuencia, los
+intervalos tienden a ser conservadores en condiciones de baja incertidumbre y
+potencialmente estrechos en condiciones de alta incertidumbre.
+
+Esta limitación motiva la implementación futura de
+\textbf{Conformalized Quantile Regression} (CQR), que produce intervalos de
+ancho variable adaptados a la dificultad local de la predicción.
+
+\subsection{Próximos pasos}
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item Ejecutar \texttt{07\_conformal\_explore.py} sobre un conjunto representativo
+        de runs (al menos un run por arquitectura, sitio y horizonte) y registrar
+        los valores $(\hat{q}, \hat{\text{cov}}_\text{day})$ observados.
+  \item Verificar que la cobertura diurna empírica $\hat{\text{cov}}_\text{day}$
+        sea $\geq 1-\alpha$ para cada nivel evaluado. Si la cobertura es
+        sistemáticamente más alta que la nominal, confirmará que los intervalos
+        son conservadores y que CQR puede agregar valor reduciendo el ancho
+        innecesario.
+  \item Comparar el ancho medio diurno $\overline{w}_\text{day}$ entre horizontes
+        y arquitecturas: un menor ancho para la misma cobertura nominal indica
+        un predictor puntual más calibrado.
+\end{enumerate}
+
+% ================================================================
+\section{Resultados}
+% ================================================================
+
+\subsection{Resumen general}
+
+La Tabla~\ref{tab:resultados} presenta el RMSE diurno y el puntaje de habilidad
+sobre el conjunto de prueba para todos los modelos entrenados hasta la fecha.
+Los modelos de aprendizaje profundo (DL) reportan media $\pm$ desviación estándar
+sobre 5 semillas (línea base) o el número de semillas completadas hasta la fecha
+(Optuna).
+
+\begin{table}[H]
+  \centering
+  \caption{Resultados en el conjunto de prueba. $\text{RMSE}_\text{day}$ en W/m².
+           Skill$_\text{day}$ relativo a persistencia (mayor es mejor).
+           Persit.: RMSE$_\text{day}$ de la persistencia (referencia).
+           DL baselines: 5 semillas; Optuna: semillas completadas (ver nota).}
+  \label{tab:resultados}
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{llccccc}
+    \toprule
+    \textbf{Modelo} & \textbf{Sitio} & \textbf{H} &
+    \textbf{RMSE$_\text{day}$} & \textbf{$\sigma$} &
+    \textbf{Skill$_\text{day}$} & \textbf{Persit.} \\
+    \midrule
+    % ---- Persistencia ----
+    Persistencia & El Paso   & 1h & 204.4 & ---  & 0.000 & 204.4 \\
+    Persistencia & El Paso   & 3h & 411.0 & ---  & 0.000 & 411.0 \\
+    Persistencia & El Paso   & 6h & 565.3 & ---  & 0.000 & 565.3 \\
+    Persistencia & Uniandes  & 1h & 293.9 & ---  & 0.000 & 293.9 \\
+    Persistencia & Uniandes  & 3h & 405.0 & ---  & 0.000 & 405.0 \\
+    Persistencia & Uniandes  & 6h & 469.9 & ---  & 0.000 & 469.9 \\
+    \midrule
+    % ---- SARIMA ----
+    SARIMA & El Paso   & 1h & 447.9 & ---  & $-1.205$ & 203.2 \\
+    SARIMA & El Paso   & 3h & 450.4 & ---  & $-0.093$ & 412.0 \\
+    SARIMA & El Paso   & 6h & 445.8 & ---  & $+0.210$ & 564.2 \\
+    SARIMA & Uniandes  & \multicolumn{4}{c}{\textit{(pendiente)}} & --- \\
+    \midrule
+    % ---- ResNet+LSTM baseline ----
+    ResNet+LSTM        & El Paso  & 1h & 238.7 & 5.3  & $-0.168$ & 204.4 \\
+    ResNet+LSTM        & El Paso  & 3h & 216.6 & 10.4 & $+0.473$ & 411.0 \\
+    ResNet+LSTM        & El Paso  & 6h & 220.7 & 12.0 & $+0.610$ & 565.3 \\
+    ResNet+LSTM        & Uniandes & 1h & 250.3 & 5.3  & $+0.148$ & 293.9 \\
+    ResNet+LSTM        & Uniandes & 3h & 256.2 & 3.3  & $+0.368$ & 405.0 \\
+    ResNet+LSTM        & Uniandes & 6h & 284.5 & 19.5 & $+0.393$ & 468.8 \\
+    \midrule
+    % ---- GraphSAGE+LSTM baseline ----
+    GraphSAGE+LSTM     & El Paso  & 1h & 253.7 & 25.8 & $-0.241$ & 204.4 \\
+    GraphSAGE+LSTM     & El Paso  & 3h & 244.0 & 13.5 & $+0.406$ & 411.0 \\
+    GraphSAGE+LSTM     & El Paso  & 6h & 230.4 & 11.3 & $+0.592$ & 565.3 \\
+    GraphSAGE+LSTM     & Uniandes & 1h & 247.9 & 6.0  & $+0.156$ & 293.9 \\
+    GraphSAGE+LSTM     & Uniandes & 3h & 255.1 & 3.2  & $+0.370$ & 405.0 \\
+    GraphSAGE+LSTM     & Uniandes & 6h & 274.2 & 5.1  & $+0.418$ & 470.9 \\
+    \midrule
+    % ---- ResNet+LSTM Optuna ----
+    ResNet+LSTM (Opt.) & El Paso  & 1h & 238.6 & 22.4 & $-0.167$ & 204.4 \\
+    ResNet+LSTM (Opt.) & El Paso  & 3h & 256.7 & 60.2 & $+0.375$ & 411.0 \\
+    ResNet+LSTM (Opt.) & Uniandes & 1h & 246.7 & 4.1  & $+0.161$ & 293.9 \\
+    ResNet+LSTM (Opt.) & Uniandes & 3h & 258.0 & 2.0  & $+0.363$ & 405.0 \\
+    \midrule
+    % ---- GraphSAGE+LSTM Optuna ----
+    \rowcolor{yellow!25}
+    GraphSAGE+LSTM (Opt.) & El Paso  & 6h & \textbf{208.8} & --- & $\mathbf{+0.631}$ & 565.3 \\
+    GraphSAGE+LSTM (Opt.) & El Paso  & 1h & 251.5 & 3.6  & $-0.230$ & 204.4 \\
+    GraphSAGE+LSTM (Opt.) & Uniandes & 1h & 248.6 & 3.3  & $+0.154$ & 293.9 \\
+    GraphSAGE+LSTM (Opt.) & Uniandes & 3h & 252.1 & 2.4  & $+0.378$ & 405.0 \\
+    GraphSAGE+LSTM (Opt.) & Uniandes & 6h & 269.5 & ---  & $+0.428$ & 470.9 \\
+    \bottomrule
+  \end{tabular}
+  \par\smallskip
+  \footnotesize
+  \textit{Nota:} Las entradas Optuna con $\sigma = \text{---}$ corresponden a una sola semilla completada;
+  los resultados con $\sigma$ reportado usan 2--4 semillas. Los baselines DL usan 5 semillas.
+\end{table}
+
+\subsection{Observaciones principales}
+
+\paragraph{Horizonte de 1 hora.}
+El horizonte más corto resulta el más difícil para los modelos de aprendizaje profundo.
+El puntaje de habilidad es negativo o cercano a cero para ambas arquitecturas en
+El Paso ($-0.17$ a $-0.24$), y ligeramente positivo en Uniandes ($+0.15$ a $+0.16$).
+Esto se debe a que en el horizonte de 1 hora la persistencia es un predictor muy
+fuerte (la irradiancia varía poco en periodos cortos), y los modelos DL no logran
+superar esa referencia de forma consistente.
+
+\paragraph{Horizonte de 3 horas.}
+Los modelos DL comienzan a superar claramente a la persistencia.
+Los puntajes de habilidad se ubican en el rango $0.36$--$0.47$ para El Paso y
+$0.37$--$0.38$ para Uniandes, con cierta varianza entre semillas.
+
+\paragraph{Horizonte de 6 horas.}
+Es donde los modelos DL tienen el mejor desempeño relativo.
+El mejor resultado individual es \textbf{GraphSAGE+LSTM (Optuna) en El Paso}:
+$\text{RMSE}_\text{day} = 208.8\,\text{W/m}^2$, $\text{Skill}_\text{day} = 0.631$
+(reducción del 63\% del RMSE respecto a persistencia).
+En Uniandes, donde la variabilidad convectiva es mayor, los valores de habilidad
+son menores pero siguen siendo positivos ($+0.39$ a $+0.43$).
+
+\paragraph{SARIMA vs.\ modelos DL.}
+SARIMA supera a la persistencia solo en el horizonte de 6 horas ($+0.21$),
+y es considerablemente peor en horizontes cortos (especialmente 1\,h, donde
+$\text{Skill}_\text{day} = -1.20$). Los modelos DL superan consistentemente a
+SARIMA en todos los horizontes evaluados, lo que confirma que la integración de
+información espacial satelital es clave para este problema.
+
+\paragraph{ResNet vs.\ GraphSAGE.}
+GraphSAGE supera a ResNet en El Paso a 6\,h ($+0.592$ vs.\ $+0.610$ en baseline,
+$+0.631$ en Optuna), pero las diferencias en otros horizontes y en Uniandes
+son pequeñas y dentro de la varianza por semilla. Se requieren más semillas
+Optuna para conclusiones definitivas.
+
+% ================================================================
+\section{Estado de Experimentos}
+% ================================================================
+
+La Tabla~\ref{tab:estado} resume el estado actual de todos los experimentos.
+
+\begin{table}[H]
+  \centering
+  \caption{Estado de experimentos al 30 de abril de 2026.}
+  \label{tab:estado}
+  \begin{tabular}{lccl}
+    \toprule
+    \textbf{Modelo} & \textbf{Completados} & \textbf{Objetivo} & \textbf{Observaciones} \\
+    \midrule
+    ResNet+LSTM (baseline)    & 30 / 30 & 30 & 2 sitios $\times$ 3H $\times$ 5 semillas \\
+    GraphSAGE+LSTM (baseline) & 30 / 30 & 30 & Ídem \\
+    SARIMA                    &  1 / 2  &  2 & Solo El Paso; falta Uniandes \\
+    ResNet+LSTM (Optuna)      &  6 / 24 & 24 & 4 semillas $\times$ 2 sitios $\times$ 3H \\
+    GraphSAGE+LSTM (Optuna)   &  5 / 24 & 24 & Ídem; corriendo en servidor \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Los experimentos Optuna se están ejecutando en el servidor de forma secuencial
+con el script \texttt{run\_sequential.sh} para evitar saturación de memoria GPU.
+El tiempo estimado de finalización para los 48 runs Optuna es de 4--5 días adicionales.
+
+% ================================================================
+\section{Trabajo Pendiente}
+% ================================================================
+
+\subsection{Experimentos en curso (corto plazo)}
+
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Completar runs Optuna:} Faltan 18/24 de ResNet y 19/24 de GraphSAGE.
+        En ejecución en el servidor.
+  \item \textbf{SARIMA para Uniandes:} Ejecutar
+        \texttt{scripts/05\_sarima\_baseline.py --site uniandes --hours\_ahead 1 3 6}.
+\end{enumerate}
+
+\subsection{Fase 1 — Predicción Conforme (Split CP)}
+
+Se ha implementado la clase \texttt{SplitCP} en
+\texttt{src/solar\_uq/conformal.py}, que calibra umbrales de residuo
+sobre el conjunto de validación para garantizar cobertura marginal al nivel $1-\alpha$.
+También se implementó \texttt{collect\_predictions()} en \texttt{src/solar\_uq/train.py}
+y el script exploratorio \texttt{scripts/07\_conformal\_explore.py}.
+
+Tareas pendientes:
+\begin{itemize}[leftmargin=1.5em]
+  \item Ejecutar \texttt{07\_conformal\_explore.py} sobre runs representativos y
+        verificar que la cobertura diurna $\approx$ objetivo (p.ej.\ 90\%).
+  \item Si la cobertura es uniforme (intervalos no adaptativos), motivar
+        la implementación de \textit{Conformalized Quantile Regression} (CQR),
+        que produce intervalos de ancho variable según la dificultad local.
+\end{itemize}
+
+\subsection{Fase 2 — Redes de Varianza}
+
+Extensión de las arquitecturas DL existentes para producir simultáneamente
+media $\hat{\mu}$ y varianza $\hat{\sigma}^2$, entrenadas con pérdida
+de log-verosimilitud gaussiana negativa (Gaussian NLL):
+\begin{equation}
+  \mathcal{L}_\text{NLL} = \frac{1}{N}\sum_{i=1}^{N}
+    \left[\frac{(y_i - \hat{\mu}_i)^2}{2\hat{\sigma}_i^2} + \frac{1}{2}\ln\hat{\sigma}_i^2\right]
+\end{equation}
+
+Métricas de evaluación: calibración (ECE), sharpness, y CRPS (\textit{Continuous
+Ranked Probability Score}).
+
+\subsection{Fase 3 — Métodos Bayesianos}
+
+Definir e implementar al menos una variante bayesiana. Los candidatos son:
+(i)~MC Dropout, (ii)~Deep Ensemble (múltiples cabezas con inicializaciones distintas),
+o (iii)~capas Bayesianas (BNN). El objetivo es obtener descomposición de incertidumbre
+en componente \textit{aleatórica} (ruido irreducible) y \textit{epistémica} (incertidumbre
+del modelo).
+
+\subsection{Fase 4 — Tablas comparativas y figuras}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item Completar \texttt{scripts/08\_results\_table.py} para leer todos los
+        \texttt{summary.json} y producir tablas en CSV y \LaTeX{}.
+  \item Guardar \texttt{y\_true} / \texttt{y\_pred} del test en disco para:
+        \begin{itemize}
+          \item Gráficas de dispersión error vs.\ predicción.
+          \item Series de tiempo de un período representativo.
+          \item Distribución del error por hora del día.
+        \end{itemize}
+  \item Figuras de barras comparativas por horizonte (estilo publicación, matplotlib).
+\end{itemize}
+
+% ================================================================
+\section{Conclusiones Parciales}
+% ================================================================
+
+Los modelos de aprendizaje profundo con información satelital (ResNet+LSTM y
+GraphSAGE+LSTM) superan consistentemente tanto a la persistencia como a SARIMA
+en los horizontes de 3 y 6 horas, con reducciones de RMSE diurno del orden del
+37--63\% según horizonte y sitio.
+
+El horizonte de 1 hora sigue siendo un desafío: la persistencia es difícil de
+superar y los modelos DL muestran habilidad negativa o marginal en El Paso.
+Este comportamiento es consistente con la literatura e indica que la mayor parte
+de la información predictiva para 1 hora ya está contenida en la última observación.
+
+La optimización de hiperparámetros vía Optuna muestra mejoras moderadas para
+6 horas en El Paso (de $+0.592$ a $+0.631$), pero los runs están incompletos y
+no permiten conclusiones definitivas.
+
+La implementación de cuantificación de incertidumbre es el siguiente paso
+fundamental para que el sistema sea útil en aplicaciones reales de operación
+de la red eléctrica.
+
+% ================================================================
+% Bibliografía (placeholder)
+% ================================================================
+% \bibliographystyle{plainnat}
+% \bibliography{referencias}
+
+\end{document}
