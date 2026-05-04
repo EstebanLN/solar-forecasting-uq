@@ -1,0 +1,119 @@
+{
+  "run_name": "uniandes_H36_L24_P16_seed13_20260502_112159",
+  "study_name": "graphsage_lstm_uniandes_P16",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 13,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h6",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_optuna/uniandes_H36_L24_P16_seed13_20260502_112159"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 36,
+    "history_hours": 4.0,
+    "horizon_hours": 6.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "n_nodes": 256,
+    "n_edges": 1860,
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 180.78839786820285,
+    "y_std_train": 283.1064661153594,
+    "y_percentiles_train": [
+      0.0,
+      2.202,
+      628.0594000000003,
+      858.5459999999997,
+      1088.74274
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54470,
+      "rmse": 419.8303181060779,
+      "mae": 281.04479528180656,
+      "n_day": 25215,
+      "rmse_day": 498.6695422994848,
+      "mae_day": 398.23299048185606,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 12406,
+      "rmse": 378.32913327097435,
+      "mae": 247.05014589714656,
+      "n_day": 5467,
+      "rmse_day": 462.17602240706213,
+      "mae_day": 370.62950722516916,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12075,
+      "rmse": 389.517844176586,
+      "mae": 250.79533714285714,
+      "n_day": 5465,
+      "rmse_day": 470.92567245567665,
+      "mae_day": 369.5877123513266,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 20,
+    "best_trial_number": 4,
+    "best_value_val_rmse_day": 273.83602583287876,
+    "best_params": {
+      "hidden_g": 96,
+      "n_sage_layers": 4,
+      "hidden_t": 128,
+      "n_lstm_layers": 1,
+      "input_bn": true,
+      "concat_agg": true,
+      "dropout_head": 0.1,
+      "lr": 0.0005984219407086397,
+      "weight_decay": 3.597010175734738e-05,
+      "batch_size": 16
+    }
+  },
+  "best_model": {
+    "arch": "GraphSAGE_LSTM (improved)",
+    "best_epoch": 9,
+    "train_seconds_total": 4965.958189249039,
+    "n_params": 191329,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_optuna/uniandes_H36_L24_P16_seed13_20260502_112159/best_model.pt",
+    "final_val": {
+      "n": 12407,
+      "rmse": 214.87581069699434,
+      "mae": 143.58752628097972,
+      "n_day": 5468,
+      "rmse_day": 277.13612959421016,
+      "mae_day": 218.77138790390137,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.4320400101382328,
+      "skill_day_vs_persistence": 0.4003667084439929
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 226.0400128444916,
+      "mae": 154.5864524496959,
+      "n_day": 5465,
+      "rmse_day": 278.2242000975481,
+      "mae_day": 225.04963843929363,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.4196927914244235,
+      "skill_day_vs_persistence": 0.40919721227613937
+    }
+  }
+}
