@@ -5,8 +5,10 @@
 # Saltea automáticamente cualquier run que ya tenga summary.json.
 #
 # Uso:
-#   bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|all] [uniandes|elpaso|all]
-#   bash run_sequential.sh resnet_optuna uniandes   # solo resnet, solo uniandes
+#   bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|sarima|all] [uniandes|elpaso|all]
+#   bash run_sequential.sh gsage_optuna               # solo GraphSAGE Optuna
+#   bash run_sequential.sh sarima uniandes            # solo SARIMA uniandes
+#   bash run_sequential.sh resnet_optuna uniandes     # solo resnet, solo uniandes
 # ================================================================
 set -uo pipefail   # sin -e: un run fallido loguea el error y sigue al siguiente
 
@@ -29,6 +31,23 @@ for f in glob.glob(f"{runs_dir}/*/summary.json"):
         if (d.get("site") == site
                 and d.get("seed") == seed
                 and abs(d.get("temporal", {}).get("horizon_hours", -1) - hours) < 0.01):
+            sys.exit(0)
+    except Exception:
+        pass
+sys.exit(1)
+PYEOF
+}
+
+# Devuelve 0 si ya existe un run SARIMA completo (3 horizontes) para este sitio
+sarima_done() {
+    local site=$1
+    python3 - "runs/sarima" "$site" <<'PYEOF'
+import json, glob, sys
+runs_dir, site = sys.argv[1], sys.argv[2]
+for f in glob.glob(f"{runs_dir}/*/summary.json"):
+    try:
+        d = json.load(open(f))
+        if d.get("site") == site and len(d.get("results", {})) >= 3:
             sys.exit(0)
     except Exception:
         pass
@@ -137,6 +156,31 @@ run_optuna_gsage() {
 }
 
 # ----------------------------------------------------------------
+# SARIMA baseline (una ejecución por sitio cubre h1, h3, h6)
+# ----------------------------------------------------------------
+run_sarima() {
+    echo ""
+    echo "=== SARIMA baseline [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        if sarima_done "$site"; then
+            echo "[SKIP] sarima site=${site} — ya existe summary.json con 3 horizontes"
+            continue
+        fi
+        local logfile="logs/sarima_${site}.log"
+        echo "[RUN ] sarima site=${site} → ${logfile}"
+        if .venv/bin/python scripts/05_sarima_baseline.py \
+                --site "$site" --hours_ahead 1 3 6 \
+                > "$logfile" 2>&1; then
+            echo "[DONE] sarima site=${site}"
+        else
+            echo "[FAIL] sarima site=${site} — ver ${logfile}"
+            FAILED_RUNS+=("sarima ${site}")
+        fi
+    done
+}
+
+# ----------------------------------------------------------------
 # Dispatch
 # ----------------------------------------------------------------
 case "$GROUP" in
@@ -154,14 +198,18 @@ case "$GROUP" in
     gsage_optuna)
         run_optuna_gsage
         ;;
+    sarima)
+        run_sarima
+        ;;
     all)
         run_baseline_resnet
         run_baseline_gsage
         run_optuna_resnet
         run_optuna_gsage
+        run_sarima
         ;;
     *)
-        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|all] [uniandes|elpaso|all]"
+        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|sarima|all] [uniandes|elpaso|all]"
         exit 1
         ;;
 esac
