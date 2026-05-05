@@ -352,7 +352,7 @@ def _save_markdown(table: pd.DataFrame, sites: list, horizons: list, path: Path)
                 skill_s = _fmt(r.get("skill_day_mean"), r.get("skill_day_std"), ".3f")
                 seeds_s = _seeds_status(int(r.get("n_seeds", 0)), model)
                 lines.append(f"| {model} | {rmse_s} | {skill_s} | {seeds_s} |")
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 # ──────────────────────────────────────────────────────────────────────
