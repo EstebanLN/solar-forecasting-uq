@@ -156,6 +156,25 @@ run_optuna_gsage() {
 }
 
 # ----------------------------------------------------------------
+# Optuna: FlatMLP  (24 runs × 50 trials, n_jobs=2)
+# ----------------------------------------------------------------
+run_optuna_mlp() {
+    echo ""
+    echo "=== FlatMLP Optuna [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        for hours in 1 3 6; do
+            for seed in 42 1 7 13; do
+                run_one "optuna_mlp" "runs/mlp_optuna" \
+                    "scripts/06_mlp_optuna.py" \
+                    "$site" "$hours" "$seed" \
+                    --n_trials 50
+            done
+        done
+    done
+}
+
+# ----------------------------------------------------------------
 # SARIMA baseline (una ejecución por sitio cubre h1, h3, h6)
 # ----------------------------------------------------------------
 run_sarima() {
@@ -191,12 +210,16 @@ case "$GROUP" in
     optuna)
         run_optuna_resnet
         run_optuna_gsage
+        run_optuna_mlp
         ;;
     resnet_optuna)
         run_optuna_resnet
         ;;
     gsage_optuna)
         run_optuna_gsage
+        ;;
+    mlp_optuna)
+        run_optuna_mlp
         ;;
     sarima)
         run_sarima
@@ -206,10 +229,11 @@ case "$GROUP" in
         run_baseline_gsage
         run_optuna_resnet
         run_optuna_gsage
+        run_optuna_mlp
         run_sarima
         ;;
     *)
-        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|sarima|all] [uniandes|elpaso|all]"
+        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|mlp_optuna|sarima|all] [uniandes|elpaso|all]"
         exit 1
         ;;
 esac

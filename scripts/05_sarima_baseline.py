@@ -141,6 +141,10 @@ def fit_and_forecast(
         result = model.fit(disp=False, maxiter=200)
 
     fc = result.forecast(steps=n_forecast)
+    # statsmodels may return RangeIndex when k_train has no inferred freq
+    if not isinstance(fc.index, pd.DatetimeIndex):
+        start = k_train.index[-1] + pd.Timedelta(hours=1)
+        fc.index = pd.date_range(start=start, periods=len(fc), freq="1h")
     fc = fc.clip(0.0, K_MAX)
     return fc
 
