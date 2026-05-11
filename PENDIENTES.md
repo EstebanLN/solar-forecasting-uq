@@ -1,86 +1,86 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-04-26_
+_Actualizado: 2026-05-11_
 
 ---
 
-## Estado actual de runs (servidor: /srv/projects/Proyecto_e_ladino/)
+## Estado actual de runs
 
-| Modelo               | Runs completos | Observaciones                                          |
-|----------------------|---------------|--------------------------------------------------------|
-| resnet_lstm          | 30 / 30       | 2 sitios × 3 horizontes × 5 semillas. Solo val metrics en summary.json (test metrics en servidor pero no subidas a git) |
-| graphsage_lstm       | 30 / 30       | Ídem                                                   |
-| resnet_lstm_optuna   | 6 / 24        | 2 sitios × 3H × 4 seeds = 24 objetivo. Sí tienen final_test en summary.json |
-| graphsage_lstm_optuna| 5 / 24        | Ídem                                                   |
-| sarima               | 1 / 2         | Solo elpaso. Falta uniandes.                           |
+| Modelo                | Runs completos | Observaciones                                                    |
+|-----------------------|---------------|------------------------------------------------------------------|
+| resnet_lstm           | 30 / 30       | 2 sitios × 3H × 5 seeds. Val metrics en summary.json            |
+| graphsage_lstm        | 30 / 30       | Ídem                                                             |
+| resnet_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
+| graphsage_lstm_optuna | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
+| sarima                | **2 / 2**     | COMPLETO ✓ — uniandes corrido el 2026-05-11                      |
+| mlp_optuna            | 0 / 24        | EN CURSO — 2 procesos paralelos lanzados 2026-05-11              |
 
-**Comando para seguir corriendo Optuna en el servidor:**
-```bash
-bash run_sequential.sh optuna           # ambas archs, ambos sitios
-bash run_sequential.sh resnet_optuna uniandes   # solo resnet, solo uniandes
-bash run_sequential.sh gsage_optuna elpaso      # solo gsage, solo elpaso
-```
+`run_sequential.sh` MLP corriendo: `logs/run_mlp_uniandes.out` y `logs/run_mlp_elpaso.out`.
 
 ---
 
-## Pendiente de implementar (UQ)
+## Pendiente de implementar — Incertidumbre y métodos bayesianos
 
-### Fase 1 — Conformal Prediction (empezada)
+### Fase 1 — Conformal Prediction (implementada, falta correr)
 - [x] `src/solar_uq/conformal.py` — clase `SplitCP` con calibrate/predict/evaluate
-- [x] `src/solar_uq/train.py` — función `collect_predictions(model, loader, normalizer, device)`
+- [x] `src/solar_uq/train.py` — `collect_predictions(model, loader, normalizer, device)`
 - [x] `scripts/07_conformal_explore.py` — exploración Split CP sobre un run existente
-- [ ] Correr `07_conformal_explore.py` en el servidor sobre runs representativos
-- [ ] Evaluar si cobertura_day ≈ target_coverage (si no → motiva métodos adaptativos)
-- [ ] Decidir si implementar CQR (Conformalized Quantile Regression) para intervalos adaptativos
+- [ ] Correr `07_conformal_explore.py` en runs representativos (graphsage elpaso h6 seed42)
+- [ ] Evaluar cobertura_day ≈ target_coverage → decide si implementar CQR
 
-### Fase 2 — Variance Networks
-- [ ] Implementar cabeza de varianza (output: μ, σ²) con loss NLL gaussiana
-- [ ] Script de entrenamiento `05_variance_net_baseline.py`
-- [ ] Evaluación: calibración, sharpness, CRPS
+### Fase 2 — Variance Networks (NLL)
+- [ ] Cabeza de varianza (output μ, σ²) con loss NLL gaussiana en `src/solar_uq/`
+- [ ] Script `09_variance_net.py` — entrenamiento y evaluación (calibración, sharpness, CRPS)
 
-### Fase 3 — Cooperative Bayesian
-- [ ] Definir qué variante: MC Dropout, Deep Ensemble, o Bayesian layers (BNN)
-- [ ] Implementar y entrenar
-- [ ] Evaluación: descomposición aleatoria/epistémica
+### Fase 3 — SGLD (Stochastic Gradient Langevin Dynamics) ← PRÓXIMO
+- [ ] `scripts/10_sgld_train.py` — entrenamiento con inyección de ruido de Langevin
+  - 1 000 épocas totales; guardar checkpoint cada 100 épocas (10 muestras de la posterior)
+  - Guardar: epoch, loss_train, loss_val, params snapshot → `runs/sgld/{site}_{H}_{seed}/`
+  - Estructura de guardado: `checkpoint_ep{epoch:04d}.pt` + `sgld_trace.json` con métricas
+- [ ] Inferencia: ensemble sobre las 10 muestras → media (predicción) + std (incertidumbre epistémica)
+- [ ] Evaluación: CRPS, cobertura de intervalos, skill_day con predicción SGLD
+- [ ] Notebook `notebooks/06_sgld_posterior.ipynb` — visualizar cadenas de parámetros (convergencia, autocorrelación)
+- [ ] Extraer parámetros de la distribución a posteriori:
+  - Media y varianza por capa/parámetro
+  - Diagnósticos de convergencia (R̂ de Gelman-Rubin si se corren varias cadenas)
+  - Correlación entre parámetros relevantes (pesos de cabeza de salida)
 
-### Fase 4 — Comparación y paper
-- [ ] `scripts/08_results_table.py` — leer todos los summary.json y producir tabla
-  comparativa (mean ± std por arch/site/horizonte) → CSV + LaTeX
-- [ ] Script de figuras de barras comparativas (matplotlib estilo publicación)
-- [ ] Guardar y_true / y_pred del test set en disco para plots detallados
-  (scatter, serie de tiempo, distribución de errores por hora del día)
-- [ ] SARIMA para uniandes (falta)
+### Fase 4 — Baseline MLP + Optuna
+- [ ] `scripts/06_mlp_optuna.py` — red completamente conectada (sin graph, con/sin LSTM)
+  - Hiperparámetros: n_layers, hidden_dim, dropout, lr, weight_decay
+  - Mismo protocolo Optuna (n_trials=50, 4 seeds, 2 sitios, 3 horizontes)
+- [ ] Integrar resultados en `runs/mlp_optuna/` con mismo formato summary.json
 
 ---
 
-## Cambios recientes en scripts (2026-04-26)
+## Pendiente — Resultados y paper
 
-### Scripts 05 y 06 — guardado de arch_hparams en checkpoint
-Los cuatro scripts (`05_resnet_lstm_baseline.py`, `05_graphsage_lstm_baseline.py`,
-`06_resnet_lstm_optuna.py`, `06_graphsage_lstm_optuna.py`) ahora guardan
-`"arch_hparams"` en el meta del checkpoint `.pt`.
+### Tabla comparativa y figuras
+- [ ] Correr `scripts/08_results_table.py` con todos los runs actuales → `results/summary.csv`
+- [ ] Figuras de barras comparativas (matplotlib estilo publicación) por horizonte/sitio
+- [ ] Guardar y_true / y_pred del test set en disco (scatter, serie de tiempo, distribución por hora)
+- [x] SARIMA para uniandes (skill_day: h1=0.081, h3=0.353, h6=0.435)
 
-**Por qué:** `07_conformal_explore.py` necesita reconstruir el modelo exacto
-al cargar un `.pt`. Sin arch_hparams el script cae en defaults hardcodeados
-que no coinciden con los hiperparámetros reales de los runs Optuna.
-
-**Impacto en runs ya hechos:** los 72 runs existentes NO tienen arch_hparams
-en su .pt. Para esos, `07_conformal_explore.py` usa los defaults del CLI
-(que sí coinciden con los baseline runs, pero NO con los Optuna).
-Solución: pasar los hparams del Optuna manualmente vía CLI, o re-entrenar.
+### Documento de artículo
+- [ ] Definir venue objetivo (NeurIPS workshop, Solar Energy journal, Applied Energy, etc.)
+- [ ] Estructura base del LaTeX: Abstract, Intro, Related Work, Metodología, Experimentos, Conclusión
+- [ ] Sección de datos: descripción El Paso / Uniandes, preprocesamiento, split temporal
+- [ ] Sección de modelos: ResNet-LSTM, GraphSAGE-LSTM, MLP, SARIMA, persistencia
+- [ ] Sección UQ: Conformal, Variance Net, SGLD posterior
+- [ ] Tabla principal de resultados (RMSE, MAE, skill_day, CRPS) por arch/site/horizon
+- [ ] Figuras: intervalos de predicción, descomposición incertidumbre
 
 ---
 
 ## Notas de resultados clave (Optuna, test set)
 
-| Arch          | Sitio    | H   | skill_day |
-|---------------|----------|-----|-----------|
-| graphsage     | elpaso   | 6h  | **0.631** |
-| resnet        | elpaso   | 3h  | 0.479     |
-| graphsage     | uniandes | 6h  | 0.428     |
-| graphsage     | uniandes | 1h  | 0.144–0.166 |
-| resnet        | elpaso   | 1h  | negativo  |
+| Arch      | Sitio    | H   | skill_day      |
+|-----------|----------|-----|----------------|
+| graphsage | elpaso   | 6h  | **0.631**      |
+| resnet    | elpaso   | 3h  | 0.479          |
+| graphsage | uniandes | 6h  | 0.428          |
+| graphsage | uniandes | 1h  | 0.144–0.166    |
+| resnet    | elpaso   | 1h  | negativo       |
 
-H=1h es el horizonte más difícil (skill_day mixto o negativo).
 SARIMA peor que persistencia en todos los horizontes (skill_day < 0 en elpaso).
 
 ---
@@ -90,5 +90,26 @@ SARIMA peor que persistencia en todos los horizontes (skill_day < 0 en elpaso).
 - **Split:** train 2022-2023 | val 2024-H1 | test 2024-H2→2025
 - **Métrica primaria:** rmse_day (RMSE muestras diurnas, GHI ≥ 20 W/m²)
 - **Baseline:** persistencia — ŷ(t+H) = GHI(t)
-- **Frecuencia:** 10 min | Historia L=24 pasos (4h) | Semillas: 42, 1, 7, 13, 100
+- **Frecuencia:** 10 min | Historia L=24 pasos (4h) | Seeds Optuna: 42, 1, 7, 13
 - **Datos en el servidor, nunca en git** (ver .gitignore)
+
+---
+
+## Cambios recientes en scripts (2026-05-11)
+
+### SARIMA bug fix — `fit_and_forecast()` en `05_sarima_baseline.py`
+statsmodels `forecast()` retorna `RangeIndex` cuando `k_train` no tiene frecuencia inferida.
+Fix: detectar `isinstance(fc.index, pd.DatetimeIndex)` y reconstruir el índice desde `k_train.index[-1] + 1h`.
+
+### FlatMLP baseline — nuevos archivos
+- `src/solar_uq/models/mlp.py` — `FlatMLP`: spatial avg-pool sobre P×P, flatten L×C, MLP con LayerNorm
+- `scripts/06_mlp_optuna.py` — HPO idéntico al de ResNet/GraphSAGE (50 trials, 2 sitios, 3H, 4 seeds)
+- `run_sequential.sh` — nuevo grupo `mlp_optuna`
+
+---
+
+## Cambios recientes en scripts (2026-04-26)
+
+Los cuatro scripts baseline/optuna guardan `"arch_hparams"` en el meta del checkpoint `.pt`
+para permitir reconstrucción exacta del modelo en `07_conformal_explore.py`.
+Los 72 runs anteriores al 2026-04-26 no tienen este campo → usar defaults CLI o re-entrenar.

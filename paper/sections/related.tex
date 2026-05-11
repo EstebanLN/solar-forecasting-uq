@@ -1,0 +1,69 @@
+% =============================================================
+\section{Related Work}
+\label{sec:related}
+% =============================================================
+
+\subsection{Short-term solar irradiance forecasting}
+
+Short-term GHI forecasting methods span a wide spectrum from statistical time-series
+models to physically-based NWP and data-driven machine learning
+\cite{diagne2013,voyant2017}. For intra-hour and sub-day horizons (0--6~h),
+satellite-based and ground-observation methods generally outperform NWP, which
+requires several hours of spin-up time \cite{perez2013}.
+
+\textbf{Persistence} (assuming future irradiance equals the most recent observation)
+is the standard benchmark for short-term forecasting. It is competitive at very
+short horizons (under 30~minutes) when irradiance changes slowly, but degrades
+rapidly beyond one hour \cite{lonij2013}.
+
+\textbf{Statistical models} such as ARIMA and its seasonal variant SARIMA have
+been applied to GHI series after removing the deterministic clear-sky envelope
+\cite{reikard2009,bacher2009}. Working on the clear-sky index $k_t = \text{GHI}/\ghics$
+improves stationarity and allows standard time-series machinery at hourly resolution.
+Despite their simplicity, seasonal ARIMA models can be competitive at multi-hour
+horizons in climates with regular diurnal patterns \cite{pedro2012}.
+
+\subsection{Deep learning with satellite imagery}
+
+CNN-based architectures applied to sequences of geostationary satellite patches
+have become the dominant approach for satellite-based GHI forecasting. Early
+work showed that cloud-motion vectors extracted from visible channels improve
+short-term forecasts \cite{chow2011}. More recent studies feed raw satellite
+reflectances directly into CNNs followed by fully-connected regressors or LSTMs
+\cite{huertas2018,paletta2021,feng2022}. The encoder-decoder design, where a CNN
+extracts per-frame spatial embeddings that are then processed by a recurrent model,
+has shown consistent gains over purely spatial or purely temporal baselines
+\cite{wang2019}.
+
+Attention-based architectures including Vision Transformers (ViT) and Swin
+Transformers have also been applied to satellite-based solar forecasting
+\cite{acikgoz2022,liu2023}, achieving competitive performance at the cost of
+increased parameter count and data requirements. For moderate dataset sizes such
+as those encountered in single-site studies, CNN+LSTM hybrids remain a practical
+and well-characterised baseline.
+
+\subsection{Graph neural networks for spatial data}
+
+GraphSAGE \cite{hamilton2017} is an inductive GNN that learns aggregation
+functions over local neighbourhoods, enabling generalisation to unseen nodes.
+It has been applied to traffic forecasting \cite{li2018}, air quality prediction,
+and wind power generation \cite{kazem2021}, where spatial proximity defines the
+graph topology. In the context of satellite imagery, representing pixels as graph
+nodes allows the model to capture irregular spatial dependencies that periodic
+CNN filters may miss, such as cloud boundaries or fractional cloud cover patterns.
+
+Closest to our work, \cite{ji2022} applied a GNN-LSTM model to multi-site solar
+irradiance forecasting, treating monitoring stations as nodes. Our approach differs
+in that we build the graph within a single satellite patch (pixel level), without
+requiring multi-station measurements, which is more practical for single-site
+deployment.
+
+\subsection{Forecasting in tropical and Andean climates}
+
+Most GHI forecasting benchmarks are conducted in temperate or semi-arid climates
+(Europe, southwestern United States, Australia) \cite{paletta2022,benchmarks2023}.
+Tropical Andean sites present distinct challenges: convective cloud formation is
+driven by topographic lifting and moisture advection, producing strong intraday
+variability concentrated in the afternoon \cite{poveda2004}. Few published studies
+address satellite-based forecasting for Colombian or equivalent tropical mountain
+conditions, motivating the present work.

@@ -1,0 +1,232 @@
+% =============================================================
+\section{Methodology}
+\label{sec:methodology}
+% =============================================================
+
+\subsection{Study sites}
+
+Experiments are conducted at two meteorological stations in Colombia that represent
+climatologically contrasting regimes (Table~\ref{tab:sites}).
+
+\begin{table}[t]
+  \centering
+  \caption{Study site metadata.}
+  \label{tab:sites}
+  \begin{tabular}{lcc}
+    \toprule
+    & \textbf{El Paso (César)} & \textbf{Uniandes (Bogotá)} \\
+    \midrule
+    Latitude  & $9.737°\text{N}$ & $4.602°\text{N}$ \\
+    Longitude & $73.695°\text{W}$ & $74.066°\text{W}$ \\
+    Elevation & 50~m a.s.l.      & 2\,600~m a.s.l.  \\
+    Climate   & Tropical semi-arid & Equatorial mountain \\
+    Avg.\ GHI & ${\sim}$5.5~kWh/m²/day & ${\sim}$4.2~kWh/m²/day \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{El Paso} is located in the lowland Caribbean region of C{\'e}sar department,
+characterised by high annual irradiance, predominantly clear-sky conditions, and
+dry-season cloud cover driven by the Inter-Tropical Convergence Zone (ITCZ).
+
+\textbf{Universidad de los Andes} (referred to as Uniandes) is an instrumented
+rooftop station in the Colombian Andean city of Bogot{\'a}. At 2\,600~m above sea
+level, it experiences the equatorial bimodal rainfall regime with intense convective
+cloud formation typically peaking in the early afternoon, producing sharp intraday
+GHI drops.
+
+\subsection{Data}
+
+\subsubsection{Ground measurements}
+
+GHI is measured at 10-minute resolution and stored in time-zone-aware (UTC) Parquet
+files. Missing values account for less than 2\% of the record at both sites and are
+excluded during dataset construction.
+
+\subsubsection{Satellite data}
+
+We use the GOES-16 ABI Level-2 Multi-Band Cloud and Moisture Imagery Product
+(ABI-L2-MCMIPF), which provides all 16 ABI spectral channels at a unified
+10-minute cadence and ${\sim}2$~km spatial resolution in the visible bands.
+For each observation timestamp, a $16 \times 16$ pixel patch ($P = 16$) centred
+on the target site is extracted, yielding a tensor of shape $(C, P, P) = (16, 16, 16)$
+in units consistent with each band's native reflectance or brightness temperature.
+
+\subsubsection{Dataset construction and temporal split}
+
+Forecast samples are constructed as pairs $(X, y)$ where the input
+$X \in \R^{L \times C \times P \times P}$ is a sequence of $L = 24$ satellite
+patch frames covering the most recent 4 hours of observation, and the target
+$y \in \R$ is the GHI at the site $H$ steps ahead. We consider
+$H \in \{6, 18, 36\}$ steps (corresponding to 1, 3, and 6 hours at 10-minute
+resolution).
+
+To prevent data leakage, train, validation, and test sets are defined by
+non-overlapping calendar blocks (Table~\ref{tab:splits}).
+
+\begin{table}[t]
+  \centering
+  \caption{Temporal data splits.}
+  \label{tab:splits}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llccc}
+    \toprule
+    \textbf{Site} & \textbf{Split} & \textbf{Start} & \textbf{End} & \textbf{Samples (approx.)} \\
+    \midrule
+    \multirow{3}{*}{El Paso}
+      & Train & 2022-03-01 & 2023-06-30 & 69\,984 \\
+      & Val   & 2023-07-01 & 2023-10-31 & 17\,568 \\
+      & Test  & 2023-11-01 & 2024-03-07 & 18\,288 \\
+    \midrule
+    \multirow{3}{*}{Uniandes}
+      & Train & 2023-09-01 & 2024-09-30 & 56\,850 \\
+      & Val   & 2024-10-01 & 2024-12-31 & 13\,104 \\
+      & Test  & 2025-01-01 & 2025-03-28 & 12\,384 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Models}
+
+\subsubsection{Persistence baseline}
+
+The persistence model assumes irradiance is unchanged over the forecast horizon:
+$\hat{y}(t+H) = \text{GHI}(t)$. It is optimal under no-change dynamics and
+serves as the standard benchmark for short-term solar forecasting.
+
+\subsubsection{SARIMAX on the clear-sky index}
+\label{ssec:sarima}
+
+Raw GHI is non-stationary due to the deterministic diurnal envelope. We first
+compute the clear-sky index $k_t$:
+\begin{equation}
+  k_t = \frac{\text{GHI}_t}{\ghics_t}, \quad
+  k_t = 0 \text{ if } \ghics_t < 10\,\text{W/m}^2
+  \label{eq:csi}
+\end{equation}
+where $\ghics$ is the Ineichen clear-sky model \cite{ineichen2002} evaluated with
+\texttt{pvlib} \cite{holmgren2018}. The series $k_t$ lies in $[0, 1.5]$ and is
+more stationary than raw GHI.
+
+Because the 10-minute resolution would require an intractable seasonal period of
+$m = 144$, we resample $k_t$ to hourly resolution ($m = 24$). Order selection
+via ADF/KPSS tests, ACF/PACF analysis, and AIC grid search \cite{hyndman2018}
+yields the model:
+\begin{equation}
+  \text{SARIMAX}(2,1,2)(1,1,1)_{24}
+  \label{eq:sarima}
+\end{equation}
+
+The fitted model forecasts $k_t$ out-of-sample; the final GHI prediction is
+recovered as $\hat{\text{GHI}}(t) = \hat{k}(t)\cdot\ghics(t)$.
+
+\subsubsection{ResNet-LSTM}
+\label{ssec:resnet}
+
+The ResNet-LSTM encoder-decoder processes the patch sequence $X$ as follows.
+A lightweight ResNet \cite{he2016} (three residual stages with stride-2 downsampling,
+followed by global average pooling) encodes each frame $(C, P, P)$ into a
+$d_e$-dimensional embedding $\mathbf{e}_\ell \in \R^{d_e}$. The sequence
+$(\mathbf{e}_1, \ldots, \mathbf{e}_L)$ is then processed by a single- or two-layer
+LSTM \cite{hochreiter1997} whose final hidden state is projected to the scalar
+output $\hat{y}$.
+
+The ResNet encoder has three hyperparameters: base channel width
+(\texttt{base}~$\in\{16, 24, 32, 48\}$), embedding dimension
+(\texttt{emb\_dim}~$\in\{64, 128, 192\}$), and head dropout. The total parameter
+count ranges from approximately 50k to 500k depending on the configuration.
+
+\subsubsection{GraphSAGE-LSTM}
+\label{ssec:gsage}
+
+Instead of convolutional layers, we model the spatial patch as a graph
+$G = (V, E)$ where each pixel is a node ($|V| = P^2 = 256$) and edges connect
+8-connected neighbours (horizontal, vertical, diagonal). Node features at step $\ell$
+are the $C = 16$ channel values at that pixel.
+
+GraphSAGE \cite{hamilton2017} updates each node's representation by aggregating
+its neighbourhood:
+\begin{equation}
+  \mathbf{h}_v^{(k)} = \sigma\!\left(
+    \mathbf{W}^{(k)} \left[ \mathbf{h}_v^{(k-1)} \Vert
+    \text{MEAN}_{u \in \mathcal{N}(v)} \mathbf{h}_u^{(k-1)} \right]
+  \right)
+  \label{eq:sage}
+\end{equation}
+where $\mathcal{N}(v)$ denotes the neighbours of $v$, $\Vert$ is concatenation,
+and $\sigma$ is ReLU. After $K$ layers (K~$\in\{2,3,4\}$), a mean readout over
+all nodes yields the graph-level embedding $\mathbf{g}_\ell \in \R^{d_g}$.
+The sequence $(\mathbf{g}_1, \ldots, \mathbf{g}_L)$ is then processed by an
+LSTM identical to that of the ResNet-LSTM variant.
+
+The edge index is a fixed buffer registered with the model, so both standard
+mini-batch DataLoaders and the existing training loop are reused without
+modification.
+
+\subsubsection{Flat MLP baseline (under evaluation)}
+\label{ssec:mlp}
+
+As an ablation of spatial structure, we include a \textbf{FlatMLP} baseline that
+applies global average pooling over the $P \times P$ spatial dimensions of each
+frame, yielding a flattened feature vector of size $L \times C = 24 \times 16 = 384$.
+This vector is passed through a multi-layer perceptron with \texttt{LayerNorm} and
+\texttt{ReLU} activations. The FlatMLP uses no spatial inductive bias and serves
+to quantify the benefit of spatial encoding. Results for this model are pending
+and will be included in the final version.
+
+\subsection{Hyperparameter optimisation}
+\label{ssec:optuna}
+
+For ResNet-LSTM and GraphSAGE-LSTM we use Optuna \cite{akiba2019} with the TPE
+sampler and Median pruner. Each study runs 50 trials with $n_\text{jobs}=2$.
+The search space is summarised in Table~\ref{tab:hpspace}.
+
+\begin{table}[t]
+  \centering
+  \caption{Optuna hyperparameter search spaces.}
+  \label{tab:hpspace}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{lll}
+    \toprule
+    \textbf{Hyperparameter} & \textbf{ResNet-LSTM} & \textbf{GraphSAGE-LSTM} \\
+    \midrule
+    \texttt{base} / \texttt{hidden\_g}  & $\{16,24,32,48\}$   & $\{64,96,128,192\}$ \\
+    \texttt{emb\_dim} / \texttt{n\_sage\_layers} & $\{64,128,192\}$ & $\{2,3,4\}$   \\
+    \texttt{hidden\_t} (LSTM)  & $\{64,128,192\}$  & $\{64,96,128\}$    \\
+    \texttt{n\_lstm\_layers}   & $\{1,2\}$         & $\{1,2\}$          \\
+    \texttt{dropout}           & $\{0,0.1,0.2,0.3\}$ & $\{0,0.1,0.2\}$  \\
+    \texttt{lr}                & $[3\text{e-}4, 3\text{e-}3]$ & $[5\text{e-}5, 2\text{e-}3]$ \\
+    \texttt{weight\_decay}     & $[10^{-6}, 10^{-3}]$ & $[10^{-6}, 10^{-3}]$ \\
+    \texttt{batch\_size}       & $\{16,32,64\}$    & $\{8,16,32\}$      \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The Optuna study identifies the best trial on validation $\rmseday$; the winning
+configuration is then retrained for up to 30~epochs with patience~8 and evaluated
+on the held-out test set.
+
+\subsection{Training protocol}
+
+All deep-learning models are trained with the Adam optimiser minimising the MSE
+loss on normalised targets ($y_\text{norm} = (y - \bar{y}) / s_y$, with $\bar{y}$
+and $s_y$ estimated from the training set). Training uses early stopping with
+patience~6 (trials) or~8 (final retraining). Automatic Mixed Precision (AMP) is
+enabled when a GPU is available. Each experiment is replicated with four seeds
+$\{42, 1, 7, 13\}$ to report mean~$\pm$~std statistics.
+
+\subsection{Evaluation metrics}
+
+Following standard practice in solar forecasting \cite{coimbra2013}, we report:
+
+\textbf{Daytime RMSE} ($\rmseday$, W/m²): RMSE computed only over test samples
+with observed $\text{GHI} \geq 20$~W/m², excluding night-time samples where all
+models trivially predict zero.
+
+\textbf{Daytime skill score} ($\skillday$): normalised improvement over persistence,
+\begin{equation}
+  \skillday = 1 - \frac{\rmseday(\text{model})}{\rmseday(\text{persistence})}
+  \label{eq:skill}
+\end{equation}
+A score of 0 indicates parity with persistence; positive values indicate improvement.
+We also report $\text{MAE}_\text{day}$ for completeness.

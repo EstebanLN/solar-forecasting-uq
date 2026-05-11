@@ -1,0 +1,75 @@
+% =============================================================
+\section{Introduction}
+\label{sec:intro}
+% =============================================================
+
+Solar photovoltaic (PV) generation has grown rapidly across Latin America, with
+Colombia reaching over 1~GW of installed capacity and targeting 9~GW by 2030
+under its National Energy Plan \cite{upme2023}. Reliable short-term forecasts of
+global horizontal irradiance (GHI) are a prerequisite for efficient dispatch of
+PV-integrated power systems: they enable reserve scheduling, reduce imbalance
+penalties, and support real-time grid management. In tropical countries such as
+Colombia, the forecasting challenge is compounded by the high frequency and spatial
+heterogeneity of convective cloud systems, which can reduce surface irradiance by
+more than 80\% within minutes and are poorly captured by coarse-resolution numerical
+weather prediction (NWP) models.
+
+Satellite-based nowcasting methods bypass NWP limitations by inferring cloud
+motion and optical depth directly from geostationary imagery. Instruments such as
+the GOES-16 Advanced Baseline Imager (ABI) provide multi-spectral observations
+every 10~minutes at sub-kilometre resolution, making them well-suited for
+sub-hourly to hourly irradiance estimation and forecasting. The dominant paradigm
+couples a spatial feature extractor (applied to a patch of satellite pixels
+centred on the target site) with a temporal model that exploits the recent
+history of observed GHI or satellite state \cite{zhang2015,reno2016}.
+
+Deep learning has substantially advanced this paradigm. Convolutional neural
+networks (CNNs) applied to satellite patches learn translation-invariant spatial
+patterns associated with cloud regimes, and when combined with recurrent models
+such as LSTMs they achieve state-of-the-art performance on benchmark datasets
+\cite{alessandrini2015,huertas2018,paletta2021}. More recently, graph neural networks
+(GNNs) have emerged as an alternative spatial encoder: by representing pixels as
+nodes in a graph and learning neighbourhood aggregation rules, GNNs relax the
+translation-invariance assumption of CNNs and can capture irregular spatial
+dependencies introduced by non-uniform cloud structures \cite{hamilton2017,ji2022}.
+However, systematic comparisons of GNN-based and CNN-based encoders for GHI
+forecasting remain scarce, and none, to the best of our knowledge, address the
+tropical Andean climate.
+
+\subsection*{Contributions}
+
+This paper makes the following contributions:
+
+\begin{enumerate}
+  \item We propose \textbf{GraphSAGE-LSTM}, a model that treats a GOES-16 satellite
+        patch as an 8-connected pixel graph, applies GraphSAGE neighbourhood
+        aggregation \cite{hamilton2017}, and passes the resulting sequence of
+        graph embeddings through an LSTM to produce a point forecast.
+
+  \item We conduct a \textbf{rigorous empirical comparison} across two sites,
+        three forecast horizons (1, 3, and 6~hours), and four random seeds,
+        including Bayesian hyperparameter optimisation via Optuna \cite{akiba2019}
+        for both GraphSAGE-LSTM and ResNet-LSTM.
+
+  \item We show that GraphSAGE-LSTM \textbf{consistently outperforms} ResNet-LSTM
+        at the 6-hour horizon for the low-elevation high-irradiance site
+        ($\skillday = 0.636$ vs.\ $0.614$), while the advantage diminishes for
+        the high-altitude, high-variability site.
+
+  \item We identify a \textbf{regime-dependence} of statistical vs.\ deep-learning
+        methods: SARIMAX on the clear-sky index remains competitive at 6~hours
+        for the tropical mountain site (Bogot{\'a}), where the regular diurnal
+        cycle dominates over cloud-driven variability.
+
+  \item We provide a \textbf{fully reproducible experimental framework} including
+        manifests, patch extraction, model code, and evaluation scripts, which
+        we release openly.
+\end{enumerate}
+
+\subsection*{Paper organisation}
+
+Section~\ref{sec:related} reviews related work. Section~\ref{sec:methodology}
+describes the datasets, model architectures, training protocol, and evaluation
+metrics. Section~\ref{sec:results} presents quantitative results.
+Section~\ref{sec:discussion} analyses key findings. Section~\ref{sec:conclusion}
+concludes and outlines future work.
