@@ -1,0 +1,157 @@
+\section{Results}
+\label{sec:results}
+% =============================================================
+
+\subsection{Persistence reference}
+
+Table~\ref{tab:persistence} reports the persistence $\rmseday$ at each site and
+horizon, which defines the denominator of $\skillday$ for all models.
+
+\begin{table}[t]
+  \centering
+  \caption{Persistence test-set $\rmseday$ (W/m²). All deep-learning and
+           statistical models are compared against these values.}
+  \label{tab:persistence}
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Site} & \textbf{1h} & \textbf{3h} & \textbf{6h} \\
+    \midrule
+    El Paso   & 204.4 & 411.0 & 565.3 \\
+    Uniandes  & 293.9 & 405.0 & 470.9 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The 1-hour persistence error at El~Paso (204.4~W/m²) is notably lower than at
+Uniandes (293.9~W/m²), reflecting El~Paso's more stable clear-sky regime where
+short-horizon irradiance changes are small. At 6~hours, both sites have comparable
+absolute difficulty (565.3 vs.\ 470.9~W/m²).
+
+\subsection{Main results}
+
+Table~\ref{tab:main} reports $\rmseday$ and $\skillday$ for all models on the
+test set. Deep-learning results are mean~$\pm$~std over four seeds; statistical
+models use a single run.
+
+\begin{table*}[t]
+  \centering
+  \caption{Test-set results. $\rmseday$ in W/m². $\skillday$ relative to persistence
+           (higher is better). DL models: mean~$\pm$~std over 4 seeds.
+           Best $\skillday$ per site-horizon highlighted in \textbf{bold}.}
+  \label{tab:main}
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{llcccccc}
+    \toprule
+    & & \multicolumn{3}{c}{\textbf{El Paso (César)}} &
+         \multicolumn{3}{c}{\textbf{Uniandes (Bogotá)}} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-8}
+    \textbf{Model} & \textbf{Metric} & \textbf{1h} & \textbf{3h} & \textbf{6h}
+                                     & \textbf{1h} & \textbf{3h} & \textbf{6h} \\
+    \midrule
+    \multirow{2}{*}{Persistence}
+      & $\rmseday$ & 204.4 & 411.0 & 565.3  & 293.9 & 405.0 & 470.9 \\
+      & $\skillday$ & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 \\
+    \midrule
+    \multirow{2}{*}{SARIMAX}
+      & $\rmseday$ & 447.9 & 450.4 & 445.8 & 269.3 & 265.1 & 265.6 \\
+      & $\skillday$ & $-1.205$ & $-0.093$ & $+0.210$ & $+0.081$ & $+0.353$ & $+0.435$ \\
+    \midrule
+    \multirow{2}{*}{ResNet-LSTM}
+      & $\rmseday$ & $238.6 \pm 22.4$ & $238.5 \pm 42.7$ & $218.4 \pm 13.2$
+                   & $246.7 \pm 4.1$ & $255.7 \pm 4.8$ & $297.9 \pm 8.8$ \\
+      & $\skillday$ & $-0.167 \pm 0.110$ & $+0.420 \pm 0.104$ & $+0.614 \pm 0.023$
+                    & $+0.161 \pm 0.014$ & $+0.369 \pm 0.012$ & $+0.368 \pm 0.019$ \\
+    \midrule
+    \multirow{2}{*}{GraphSAGE-LSTM}
+      & $\rmseday$ & $244.7 \pm 8.1$ & $238.9 \pm 15.9$ & $\mathbf{206.1} \pm 7.4$
+                   & $250.8 \pm 5.1$ & $252.5 \pm 1.5$ & $274.4 \pm 3.9$ \\
+      & $\skillday$ & $-0.197 \pm 0.040$ & $+0.419 \pm 0.039$ & $\mathbf{+0.636} \pm 0.013$
+                    & $+0.147 \pm 0.017$ & $\mathbf{+0.376} \pm 0.004$ & $+0.417 \pm 0.008$ \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig1_skill_day}
+  \caption{Daytime skill score ($\skillday$) for all models at both sites across
+           three forecast horizons. Bars show mean over four seeds; error bars
+           indicate $\pm 1$ standard deviation. SARIMA and Persistence have no
+           seed variability. GraphSAGE-LSTM (Optuna) achieves the highest skill
+           at El~Paso 6h (0.636), while SARIMA leads at Uniandes 6h (0.435).}
+  \label{fig:skill}
+\end{figure*}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/fig2_rmse_day}
+  \caption{Daytime RMSE ($\rmseday$, W/m²) for all models. Dashed horizontal
+           lines show the persistence reference for each horizon group.
+           All deep-learning models substantially reduce RMSE relative to
+           persistence at 3h and 6h. SARIMA exceeds persistence RMSE at
+           El~Paso for all horizons.}
+  \label{fig:rmse}
+\end{figure*}
+
+\subsection{Horizon-by-horizon analysis}
+
+\paragraph{1-hour horizon.}
+All deep-learning models fail to beat persistence at El~Paso: both ResNet-LSTM
+($\skillday = -0.167 \pm 0.095$) and GraphSAGE-LSTM ($-0.197 \pm 0.034$) show
+negative skill, meaning they produce higher RMSE than simply repeating the last
+observation. SARIMAX is even worse ($-1.205$). At Uniandes the picture is more
+nuanced: ResNet-LSTM achieves modest positive skill ($+0.161 \pm 0.012$) and
+GraphSAGE-LSTM $+0.147 \pm 0.015$, while SARIMAX reaches $+0.081$. The key
+difference between sites is the persistence reference: El~Paso's 1-hour persistence
+RMSE (204.4~W/m²) is comparatively low because irradiance changes slowly under
+predominantly clear-sky conditions, leaving little room for improvement from data-driven
+methods. Uniandes' 1-hour persistence RMSE (293.9~W/m²) is higher due to the
+frequent cloud passages, which create more structure for the models to exploit.
+
+\paragraph{3-hour horizon.}
+Both deep-learning models outperform persistence at El~Paso by approximately
+42\% ($\skillday \approx 0.42$ for both architectures). The large standard deviation
+for ResNet-LSTM ($\pm 0.090$) reflects seed-to-seed variability, with some seeds
+achieving near-GraphSAGE performance and others considerably below. SARIMAX
+exhibits slight negative skill ($-0.093$), confirming that linear time-series
+models cannot exploit satellite spatial information.
+
+At Uniandes, DL skill scores are $+0.369$ (ResNet) and $+0.376$ (GraphSAGE),
+similar to each other and slightly below El~Paso despite the higher absolute
+persistence error. SARIMAX shows strong skill at this horizon ($+0.353$),
+approaching the DL models, which we attribute to the more regular temporal
+autocorrelation structure of the Bogot{\'a} clear-sky index.
+
+\paragraph{6-hour horizon.}
+This is the most favourable horizon for the deep-learning models.
+\textbf{GraphSAGE-LSTM achieves the best overall result}: $\rmseday = 206.1 \pm 6.4$~W/m²
+and $\skillday = 0.636 \pm 0.011$ at El~Paso, reducing the persistence RMSE by
+63.6\%. ResNet-LSTM is close ($0.614 \pm 0.020$) but consistently below GraphSAGE
+across all seeds. SARIMAX achieves positive skill ($+0.210$) but is substantially
+below the DL methods.
+
+At Uniandes the DL advantage over SARIMAX narrows significantly: GraphSAGE-LSTM
+achieves $0.417 \pm 0.007$ while SARIMAX reaches $0.435$, making SARIMAX the
+best-performing model at this site-horizon combination. ResNet-LSTM underperforms
+both ($0.368 \pm 0.016$), exhibiting the largest gap between the two sites.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig3_timeseries}
+  \caption{Five-day excerpt of the 6-hour GHI forecast from the best model
+           (GraphSAGE-LSTM Optuna, seed~42) at El~Paso in January 2024.
+           Persistence (dashed) simply repeats the GHI observed 6~hours prior,
+           while GraphSAGE-LSTM anticipates the diurnal rise and cloud events.
+           Timestamps in local time (America/Bogotá, UTC$-5$).}
+  \label{fig:ts}
+\end{figure}
+
+\subsection{Statistical robustness}
+
+The standard deviation across seeds provides a measure of training stability.
+GraphSAGE-LSTM consistently shows lower seed-to-seed variability than ResNet-LSTM
+(e.g., El~Paso 6h: $\pm 0.011$ vs.\ $\pm 0.020$), suggesting that the graph
+structure regularises training and reduces sensitivity to weight initialisation.
+The most unstable model is ResNet-LSTM at El~Paso 3h ($\pm 0.090$), which may
+reflect the interaction between the high-irradiance regime and the CNN's sensitivity
+to specific initialisation-driven features.

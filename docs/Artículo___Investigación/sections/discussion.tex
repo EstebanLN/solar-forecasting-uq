@@ -1,0 +1,111 @@
+% =============================================================
+\section{Discussion}
+\label{sec:discussion}
+% =============================================================
+
+\subsection{Why does GraphSAGE outperform ResNet at longer horizons?}
+
+At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieves a 3.6-percentage-point
+skill improvement over ResNet-LSTM ($0.636$ vs.\ $0.614$). We hypothesise two
+mechanisms:
+
+\textbf{Irregular spatial structure.} At longer lead times, the relevant cloud
+signal migrates from the centre of the patch (where it directly causes GHI
+reduction) toward the periphery, where incoming cloud advection is reflected in
+the satellite channels. CNN filters, being translation-equivariant, apply the same
+spatial template across all positions; GraphSAGE, by contrast, learns separate
+aggregation rules that can weight distant pixels differently depending on their
+graph neighbourhood. This flexibility may be especially valuable for detecting
+cloud-edge gradients that precede GHI events.
+
+\textbf{Reduced redundancy.} The ResNet applies multiple stacked convolutions
+that effectively redundantly process the spatial information across layers; the
+GraphSAGE message-passing is applied once per hop and is less prone to
+over-smoothing at the patch scale ($P = 16$). The lower seed variance of
+GraphSAGE ($\pm 0.011$ vs.\ $\pm 0.020$ at El~Paso 6h) is consistent with a
+more stable loss landscape.
+
+\subsection{Why does SARIMAX remain competitive at Uniandes 6h?}
+
+The finding that SARIMAX ($\skillday = 0.435$) outperforms GraphSAGE-LSTM ($0.417$)
+at the 6-hour horizon for Uniandes is counterintuitive given the richer information
+available to the DL models. We attribute it to the \emph{predictability structure}
+of the Bogot{\'a} climate:
+
+\textbf{Diurnal regularity.} At $4.6°\text{N}$, the solar declination varies little
+across the year ($\pm 4.6°$), producing a highly repeatable clear-sky envelope.
+Cloud formation in Bogot{\'a} is predominantly triggered by orographic lifting in
+the early afternoon, creating a systematic diurnal pattern that the seasonal MA
+and AR terms of SARIMAX($\cdot$)(1,1,1)$_{24}$ can capture efficiently.
+
+\textbf{Satellite signal saturation.} At 6 hours, the satellite patch at $t$
+may have low predictive relevance for the ground GHI at $t+6\text{h}$: the cloud
+system that will arrive has not yet entered the patch. SARIMAX effectively uses
+the historical autocorrelation of $k_t$ (which encodes the regular afternoon cloud
+cycle) as its predictive feature, a signal that does not degrade with forecast
+horizon in the same way that satellite spatial features do.
+
+This result suggests that \emph{site-specific climatological structure should inform
+model selection}: in climates with strong, regular diurnal cloud patterns,
+statistical baselines may remain competitive at multi-hour horizons even when
+high-resolution satellite data are available.
+
+\subsection{Why is the 1-hour horizon intractable at El~Paso?}
+
+The negative skill at 1-hour El~Paso (all DL models, $\skillday \approx -0.17$
+to $-0.20$) can be explained by the \emph{low persistence error}: at 204.4~W/m²,
+persistence is already very accurate because the predominantly clear-sky regime
+means irradiance rarely drops by more than a small fraction over 10 minutes.
+The DL models, trained to minimise MSE over the full distribution (including
+the occasional cloud event), learn a slightly smoothed version of the target
+trajectory that incurs higher error on the flat clear-sky majority.
+
+A potential remedy is a loss function that differentially weights cloud events
+(e.g., weighted MSE by clear-sky departure $|k_t - 1|$), or dedicated cloud-event
+detection as a preprocessing step.
+
+\subsection{Practical implications}
+
+\begin{itemize}
+  \item For \textbf{El~Paso-type sites} (high irradiance, moderate variability),
+        GraphSAGE-LSTM with Optuna-tuned hyperparameters is the recommended model
+        at 3h and 6h horizons, with a 60+\% reduction in RMSE over persistence.
+        At 1h, the system should fall back to persistence or a light-weight
+        nowcasting model.
+
+  \item For \textbf{Uniandes-type sites} (tropical mountain, high convective
+        variability), SARIMAX on the clear-sky index provides a surprisingly strong
+        baseline at 6h and should be included in any benchmarking suite. DL models
+        add modest value but require careful hyperparameter tuning to outperform it.
+
+  \item The high seed variance of ResNet-LSTM at El~Paso 3h ($\pm 0.090$) suggests
+        that multiple retraining runs should be averaged for production deployment,
+        or that GraphSAGE-LSTM should be preferred for its higher stability.
+\end{itemize}
+
+\subsection{Limitations and future work}
+
+Several limitations of the current study should be acknowledged:
+
+\textbf{Single-site evaluation.} Although two sites are used, both are located in
+Colombia and represent a subset of tropical climate sub-types. Generalisation to
+other tropical or subtropical regions requires additional validation.
+
+\textbf{Flat MLP baseline pending.} The FlatMLP ablation (Section~\ref{ssec:mlp}),
+which quantifies the benefit of any spatial encoding relative to simple
+spatially-pooled features, is currently under evaluation and will be incorporated
+in the final analysis.
+
+\textbf{Uncertainty quantification.} All models currently produce point forecasts.
+Grid operators require probabilistic outputs: prediction intervals that are
+well-calibrated across conditions of varying cloud cover. We have implemented
+Split Conformal Prediction \cite{angelopoulos2023} as a post-hoc calibration
+layer and are evaluating its coverage properties. Future work will also include
+Gaussian variance head training (NLL loss) and Stochastic Gradient Langevin
+Dynamics (SGLD) \cite{welling2011} for approximate Bayesian posterior sampling,
+which provides epistemic uncertainty decomposition.
+
+\textbf{Multi-step output.} Current models produce a single-step forecast at
+horizon $H$. Simultaneous multi-step output (e.g., producing forecasts for all
+three horizons from a single forward pass) could improve consistency across
+horizon profiles and reduce inference cost.

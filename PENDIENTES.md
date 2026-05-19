@@ -1,5 +1,5 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-05-11_
+_Actualizado: 2026-05-19_
 
 ---
 
@@ -12,9 +12,10 @@ _Actualizado: 2026-05-11_
 | resnet_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
 | graphsage_lstm_optuna | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
 | sarima                | **2 / 2**     | COMPLETO ✓ — uniandes corrido el 2026-05-11                      |
-| mlp_optuna            | 0 / 24        | EN CURSO — 2 procesos paralelos lanzados 2026-05-11              |
+| mlp_optuna            | 9 / 24        | EN CURSO — H6 (1h) elpaso y uniandes completos (4 seeds); corriendo H18 (3h) |
 
-`run_sequential.sh` MLP corriendo: `logs/run_mlp_uniandes.out` y `logs/run_mlp_elpaso.out`.
+`run_sequential.sh` MLP corriendo: elpaso H18 seed 42, uniandes H18 seed 1 (activos a 2026-05-19).
+Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + uniandes_H18 (seed 42).
 
 ---
 
@@ -55,19 +56,75 @@ _Actualizado: 2026-05-11_
 ## Pendiente — Resultados y paper
 
 ### Tabla comparativa y figuras
-- [ ] Correr `scripts/08_results_table.py` con todos los runs actuales → `results/summary.csv`
-- [ ] Figuras de barras comparativas (matplotlib estilo publicación) por horizonte/sitio
-- [ ] Guardar y_true / y_pred del test set en disco (scatter, serie de tiempo, distribución por hora)
+- [x] Correr `scripts/08_results_table.py` → `results/summary.csv` (48 Optuna runs + SARIMA ambos sitios)
+- [x] `scripts/09_paper_figures.py` — fig1 skill_day, fig2 RMSE_day, fig3 serie temporal (GraphSAGE elpaso 6h)
+- [x] Figuras integradas en `docs/Artículo___Investigación/sections/results.tex`
+- [ ] Guardar y_true / y_pred del test set en disco para todos los modelos (scatter, distribución por hora)
 - [x] SARIMA para uniandes (skill_day: h1=0.081, h3=0.353, h6=0.435)
 
-### Documento de artículo
+### Documento de artículo (`docs/Artículo___Investigación/`)
 - [ ] Definir venue objetivo (NeurIPS workshop, Solar Energy journal, Applied Energy, etc.)
-- [ ] Estructura base del LaTeX: Abstract, Intro, Related Work, Metodología, Experimentos, Conclusión
-- [ ] Sección de datos: descripción El Paso / Uniandes, preprocesamiento, split temporal
-- [ ] Sección de modelos: ResNet-LSTM, GraphSAGE-LSTM, MLP, SARIMA, persistencia
-- [ ] Sección UQ: Conformal, Variance Net, SGLD posterior
-- [ ] Tabla principal de resultados (RMSE, MAE, skill_day, CRPS) por arch/site/horizon
-- [ ] Figuras: intervalos de predicción, descomposición incertidumbre
+- [x] Estructura base del LaTeX: Abstract, Intro, Related Work, Metodología, Experimentos, Conclusión
+- [x] Sección de datos: descripción El Paso / Uniandes, preprocesamiento, split temporal
+- [x] Sección de modelos: ResNet-LSTM, GraphSAGE-LSTM, MLP (pending), SARIMA, persistencia
+- [ ] Sección UQ: Conformal, Variance Net, SGLD posterior (cuando se implementen)
+- [x] Tabla principal de resultados (RMSE_day, skill_day) por arch/site/horizon — valores 4 seeds definitivos
+- [x] Figuras publicación: fig1 skill_day, fig2 RMSE_day, fig3 serie temporal
+- [ ] Compilar PDF localmente (pdflatex no disponible en servidor)
+- [ ] Revisar y actualizar sección MLP cuando runs terminen
+- [ ] Añadir figura scatter y_true vs y_pred por modelo (opcional)
+
+---
+
+## Cambios pendientes — GraphSAGE v2 (sugeridos por asesor, 2026-05-19)
+
+> Diseño detallado de la red a discutir en próxima reunión. Lo que sigue es el alcance acordado para implementar antes de esa reunión.
+
+### 1. Grafo con pesos inversos a la distancia
+**Archivo:** `src/solar_uq/models/graphsage_lstm.py`
+
+- [x] Nueva función `build_weighted_edge_index(patch)` que reemplaza `build_edge_index_8n`:
+  - Misma topología 8-conectada (sin cambio de vecinos)
+  - Retorna `(edge_index, edge_weight)` donde `edge_weight[e] = 1 / d(u, v)`
+  - Vecinos cardinales (↑↓←→): `d = 1.0`, peso `= 1.0`
+  - Vecinos diagonales (×4): `d = √2`, peso `= 1/√2 ≈ 0.707`
+  - `edge_weight` se registra como buffer en el modelo (`register_buffer`)
+
+- [x] Modificar `GraphSAGELayer.forward()` para agregación ponderada:
+  - Antes: `nei_mean = Σ x_j / count`
+  - Después: `nei_mean = Σ(w_ij · x_j) / Σ(w_ij)` donde `w_ij` viene de `edge_weight`
+  - Signature: `forward(x, edge_index, edge_weight=None)` — retrocompatible si `None`
+
+- [x] Modificar `GraphSAGE_LSTM.forward()` para batching de `edge_weight`:
+  - Función `_batch_edge_weight(edge_weight, batch_size)` → repite el vector E veces
+  - Se pasa a cada `GraphSAGELayer` en el loop temporal
+
+- [x] `_batch_edge_index` ya existe — añadir `_batch_edge_weight` análogo
+
+### 2. Espacio de búsqueda Optuna ampliado
+**Archivo:** `scripts/06_graphsage_lstm_optuna.py`
+
+| Hiperparámetro | Antes | Después |
+|---|---|---|
+| `hidden_g` (encoder SAGE) | `{64, 96, 128, 192}` | `{64, 96, 128, 192, 256}` |
+| `hidden_t` (LSTM hidden) | `{64, 96, 128}` | `{64, 96, 128, 192, 256}` |
+| `l1_reg` | — (no existía) | `suggest_float(1e-6, 1e-3, log=True)` |
+| `n_trials` default | 50 | **100** |
+
+- [x] Añadir `l1_reg` al `objective(trial)` y pasarlo a `train_one_model`
+- [x] Guardar `l1_reg` en `arch_hparams` del checkpoint y en `summary.json`
+
+### 3. L1 regularization en el loop de entrenamiento
+**Archivo:** `src/solar_uq/train.py`
+
+- [x] Añadir parámetro `l1_reg: float = 0.0` a `train_one_model()`
+- [x] En el loop: `loss = mse_loss + l1_reg * sum(p.abs().sum() for p in model.parameters())`
+- [x] Retrocompatible: si `l1_reg=0.0` el comportamiento es idéntico al actual
+
+### Pendiente de discutir en próxima reunión con asesor
+- Topología del grafo: ¿k-NN con k como hiperparámetro (4–16) vs. 8-conectado ponderado?
+- "Vecino óptimo" como hiperparámetro de Optuna
+- Posibles cambios en la cabeza de salida o en el readout del grafo
 
 ---
 

@@ -43,7 +43,11 @@ from solar_uq.data import (
     read_history_steps_from_manifest,
 )
 from solar_uq.metrics import eval_persistence, skill_score
-from solar_uq.models.graphsage_lstm import GraphSAGE_LSTM, build_edge_index_8n
+from solar_uq.models.graphsage_lstm import (
+    GraphSAGE_LSTM,
+    build_edge_index_8n,
+    build_weighted_edge_index,
+)
 from solar_uq.train import seed_everything, train_one_model, eval_model
 
 
@@ -56,10 +60,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--hours_ahead",   type=int,   default=6, choices=[1, 3, 6])
     p.add_argument("--seed",          type=int,   default=42)
     p.add_argument("--patch",         type=int,   default=16)
-    p.add_argument("--n_trials",      type=int,   default=30)
+    p.add_argument("--n_trials",      type=int,   default=100)
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int,   default=4)
     p.add_argument("--day_threshold", type=float, default=20.0)
+    p.add_argument("--runs_root",     default=None,
+                   help="Directorio raíz donde guardar los runs "
+                        "(default: runs/graphsage_lstm_optuna)")
     return p.parse_args()
 
 
@@ -70,21 +77,23 @@ def make_objective(
     train_ds, val_ds,
     normalizer: TargetNormalizer,
     edge_index: torch.Tensor,
+    edge_weight: torch.Tensor,
     device: str,
     seed: int,
     day_threshold: float,
     use_amp: bool,
 ):
     def objective(trial: optuna.Trial) -> float:
-        hidden_g      = trial.suggest_categorical("hidden_g",      [64, 96, 128, 192])
+        hidden_g      = trial.suggest_categorical("hidden_g",      [64, 96, 128, 192, 256])
         n_sage_layers = trial.suggest_categorical("n_sage_layers", [2, 3, 4])
-        hidden_t      = trial.suggest_categorical("hidden_t",      [64, 96, 128])
+        hidden_t      = trial.suggest_categorical("hidden_t",      [64, 96, 128, 192, 256])
         n_lstm_layers = trial.suggest_categorical("n_lstm_layers", [1, 2])
         input_bn      = trial.suggest_categorical("input_bn",      [True, False])
         concat_agg    = trial.suggest_categorical("concat_agg",    [True, False])
         dropout_head  = trial.suggest_categorical("dropout_head",  [0.0, 0.1, 0.2])
         lr            = trial.suggest_float("lr", 5e-5, 2e-3, log=True)
         weight_decay  = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
+        l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
         batch_size    = trial.suggest_categorical("batch_size", [8, 16, 32])
 
         train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
@@ -100,6 +109,7 @@ def make_objective(
             input_bn=input_bn,
             concat_agg=concat_agg,
             edge_index=edge_index,
+            edge_weight=edge_weight,
         ).to(device)
 
         out = train_one_model(
@@ -109,6 +119,7 @@ def make_objective(
             normalizer=normalizer,
             lr=lr,
             weight_decay=weight_decay,
+            l1_reg=l1_reg,
             use_amp=use_amp,
             epochs=20,
             patience=6,
@@ -139,7 +150,7 @@ def main() -> None:
     # Directories
     DATASET_ROOT = PROJECT_ROOT / "data" / "datasets" / "manifest_v1"
     GROUND_DIR   = PROJECT_ROOT / "data" / "ground_aligned"
-    RUNS_ROOT    = PROJECT_ROOT / "runs" / "graphsage_lstm_optuna"
+    RUNS_ROOT    = Path(args.runs_root) if args.runs_root else PROJECT_ROOT / "runs" / "graphsage_lstm_optuna"
     RUNS_ROOT.mkdir(parents=True, exist_ok=True)
 
     SITE_DIR = DATASET_ROOT / args.site / f"h{args.hours_ahead}"
@@ -187,9 +198,10 @@ def main() -> None:
     y_train_arr = train_man["y"].astype(float).to_numpy()
     normalizer  = TargetNormalizer.from_train(y_train_arr)
 
-    N_NODES    = args.patch * args.patch
-    edge_index = build_edge_index_8n(args.patch)
-    print(f"Graph: {N_NODES} nodes, {edge_index.shape[1]} edges")
+    N_NODES = args.patch * args.patch
+    edge_index, edge_weight = build_weighted_edge_index(args.patch)
+    print(f"Graph: {N_NODES} nodes, {edge_index.shape[1]} weighted edges "
+          f"(w_cardinal=1.0, w_diagonal={1/(2**0.5):.3f})")
 
     train_ds = GraphSeqDataset(train_man, PATCHES_ROOT, normalizer)
     val_ds   = GraphSeqDataset(val_man,   PATCHES_ROOT, normalizer)
@@ -206,7 +218,7 @@ def main() -> None:
 
     print(f"\nStarting Optuna ({args.n_trials} trials) ...")
     study.optimize(
-        make_objective(train_ds, val_ds, normalizer, edge_index, DEVICE, args.seed, args.day_threshold, USE_AMP),
+        make_objective(train_ds, val_ds, normalizer, edge_index, edge_weight, DEVICE, args.seed, args.day_threshold, USE_AMP),
         n_trials=args.n_trials,
         n_jobs=2,
         show_progress_bar=True,
@@ -248,6 +260,7 @@ def main() -> None:
         input_bn=bp["input_bn"],
         concat_agg=bp["concat_agg"],
         edge_index=edge_index,
+        edge_weight=edge_weight,
     ).to(DEVICE)
 
     out = train_one_model(
@@ -257,6 +270,7 @@ def main() -> None:
         normalizer=normalizer,
         lr=bp["lr"],
         weight_decay=bp["weight_decay"],
+        l1_reg=bp.get("l1_reg", 0.0),
         use_amp=USE_AMP,
         epochs=30,
         patience=8,
@@ -292,10 +306,15 @@ def main() -> None:
             "meta": {
                 "arch": "GraphSAGE_LSTM",
                 "arch_hparams": {
-                    "hidden_g": bp["hidden_g"], "n_sage_layers": bp["n_sage_layers"],
-                    "hidden_t": bp["hidden_t"], "n_lstm_layers": bp["n_lstm_layers"],
-                    "dropout_head": bp["dropout_head"],
-                    "input_bn": bp["input_bn"], "concat_agg": bp["concat_agg"],
+                    "hidden_g":      bp["hidden_g"],
+                    "n_sage_layers": bp["n_sage_layers"],
+                    "hidden_t":      bp["hidden_t"],
+                    "n_lstm_layers": bp["n_lstm_layers"],
+                    "dropout_head":  bp["dropout_head"],
+                    "input_bn":      bp["input_bn"],
+                    "concat_agg":    bp["concat_agg"],
+                    "l1_reg":        bp.get("l1_reg", 0.0),
+                    "weighted_graph": True,
                 },
                 "site": args.site, "patch": args.patch,
                 "L": L, "H": H, "seed": args.seed,
@@ -329,12 +348,15 @@ def main() -> None:
             "horizon_hours":   H * FREQ_MIN / 60.0,
         },
         "spatial": {
-            "grid_size":    GRID_SIZE,
-            "patch":        args.patch,
+            "grid_size":      GRID_SIZE,
+            "patch":          args.patch,
             "site_center_rc": meta.get("site_center_pix"),
-            "n_nodes":      N_NODES,
-            "n_edges":      int(edge_index.shape[1]),
-            "channels":     16,
+            "n_nodes":        N_NODES,
+            "n_edges":        int(edge_index.shape[1]),
+            "channels":       16,
+            "graph_type":     "8-connected weighted (1/distance)",
+            "w_cardinal":     1.0,
+            "w_diagonal":     round(1 / (2 ** 0.5), 6),
         },
         "target_norm": {
             "y_mean_train":        normalizer.mean,
