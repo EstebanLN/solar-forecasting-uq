@@ -102,6 +102,7 @@ def train_one_model(
     normalizer: TargetNormalizer,
     lr: float,
     weight_decay: float,
+    l1_reg: float = 0.0,
     optimizer: str = "adamw",      # "adamw" | "adam"
     grad_clip_norm: float = 1.0,
     use_amp: bool = True,
@@ -153,6 +154,9 @@ def train_one_model(
             with torch.amp.autocast("cuda", enabled=use_amp):
                 yhat = model(x_seq)
                 loss = loss_fn(yhat, y)
+                if l1_reg > 0.0:
+                    l1 = sum(p.abs().sum() for p in model.parameters())
+                    loss = loss + l1_reg * l1
 
             scaler.scale(loss).backward()
 

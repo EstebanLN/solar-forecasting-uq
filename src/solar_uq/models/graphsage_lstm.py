@@ -27,6 +27,7 @@ def build_edge_index_8n(patch: int) -> torch.Tensor:
     """8-neighbourhood edge index for a (patch × patch) pixel grid.
 
     Returns a (2, E) LongTensor where edge (u, v) means u → v.
+    Kept for backward compatibility with older checkpoints.
     """
     edges = []
     for rr in range(patch):
@@ -40,6 +41,36 @@ def build_edge_index_8n(patch: int) -> torch.Tensor:
                     if 0 <= r2 < patch and 0 <= c2 < patch:
                         edges.append((u, r2 * patch + c2))
     return torch.tensor(edges, dtype=torch.long).t().contiguous()  # (2, E)
+
+
+def build_weighted_edge_index(patch: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """8-neighbourhood weighted edge index for a (patch × patch) pixel grid.
+
+    Weights are inverse Euclidean distance on the 2-D grid:
+      - Cardinal neighbours (distance 1.0)  → weight 1.000
+      - Diagonal neighbours (distance √2)   → weight 1/√2 ≈ 0.707
+
+    Returns:
+        edge_index  : (2, E) LongTensor
+        edge_weight : (E,)  FloatTensor — 1 / d(u, v)
+    """
+    edges: list[tuple[int, int]] = []
+    weights: list[float] = []
+    for rr in range(patch):
+        for cc in range(patch):
+            u = rr * patch + cc
+            for dr in (-1, 0, 1):
+                for dc in (-1, 0, 1):
+                    if dr == 0 and dc == 0:
+                        continue
+                    r2, c2 = rr + dr, cc + dc
+                    if 0 <= r2 < patch and 0 <= c2 < patch:
+                        d = (dr * dr + dc * dc) ** 0.5   # 1.0 or √2
+                        edges.append((u, r2 * patch + c2))
+                        weights.append(1.0 / d)
+    edge_index  = torch.tensor(edges,   dtype=torch.long).t().contiguous()
+    edge_weight = torch.tensor(weights, dtype=torch.float32)
+    return edge_index, edge_weight
 
 
 def _batch_edge_index(
@@ -57,6 +88,18 @@ def _batch_edge_index(
     offsets = (torch.arange(batch_size, device=device) * num_nodes).view(-1, 1)  # (B, 1)
     batched = edge_index.unsqueeze(0) + offsets.unsqueeze(-1)                    # (B, 2, E)
     return batched.permute(1, 0, 2).reshape(2, batch_size * E).contiguous()      # (2, B*E)
+
+
+def _batch_edge_weight(
+    edge_weight: torch.Tensor,
+    batch_size: int,
+    device: torch.device,
+) -> torch.Tensor:
+    """Replicate edge_weight for each graph in the batch.
+
+    Returns (E * batch_size,).
+    """
+    return edge_weight.to(device).repeat(batch_size)
 
 
 # ---------------------------------------------------------------------------
@@ -83,19 +126,29 @@ class GraphSAGELayer(nn.Module):
             self.lin_self = nn.Linear(in_dim, out_dim)
             self.lin_nei  = nn.Linear(in_dim, out_dim)
 
-    def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
-        # x: (N_total, F),  edge_index: (2, E_total)
+    def forward(
+        self,
+        x: torch.Tensor,
+        edge_index: torch.Tensor,
+        edge_weight: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        # x: (N_total, F),  edge_index: (2, E_total),  edge_weight: (E_total,) or None
         src, dst = edge_index[0], edge_index[1]
         N, F = x.shape
 
-        nei_sum = torch.zeros((N, F), device=x.device, dtype=x.dtype)
-        nei_sum.index_add_(0, dst, x[src])
-
-        nei_cnt = torch.zeros((N, 1), device=x.device, dtype=x.dtype)
-        nei_cnt.index_add_(
-            0, dst, torch.ones((len(dst), 1), device=x.device, dtype=x.dtype)
-        )
-        nei_mean = nei_sum / (nei_cnt + 1e-6)
+        if edge_weight is not None:
+            w = edge_weight.to(x.device).view(-1, 1)        # (E, 1)
+            nei_wsum = torch.zeros((N, F), device=x.device, dtype=x.dtype)
+            nei_wsum.index_add_(0, dst, x[src] * w)         # Σ w·x_j  per dst
+            w_total = torch.zeros((N, 1), device=x.device, dtype=x.dtype)
+            w_total.index_add_(0, dst, w)                    # Σ w      per dst
+            nei_mean = nei_wsum / (w_total + 1e-6)
+        else:
+            nei_sum = torch.zeros((N, F), device=x.device, dtype=x.dtype)
+            nei_sum.index_add_(0, dst, x[src])
+            nei_cnt = torch.zeros((N, 1), device=x.device, dtype=x.dtype)
+            nei_cnt.index_add_(0, dst, torch.ones((len(dst), 1), device=x.device, dtype=x.dtype))
+            nei_mean = nei_sum / (nei_cnt + 1e-6)
 
         if self.concat_agg:
             out = self.lin(torch.cat([x, nei_mean], dim=-1))
@@ -132,6 +185,7 @@ class GraphSAGE_LSTM(nn.Module):
         input_bn: bool = True,
         concat_agg: bool = True,
         edge_index: Optional[torch.Tensor] = None,
+        edge_weight: Optional[torch.Tensor] = None,
     ):
         super().__init__()
 
@@ -171,23 +225,33 @@ class GraphSAGE_LSTM(nn.Module):
         if edge_index is not None:
             self.register_buffer("edge_index", edge_index)
         else:
-            self.edge_index: Optional[torch.Tensor] = None  # set via register_buffer externally
+            self.edge_index: Optional[torch.Tensor] = None
+
+        if edge_weight is not None:
+            self.register_buffer("edge_weight", edge_weight)
+        else:
+            self.edge_weight: Optional[torch.Tensor] = None
 
     def forward(
         self,
         x_seq: torch.Tensor,
         edge_index: Optional[torch.Tensor] = None,
+        edge_weight: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Args:
-            x_seq      : (B, L, N, C)
-            edge_index : (2, E) — optional override; falls back to self.edge_index
+            x_seq       : (B, L, N, C)
+            edge_index  : (2, E) — optional override; falls back to self.edge_index
+            edge_weight : (E,)  — optional override; falls back to self.edge_weight
         """
         B, L, N, C = x_seq.shape
         device = x_seq.device
 
-        ei = edge_index if edge_index is not None else self.edge_index
+        ei = edge_index  if edge_index  is not None else self.edge_index
+        ew = edge_weight if edge_weight is not None else self.edge_weight
+
         be = _batch_edge_index(ei, batch_size=B, num_nodes=N, device=device)
+        bw = _batch_edge_weight(ew, batch_size=B, device=device) if ew is not None else None
 
         embeds = []
         for t in range(L):
@@ -196,9 +260,9 @@ class GraphSAGE_LSTM(nn.Module):
             # Input normalisation
             x = self.input_bn(x)
 
-            # SAGE stack
+            # SAGE stack — pass edge weights for weighted aggregation
             for layer in self.sage_layers:
-                x = layer(x, be)
+                x = layer(x, be, bw)
 
             h = x.view(B, N, -1)                  # (B, N, hidden_g)
             g = h.mean(dim=1)                      # (B, hidden_g)  — mean readout

@@ -5,10 +5,18 @@
 # Saltea automáticamente cualquier run que ya tenga summary.json.
 #
 # Uso:
-#   bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|sarima|all] [uniandes|elpaso|all]
-#   bash run_sequential.sh gsage_optuna               # solo GraphSAGE Optuna
-#   bash run_sequential.sh sarima uniandes            # solo SARIMA uniandes
-#   bash run_sequential.sh resnet_optuna uniandes     # solo resnet, solo uniandes
+#   bash run_sequential.sh <grupo> [uniandes|elpaso|all]
+#
+# Grupos disponibles:
+#   baseline          ResNet+LSTM y GraphSAGE+LSTM sin HPO (30 runs c/u)
+#   optuna            ResNet Optuna v1 + GraphSAGE Optuna v1 + MLP (24 runs c/u, 20 trials)
+#   resnet_optuna     Solo ResNet Optuna v1
+#   gsage_optuna      Solo GraphSAGE Optuna v1  (COMPLETO — 24/24)
+#   gsage_optuna_v2   GraphSAGE Optuna v2 — grafo ponderado, 100 trials, hidden hasta 256,
+#                     l1_reg en búsqueda → runs/graphsage_lstm_optuna_v2/
+#   mlp_optuna        FlatMLP Optuna (50 trials)
+#   sarima            SARIMA baseline
+#   all               Todo lo anterior
 # ================================================================
 set -uo pipefail   # sin -e: un run fallido loguea el error y sigue al siguiente
 
@@ -22,7 +30,7 @@ FAILED_RUNS=()   # acumula los que fallen para reportar al final
 # ----------------------------------------------------------------
 already_done() {
     local runs_dir=$1 site=$2 hours=$3 seed=$4
-    python3 - "$runs_dir" "$site" "$hours" "$seed" <<'PYEOF'
+    .venv/bin/python - "$runs_dir" "$site" "$hours" "$seed" <<'PYEOF'
 import json, glob, sys
 runs_dir, site, hours, seed = sys.argv[1], sys.argv[2], float(sys.argv[3]), int(sys.argv[4])
 for f in glob.glob(f"{runs_dir}/*/summary.json"):
@@ -41,7 +49,7 @@ PYEOF
 # Devuelve 0 si ya existe un run SARIMA completo (3 horizontes) para este sitio
 sarima_done() {
     local site=$1
-    python3 - "runs/sarima" "$site" <<'PYEOF'
+    .venv/bin/python - "runs/sarima" "$site" <<'PYEOF'
 import json, glob, sys
 runs_dir, site = sys.argv[1], sys.argv[2]
 for f in glob.glob(f"{runs_dir}/*/summary.json"):
@@ -137,11 +145,11 @@ run_optuna_resnet() {
 }
 
 # ----------------------------------------------------------------
-# Optuna: GraphSAGE+LSTM  (24 runs × 20 trials, n_jobs=2)
+# Optuna: GraphSAGE+LSTM v1  (24 runs × 20 trials) — YA COMPLETO
 # ----------------------------------------------------------------
 run_optuna_gsage() {
     echo ""
-    echo "=== GraphSAGE+LSTM Optuna [site=${SITE_FILTER}] ==="
+    echo "=== GraphSAGE+LSTM Optuna v1 [site=${SITE_FILTER}] (COMPLETO — solo skip) ==="
     for site in uniandes elpaso; do
         [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
@@ -150,6 +158,30 @@ run_optuna_gsage() {
                     "scripts/06_graphsage_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
                     --n_trials 20
+            done
+        done
+    done
+}
+
+# ----------------------------------------------------------------
+# Optuna: GraphSAGE+LSTM v2  (24 runs × 100 trials)
+#   - Grafo 8-conectado con pesos 1/distancia
+#   - hidden_g / hidden_t hasta 256
+#   - l1_reg en búsqueda: {0, 1e-5, 1e-4, 1e-3}
+#   - Resultado en runs/graphsage_lstm_optuna_v2/
+# ----------------------------------------------------------------
+run_optuna_gsage_v2() {
+    echo ""
+    echo "=== GraphSAGE+LSTM Optuna v2 — grafo ponderado, 100 trials [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        for hours in 1 3 6; do
+            for seed in 42 1 7 13; do
+                run_one "optuna_gsage_v2" "runs/graphsage_lstm_optuna_v2" \
+                    "scripts/06_graphsage_lstm_optuna.py" \
+                    "$site" "$hours" "$seed" \
+                    --n_trials 100 \
+                    --runs_root runs/graphsage_lstm_optuna_v2
             done
         done
     done
@@ -218,6 +250,9 @@ case "$GROUP" in
     gsage_optuna)
         run_optuna_gsage
         ;;
+    gsage_optuna_v2)
+        run_optuna_gsage_v2
+        ;;
     mlp_optuna)
         run_optuna_mlp
         ;;
@@ -229,11 +264,12 @@ case "$GROUP" in
         run_baseline_gsage
         run_optuna_resnet
         run_optuna_gsage
+        run_optuna_gsage_v2
         run_optuna_mlp
         run_sarima
         ;;
     *)
-        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|mlp_optuna|sarima|all] [uniandes|elpaso|all]"
+        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|gsage_optuna_v2|mlp_optuna|sarima|all] [uniandes|elpaso|all]"
         exit 1
         ;;
 esac
