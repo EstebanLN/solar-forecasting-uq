@@ -1,5 +1,5 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-05-19_
+_Actualizado: 2026-05-20_
 
 ---
 
@@ -12,10 +12,12 @@ _Actualizado: 2026-05-19_
 | resnet_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
 | graphsage_lstm_optuna | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
 | sarima                | **2 / 2**     | COMPLETO ✓ — uniandes corrido el 2026-05-11                      |
-| mlp_optuna            | 9 / 24        | EN CURSO — H6 (1h) elpaso y uniandes completos (4 seeds); corriendo H18 (3h) |
+| mlp_optuna            | 10 / 24       | EN CURSO — H6 (1h) completo ambos sitios; H18 (3h) elpaso seed42 + uniandes seed42 done |
+| resnet_lstm_optuna_v2 | 0 / 24        | PENDIENTE — lanzar `bash run_sequential.sh resnet_optuna_v2` |
+| graphsage_lstm_optuna_v2 | 0 / 24     | PENDIENTE — lanzar `bash run_sequential.sh gsage_optuna_v2`  |
 
-`run_sequential.sh` MLP corriendo: elpaso H18 seed 42, uniandes H18 seed 1 (activos a 2026-05-19).
-Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + uniandes_H18 (seed 42).
+`run_sequential.sh` MLP corriendo: H18 seeds 1,7,13 y H36 para ambos sitios (activos a 2026-05-20).
+Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + elpaso_H18 seed42 + uniandes_H18 seed42.
 
 ---
 
@@ -46,10 +48,10 @@ Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + uniande
   - Correlación entre parámetros relevantes (pesos de cabeza de salida)
 
 ### Fase 4 — Baseline MLP + Optuna
-- [ ] `scripts/06_mlp_optuna.py` — red completamente conectada (sin graph, con/sin LSTM)
-  - Hiperparámetros: n_layers, hidden_dim, dropout, lr, weight_decay
-  - Mismo protocolo Optuna (n_trials=50, 4 seeds, 2 sitios, 3 horizontes)
-- [ ] Integrar resultados en `runs/mlp_optuna/` con mismo formato summary.json
+- [x] `scripts/06_mlp_optuna.py` — `FlatMLP`: spatial avg-pool, flatten L×C, MLP con LayerNorm
+  - Hiperparámetros: n_layers, hidden_dim, dropout, lr, weight_decay (n_trials=50)
+  - Protocolo Optuna: 4 seeds, 2 sitios, 3 horizontes → `runs/mlp_optuna/`
+- [ ] Esperar a 24/24 runs completos → actualizar tabla de resultados y sección MLP del artículo
 
 ---
 
@@ -76,55 +78,72 @@ Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + uniande
 
 ---
 
-## Cambios pendientes — GraphSAGE v2 (sugeridos por asesor, 2026-05-19)
+## Cambios implementados — v2 (ambas arquitecturas, 2026-05-20)
 
-> Diseño detallado de la red a discutir en próxima reunión. Lo que sigue es el alcance acordado para implementar antes de esa reunión.
+> Sugeridos por asesor. Implementados completamente. Runs v2 pendientes de lanzar.
 
-### 1. Grafo con pesos inversos a la distancia
-**Archivo:** `src/solar_uq/models/graphsage_lstm.py`
+### GraphSAGE-LSTM v2 — `src/solar_uq/models/graphsage_lstm.py`
 
-- [x] Nueva función `build_weighted_edge_index(patch)` que reemplaza `build_edge_index_8n`:
-  - Misma topología 8-conectada (sin cambio de vecinos)
-  - Retorna `(edge_index, edge_weight)` donde `edge_weight[e] = 1 / d(u, v)`
-  - Vecinos cardinales (↑↓←→): `d = 1.0`, peso `= 1.0`
-  - Vecinos diagonales (×4): `d = √2`, peso `= 1/√2 ≈ 0.707`
-  - `edge_weight` se registra como buffer en el modelo (`register_buffer`)
+- [x] **`build_weighted_knn_edge_index(patch, k)`** — grafo k-NN ponderado:
+  - Cada píxel conecta sus `k` vecinos más cercanos (distancia euclídea en la grilla 2D)
+  - `edge_weight[e] = 1 / d(u, v)` — peso inverso a la distancia
+  - Retrocompatibles: `build_edge_index_8n` y `build_weighted_edge_index` (k=8) se mantienen
+- [x] **`_batch_edge_weight(edge_weight, batch_size, device)`** — replica los pesos para batch disjunto
+- [x] **`GraphSAGELayer.forward(x, edge_index, edge_weight=None)`** — agregación ponderada:
+  - `nei_mean = Σ(w_ij · x_j) / Σ(w_ij)` si `edge_weight` no es `None`; sin pesos si `None`
+- [x] **`GraphSAGE_LSTM`** — acepta y registra `edge_weight` como buffer; lo batchea y pasa a cada capa SAGE
 
-- [x] Modificar `GraphSAGELayer.forward()` para agregación ponderada:
-  - Antes: `nei_mean = Σ x_j / count`
-  - Después: `nei_mean = Σ(w_ij · x_j) / Σ(w_ij)` donde `w_ij` viene de `edge_weight`
-  - Signature: `forward(x, edge_index, edge_weight=None)` — retrocompatible si `None`
+### ResNet-LSTM v2 — `src/solar_uq/models/resnet_lstm.py`
 
-- [x] Modificar `GraphSAGE_LSTM.forward()` para batching de `edge_weight`:
-  - Función `_batch_edge_weight(edge_weight, batch_size)` → repite el vector E veces
-  - Se pasa a cada `GraphSAGELayer` en el loop temporal
+- [x] **`n_lstm_layers`** como parámetro del constructor (antes fijo en 1)
+  - `nn.LSTM(num_layers=n_lstm_layers)`, `dropout` activo sólo si `n_lstm_layers > 1`
 
-- [x] `_batch_edge_index` ya existe — añadir `_batch_edge_weight` análogo
+### L1 regularización — `src/solar_uq/train.py`
 
-### 2. Espacio de búsqueda Optuna ampliado
-**Archivo:** `scripts/06_graphsage_lstm_optuna.py`
+- [x] **`train_one_model(..., l1_reg: float = 0.0)`** — suma L1 al MSE loss:
+  - `loss = mse_loss + l1_reg * Σ|w|` en cada paso de entrenamiento
+  - Retrocompatible: `l1_reg=0.0` → comportamiento idéntico al anterior
 
-| Hiperparámetro | Antes | Después |
-|---|---|---|
-| `hidden_g` (encoder SAGE) | `{64, 96, 128, 192}` | `{64, 96, 128, 192, 256}` |
-| `hidden_t` (LSTM hidden) | `{64, 96, 128}` | `{64, 96, 128, 192, 256}` |
-| `l1_reg` | — (no existía) | `suggest_float(1e-6, 1e-3, log=True)` |
-| `n_trials` default | 50 | **100** |
+### Optuna GraphSAGE v2 — `scripts/06_graphsage_lstm_optuna.py`
 
-- [x] Añadir `l1_reg` al `objective(trial)` y pasarlo a `train_one_model`
-- [x] Guardar `l1_reg` en `arch_hparams` del checkpoint y en `summary.json`
+| Hiperparámetro    | v1 (viejo)              | v2 (implementado)                    |
+|-------------------|-------------------------|--------------------------------------|
+| `hidden_g`        | `{64, 96, 128, 192}`    | `{64, 96, 128, 192, 256}`            |
+| `hidden_t`        | `{64, 96, 128}`         | `{64, 96, 128, 192, 256}`            |
+| `n_lstm_layers`   | fijo en 1               | `{1, 2}`                             |
+| `k_neighbors`     | no existía (k=8 fijo)   | `{4, 8, 12, 16}` ← **k-NN Optuna**  |
+| `l1_reg`          | no existía              | `{0.0, 1e-5, 1e-4, 1e-3}` categórico|
+| `n_trials` default| 50                      | **100**                              |
+| `--runs_root`     | no existía              | CLI arg (default `graphsage_lstm_optuna`) |
 
-### 3. L1 regularization en el loop de entrenamiento
-**Archivo:** `src/solar_uq/train.py`
+- Grafo construido **por trial** según `k_neighbors` con `build_weighted_knn_edge_index(patch, k)`
+- Resultado en `runs/graphsage_lstm_optuna_v2/` (no interfiere con v1)
 
-- [x] Añadir parámetro `l1_reg: float = 0.0` a `train_one_model()`
-- [x] En el loop: `loss = mse_loss + l1_reg * sum(p.abs().sum() for p in model.parameters())`
-- [x] Retrocompatible: si `l1_reg=0.0` el comportamiento es idéntico al actual
+### Optuna ResNet v2 — `scripts/06_resnet_lstm_optuna.py`
 
-### Pendiente de discutir en próxima reunión con asesor
-- Topología del grafo: ¿k-NN con k como hiperparámetro (4–16) vs. 8-conectado ponderado?
-- "Vecino óptimo" como hiperparámetro de Optuna
-- Posibles cambios en la cabeza de salida o en el readout del grafo
+| Hiperparámetro    | v1 (viejo)           | v2 (implementado)                    |
+|-------------------|----------------------|--------------------------------------|
+| `emb_dim`         | `{64, 128, 192}`     | `{64, 128, 192, 256}`                |
+| `hidden_t`        | `{64, 128, 192}`     | `{64, 128, 192, 256}`                |
+| `n_lstm_layers`   | fijo en 1            | `{1, 2}`                             |
+| `l1_reg`          | no existía           | `{0.0, 1e-5, 1e-4, 1e-3}` categórico|
+| `n_trials` default| 50 (era 20 en v1)    | **100**                              |
+| `--runs_root`     | no existía           | CLI arg (default `resnet_lstm_optuna`) |
+
+- Resultado en `runs/resnet_lstm_optuna_v2/`
+
+### Cómo lanzar los v2 (24 runs × 100 trials cada arquitectura)
+
+```bash
+# 4 procesos en paralelo: 2 sitios × 2 arquitecturas
+nohup bash run_sequential.sh resnet_optuna_v2 elpaso   > logs/run_resnet_v2_elpaso.out   2>&1 &
+nohup bash run_sequential.sh resnet_optuna_v2 uniandes > logs/run_resnet_v2_uniandes.out 2>&1 &
+nohup bash run_sequential.sh gsage_optuna_v2  elpaso   > logs/run_gsage_v2_elpaso.out    2>&1 &
+nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_uniandes.out  2>&1 &
+```
+
+> Estimado: ~4-5 días con GPU disponible (100 trials × 20 épocas × 24 combos).
+> Los runs v1 no se tocan — `already_done()` distingue por directorio.
 
 ---
 
@@ -170,3 +189,16 @@ Fix: detectar `isinstance(fc.index, pd.DatetimeIndex)` y reconstruir el índice 
 Los cuatro scripts baseline/optuna guardan `"arch_hparams"` en el meta del checkpoint `.pt`
 para permitir reconstrucción exacta del modelo en `07_conformal_explore.py`.
 Los 72 runs anteriores al 2026-04-26 no tienen este campo → usar defaults CLI o re-entrenar.
+
+
+
+
+
+  nohup bash run_sequential.sh resnet_optuna_v2 elpaso   > logs/run_resnet_v2_elpaso.out
+  2>&1 &
+  nohup bash run_sequential.sh resnet_optuna_v2 uniandes > logs/run_resnet_v2_uniandes.out
+  2>&1 &
+  nohup bash run_sequential.sh gsage_optuna_v2  elpaso   > logs/run_gsage_v2_elpaso.out
+  2>&1 &
+  nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_uniandes.out
+  2>&1 &

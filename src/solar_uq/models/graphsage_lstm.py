@@ -54,20 +54,44 @@ def build_weighted_edge_index(patch: int) -> tuple[torch.Tensor, torch.Tensor]:
         edge_index  : (2, E) LongTensor
         edge_weight : (E,)  FloatTensor — 1 / d(u, v)
     """
+    return build_weighted_knn_edge_index(patch, k=8)
+
+
+def build_weighted_knn_edge_index(patch: int, k: int) -> tuple[torch.Tensor, torch.Tensor]:
+    """k-nearest-neighbour weighted edge index for a (patch × patch) pixel grid.
+
+    For each pixel u, connects its k nearest pixels by Euclidean distance on
+    the 2-D grid.  Weights are inverse distance: w(u,v) = 1 / d(u,v).
+
+    Typical k values and the neighbours they include for an interior pixel:
+      k= 4  → 4 cardinal neighbours      (d = 1.0)
+      k= 8  → + 4 diagonal neighbours    (d = √2  ≈ 1.41)
+      k=12  → + 4 two-step cardinal      (d = 2.0)
+      k=16  → + 4 of the 8 knight moves  (d = √5  ≈ 2.24)
+
+    Border/corner pixels that have fewer than k neighbours at short range
+    automatically connect to farther pixels to reach exactly k neighbours.
+
+    Returns:
+        edge_index  : (2, N*k) LongTensor
+        edge_weight : (N*k,)   FloatTensor — 1 / d(u, v)
+    """
+    N = patch * patch
+    coords = [(r, c) for r in range(patch) for c in range(patch)]
+
     edges: list[tuple[int, int]] = []
     weights: list[float] = []
-    for rr in range(patch):
-        for cc in range(patch):
-            u = rr * patch + cc
-            for dr in (-1, 0, 1):
-                for dc in (-1, 0, 1):
-                    if dr == 0 and dc == 0:
-                        continue
-                    r2, c2 = rr + dr, cc + dc
-                    if 0 <= r2 < patch and 0 <= c2 < patch:
-                        d = (dr * dr + dc * dc) ** 0.5   # 1.0 or √2
-                        edges.append((u, r2 * patch + c2))
-                        weights.append(1.0 / d)
+
+    for u, (ru, cu) in enumerate(coords):
+        dists = sorted(
+            ((((ru - rv) ** 2 + (cu - cv) ** 2) ** 0.5), v)
+            for v, (rv, cv) in enumerate(coords)
+            if v != u
+        )
+        for d, v in dists[:k]:
+            edges.append((u, v))
+            weights.append(1.0 / d)
+
     edge_index  = torch.tensor(edges,   dtype=torch.long).t().contiguous()
     edge_weight = torch.tensor(weights, dtype=torch.float32)
     return edge_index, edge_weight

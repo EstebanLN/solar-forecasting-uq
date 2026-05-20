@@ -14,6 +14,8 @@
 #   gsage_optuna      Solo GraphSAGE Optuna v1  (COMPLETO — 24/24)
 #   gsage_optuna_v2   GraphSAGE Optuna v2 — grafo ponderado, 100 trials, hidden hasta 256,
 #                     l1_reg en búsqueda → runs/graphsage_lstm_optuna_v2/
+#   resnet_optuna_v2  ResNet Optuna v2   — 100 trials, hidden hasta 256, n_lstm_layers,
+#                     l1_reg en búsqueda → runs/resnet_lstm_optuna_v2/
 #   mlp_optuna        FlatMLP Optuna (50 trials)
 #   sarima            SARIMA baseline
 #   all               Todo lo anterior
@@ -126,11 +128,11 @@ run_baseline_gsage() {
 }
 
 # ----------------------------------------------------------------
-# Optuna: ResNet+LSTM  (24 runs × 20 trials, n_jobs=2)
+# Optuna: ResNet+LSTM v1  (24 runs × 20 trials) — YA COMPLETO
 # ----------------------------------------------------------------
 run_optuna_resnet() {
     echo ""
-    echo "=== ResNet+LSTM Optuna [site=${SITE_FILTER}] ==="
+    echo "=== ResNet+LSTM Optuna v1 [site=${SITE_FILTER}] (COMPLETO — solo skip) ==="
     for site in uniandes elpaso; do
         [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
@@ -139,6 +141,30 @@ run_optuna_resnet() {
                     "scripts/06_resnet_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
                     --n_trials 20
+            done
+        done
+    done
+}
+
+# ----------------------------------------------------------------
+# Optuna: ResNet+LSTM v2  (24 runs × 100 trials)
+#   - emb_dim / hidden_t hasta 256
+#   - n_lstm_layers {1, 2}
+#   - l1_reg en búsqueda: {0, 1e-5, 1e-4, 1e-3}
+#   - Resultado en runs/resnet_lstm_optuna_v2/
+# ----------------------------------------------------------------
+run_optuna_resnet_v2() {
+    echo ""
+    echo "=== ResNet+LSTM Optuna v2 — 100 trials, hidden hasta 256 [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        for hours in 1 3 6; do
+            for seed in 42 1 7 13; do
+                run_one "optuna_resnet_v2" "runs/resnet_lstm_optuna_v2" \
+                    "scripts/06_resnet_lstm_optuna.py" \
+                    "$site" "$hours" "$seed" \
+                    --n_trials 100 \
+                    --runs_root runs/resnet_lstm_optuna_v2
             done
         done
     done
@@ -244,8 +270,15 @@ case "$GROUP" in
         run_optuna_gsage
         run_optuna_mlp
         ;;
+    optuna_v2)
+        run_optuna_resnet_v2
+        run_optuna_gsage_v2
+        ;;
     resnet_optuna)
         run_optuna_resnet
+        ;;
+    resnet_optuna_v2)
+        run_optuna_resnet_v2
         ;;
     gsage_optuna)
         run_optuna_gsage
@@ -264,12 +297,13 @@ case "$GROUP" in
         run_baseline_gsage
         run_optuna_resnet
         run_optuna_gsage
+        run_optuna_resnet_v2
         run_optuna_gsage_v2
         run_optuna_mlp
         run_sarima
         ;;
     *)
-        echo "Uso: bash run_sequential.sh [baseline|optuna|resnet_optuna|gsage_optuna|gsage_optuna_v2|mlp_optuna|sarima|all] [uniandes|elpaso|all]"
+        echo "Uso: bash run_sequential.sh [baseline|optuna|optuna_v2|resnet_optuna|resnet_optuna_v2|gsage_optuna|gsage_optuna_v2|mlp_optuna|sarima|all] [uniandes|elpaso|all]"
         exit 1
         ;;
 esac
