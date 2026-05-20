@@ -46,7 +46,7 @@ from solar_uq.metrics import eval_persistence, skill_score
 from solar_uq.models.graphsage_lstm import (
     GraphSAGE_LSTM,
     build_edge_index_8n,
-    build_weighted_edge_index,
+    build_weighted_knn_edge_index,
 )
 from solar_uq.train import seed_everything, train_one_model, eval_model
 
@@ -76,8 +76,7 @@ def parse_args() -> argparse.Namespace:
 def make_objective(
     train_ds, val_ds,
     normalizer: TargetNormalizer,
-    edge_index: torch.Tensor,
-    edge_weight: torch.Tensor,
+    patch: int,
     device: str,
     seed: int,
     day_threshold: float,
@@ -91,6 +90,7 @@ def make_objective(
         input_bn      = trial.suggest_categorical("input_bn",      [True, False])
         concat_agg    = trial.suggest_categorical("concat_agg",    [True, False])
         dropout_head  = trial.suggest_categorical("dropout_head",  [0.0, 0.1, 0.2])
+        k_neighbors   = trial.suggest_categorical("k_neighbors",   [4, 8, 12, 16])
         lr            = trial.suggest_float("lr", 5e-5, 2e-3, log=True)
         weight_decay  = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
@@ -98,6 +98,8 @@ def make_objective(
 
         train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
+
+        edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)
 
         model = GraphSAGE_LSTM(
             in_dim=16,
@@ -199,9 +201,7 @@ def main() -> None:
     normalizer  = TargetNormalizer.from_train(y_train_arr)
 
     N_NODES = args.patch * args.patch
-    edge_index, edge_weight = build_weighted_edge_index(args.patch)
-    print(f"Graph: {N_NODES} nodes, {edge_index.shape[1]} weighted edges "
-          f"(w_cardinal=1.0, w_diagonal={1/(2**0.5):.3f})")
+    print(f"Graph: {N_NODES} nodes | k_neighbors in {[4, 8, 12, 16]} (chosen per trial)")
 
     train_ds = GraphSeqDataset(train_man, PATCHES_ROOT, normalizer)
     val_ds   = GraphSeqDataset(val_man,   PATCHES_ROOT, normalizer)
@@ -218,7 +218,7 @@ def main() -> None:
 
     print(f"\nStarting Optuna ({args.n_trials} trials) ...")
     study.optimize(
-        make_objective(train_ds, val_ds, normalizer, edge_index, edge_weight, DEVICE, args.seed, args.day_threshold, USE_AMP),
+        make_objective(train_ds, val_ds, normalizer, args.patch, DEVICE, args.seed, args.day_threshold, USE_AMP),
         n_trials=args.n_trials,
         n_jobs=2,
         show_progress_bar=True,
@@ -250,6 +250,9 @@ def main() -> None:
     val_loader   = make_loader(val_ds,   best_batch, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
     test_loader  = make_loader(test_ds,  best_batch, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
 
+    best_k = bp["k_neighbors"]
+    best_edge_index, best_edge_weight = build_weighted_knn_edge_index(args.patch, best_k)
+
     best_model = GraphSAGE_LSTM(
         in_dim=16,
         hidden_g=bp["hidden_g"],
@@ -259,8 +262,8 @@ def main() -> None:
         dropout_head=bp["dropout_head"],
         input_bn=bp["input_bn"],
         concat_agg=bp["concat_agg"],
-        edge_index=edge_index,
-        edge_weight=edge_weight,
+        edge_index=best_edge_index,
+        edge_weight=best_edge_weight,
     ).to(DEVICE)
 
     out = train_one_model(
@@ -313,8 +316,9 @@ def main() -> None:
                     "dropout_head":  bp["dropout_head"],
                     "input_bn":      bp["input_bn"],
                     "concat_agg":    bp["concat_agg"],
+                    "k_neighbors":   bp["k_neighbors"],
                     "l1_reg":        bp.get("l1_reg", 0.0),
-                    "weighted_graph": True,
+                    "weighted_graph": "knn_inverse_distance",
                 },
                 "site": args.site, "patch": args.patch,
                 "L": L, "H": H, "seed": args.seed,
@@ -352,11 +356,10 @@ def main() -> None:
             "patch":          args.patch,
             "site_center_rc": meta.get("site_center_pix"),
             "n_nodes":        N_NODES,
-            "n_edges":        int(edge_index.shape[1]),
+            "n_edges":        int(best_edge_index.shape[1]),
             "channels":       16,
-            "graph_type":     "8-connected weighted (1/distance)",
-            "w_cardinal":     1.0,
-            "w_diagonal":     round(1 / (2 ** 0.5), 6),
+            "graph_type":     "knn weighted (1/distance)",
+            "k_neighbors":    best_k,
         },
         "target_norm": {
             "y_mean_train":        normalizer.mean,

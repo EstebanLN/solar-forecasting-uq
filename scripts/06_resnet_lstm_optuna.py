@@ -48,10 +48,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--hours_ahead",   type=int, default=6, choices=[1, 3, 6])
     p.add_argument("--seed",          type=int, default=42)
     p.add_argument("--patch",         type=int, default=16)
-    p.add_argument("--n_trials",      type=int, default=30)
+    p.add_argument("--n_trials",      type=int, default=100)
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int, default=4)
     p.add_argument("--day_threshold", type=float, default=20.0)
+    p.add_argument("--runs_root",     default=None,
+                   help="Directorio raíz donde guardar los runs "
+                        "(default: runs/resnet_lstm_optuna)")
     return p.parse_args()
 
 
@@ -67,19 +70,22 @@ def make_objective(
     use_amp: bool,
 ):
     def objective(trial: optuna.Trial) -> float:
-        base      = trial.suggest_categorical("base",      [16, 24, 32, 48])
-        emb_dim   = trial.suggest_categorical("emb_dim",   [64, 128, 192])
-        hidden_t  = trial.suggest_categorical("hidden_t",  [64, 128, 192])
-        dropout   = trial.suggest_categorical("dropout",   [0.0, 0.1, 0.2, 0.3])
-        lr        = trial.suggest_float("lr", 3e-4, 3e-3, log=True)
-        weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
-        batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
+        base          = trial.suggest_categorical("base",          [16, 24, 32, 48])
+        emb_dim       = trial.suggest_categorical("emb_dim",       [64, 128, 192, 256])
+        hidden_t      = trial.suggest_categorical("hidden_t",      [64, 128, 192, 256])
+        n_lstm_layers = trial.suggest_categorical("n_lstm_layers", [1, 2])
+        dropout       = trial.suggest_categorical("dropout",       [0.0, 0.1, 0.2, 0.3])
+        lr            = trial.suggest_float("lr", 3e-4, 3e-3, log=True)
+        weight_decay  = trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True)
+        l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
+        batch_size    = trial.suggest_categorical("batch_size", [16, 32, 64])
 
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4,  seed=seed, device=device)
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         model = ResNetLSTM(
-            in_ch=16, base=base, emb_dim=emb_dim, hidden_t=hidden_t, dropout=dropout,
+            in_ch=16, base=base, emb_dim=emb_dim,
+            hidden_t=hidden_t, dropout=dropout, n_lstm_layers=n_lstm_layers,
         ).to(device)
 
         out = train_one_model(
@@ -89,6 +95,7 @@ def make_objective(
             normalizer=normalizer,
             lr=lr,
             weight_decay=weight_decay,
+            l1_reg=l1_reg,
             use_amp=use_amp,
             epochs=20,
             patience=6,
@@ -119,7 +126,7 @@ def main() -> None:
     # Directories
     DATASET_ROOT = PROJECT_ROOT / "data" / "datasets" / "manifest_v1"
     GROUND_DIR   = PROJECT_ROOT / "data" / "ground_aligned"
-    RUNS_ROOT    = PROJECT_ROOT / "runs" / "resnet_lstm_optuna"
+    RUNS_ROOT    = Path(args.runs_root) if args.runs_root else PROJECT_ROOT / "runs" / "resnet_lstm_optuna"
     RUNS_ROOT.mkdir(parents=True, exist_ok=True)
 
     SITE_DIR = DATASET_ROOT / args.site / f"h{args.hours_ahead}"
@@ -220,6 +227,7 @@ def main() -> None:
         emb_dim=bp["emb_dim"],
         hidden_t=bp["hidden_t"],
         dropout=bp["dropout"],
+        n_lstm_layers=bp.get("n_lstm_layers", 1),
     ).to(DEVICE)
 
     out = train_one_model(
@@ -229,6 +237,7 @@ def main() -> None:
         normalizer=normalizer,
         lr=bp["lr"],
         weight_decay=bp["weight_decay"],
+        l1_reg=bp.get("l1_reg", 0.0),
         use_amp=USE_AMP,
         epochs=30,
         patience=8,
@@ -264,8 +273,12 @@ def main() -> None:
             "meta": {
                 "arch": "ResNetLSTM",
                 "arch_hparams": {
-                    "base": bp["base"], "emb_dim": bp["emb_dim"],
-                    "hidden_t": bp["hidden_t"], "dropout": bp["dropout"],
+                    "base":          bp["base"],
+                    "emb_dim":       bp["emb_dim"],
+                    "hidden_t":      bp["hidden_t"],
+                    "dropout":       bp["dropout"],
+                    "n_lstm_layers": bp.get("n_lstm_layers", 1),
+                    "l1_reg":        bp.get("l1_reg", 0.0),
                 },
                 "site": args.site, "patch": args.patch,
                 "L": L, "H": H, "seed": args.seed,

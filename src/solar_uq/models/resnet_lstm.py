@@ -84,11 +84,18 @@ class ResNetLSTM(nn.Module):
         emb_dim: int = 128,
         hidden_t: int = 128,
         dropout: float = 0.1,
+        n_lstm_layers: int = 1,
     ):
         super().__init__()
         self.encoder  = SmallResNetEncoder(in_ch=in_ch, base=base, emb_dim=emb_dim)
         self.emb_norm = nn.LayerNorm(emb_dim)
-        self.lstm     = nn.LSTM(input_size=emb_dim, hidden_size=hidden_t, batch_first=True)
+        self.lstm     = nn.LSTM(
+            input_size=emb_dim,
+            hidden_size=hidden_t,
+            num_layers=n_lstm_layers,
+            batch_first=True,
+            dropout=dropout if n_lstm_layers > 1 else 0.0,
+        )
         self.head     = nn.Sequential(
             nn.Linear(hidden_t, hidden_t),
             nn.ReLU(),
