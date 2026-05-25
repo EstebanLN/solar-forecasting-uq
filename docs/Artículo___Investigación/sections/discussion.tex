@@ -5,7 +5,7 @@
 
 \subsection{Why does GraphSAGE outperform ResNet at longer horizons?}
 
-At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieves a 3.6-percentage-point
+At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieves a 2.2-percentage-point
 skill improvement over ResNet-LSTM ($0.636$ vs.\ $0.614$). We hypothesise two
 mechanisms:
 
@@ -22,7 +22,7 @@ cloud-edge gradients that precede GHI events.
 that effectively redundantly process the spatial information across layers; the
 GraphSAGE message-passing is applied once per hop and is less prone to
 over-smoothing at the patch scale ($P = 16$). The lower seed variance of
-GraphSAGE ($\pm 0.011$ vs.\ $\pm 0.020$ at El~Paso 6h) is consistent with a
+GraphSAGE ($\pm 0.013$ vs.\ $\pm 0.023$ at El~Paso 6h) is consistent with a
 more stable loss landscape.
 
 \subsection{Why does SARIMAX remain competitive at Uniandes 6h?}
@@ -83,29 +83,79 @@ detection as a preprocessing step.
         or that GraphSAGE-LSTM should be preferred for its higher stability.
 \end{itemize}
 
-\subsection{Limitations and future work}
+\subsection{Uncertainty quantification: from point forecasts to calibrated intervals}
+\label{ssec:uq_discussion}
 
-Several limitations of the current study should be acknowledged:
+Grid operators require probabilistic outputs — prediction intervals that are
+well-calibrated across conditions of varying cloud cover — not just point
+estimates. Quantifying and ultimately decomposing forecast uncertainty is the
+central long-term goal of this work.
 
-\textbf{Single-site evaluation.} Although two sites are used, both are located in
-Colombia and represent a subset of tropical climate sub-types. Generalisation to
-other tropical or subtropical regions requires additional validation.
+\textbf{Stage 1: Split Conformal Prediction (implemented).}
+Because all models produce only point forecasts, we apply Split CP
+\cite{vovk2005,angelopoulos2023} as a distribution-free post-hoc layer.
+The calibrated interval $[\hat{y} \pm \hat{q}]$ (Section~\ref{ssec:uq})
+carries a finite-sample marginal coverage guarantee regardless of the model
+residual distribution, which is particularly valuable for tropical sites where
+the error distribution is heavy-tailed due to cloud passages.
+A key limitation is that $\hat{q}$ is globally constant: the interval does not
+narrow during predictable clear-sky mornings nor widen during uncertain afternoon
+convection at Uniandes.
 
-\textbf{Flat MLP baseline pending.} The FlatMLP ablation (Section~\ref{ssec:mlp}),
-which quantifies the benefit of any spatial encoding relative to simple
-spatially-pooled features, is currently under evaluation and will be incorporated
-in the final analysis.
+\textbf{Stage 2: Conformalized Quantile Regression (planned).}
+CQR \cite{romano2019} replaces the symmetric residual score with a
+quantile-regression score that adapts the interval width to local difficulty.
+This is expected to reduce average interval width substantially at El~Paso
+(predominantly clear-sky) while maintaining coverage.
 
-\textbf{Uncertainty quantification.} All models currently produce point forecasts.
-Grid operators require probabilistic outputs: prediction intervals that are
-well-calibrated across conditions of varying cloud cover. We have implemented
-Split Conformal Prediction \cite{angelopoulos2023} as a post-hoc calibration
-layer and are evaluating its coverage properties. Future work will also include
-Gaussian variance head training (NLL loss) and Stochastic Gradient Langevin
-Dynamics (SGLD) \cite{welling2011} for approximate Bayesian posterior sampling,
-which provides epistemic uncertainty decomposition.
+\textbf{Stage 3: Aleatoric/epistemic decomposition (planned).}
+Gaussian variance heads (NLL loss) and MC~Dropout will provide separate
+estimates of irreducible measurement noise (aleatoric) and model-knowledge
+uncertainty (epistemic). Under the formulation of \cite{kendall2017}, SGLD
+\cite{welling2011} can further sample the posterior weight distribution for a
+fully Bayesian treatment.
 
-\textbf{Multi-step output.} Current models produce a single-step forecast at
-horizon $H$. Simultaneous multi-step output (e.g., producing forecasts for all
-three horizons from a single forward pass) could improve consistency across
-horizon profiles and reduce inference cost.
+\subsection{Implications for CPES resilience}
+
+The results presented here connect directly to the resilience of solar-integrated
+cyber-physical energy systems.
+
+\textbf{Situational awareness under cloud-induced uncertainty.}
+GraphSAGE-LSTM, by learning spatially-aware representations of incoming cloud
+systems from satellite imagery, provides operators with earlier detection of
+impending irradiance ramps --- the primary source of generation-side uncertainty
+in PV-heavy CPES. The 63.6\% RMSE reduction over persistence at 6h for El~Paso
+translates to significantly tighter dispatch intervals and reduced reserve
+requirements.
+
+\textbf{Calibrated prediction intervals for risk-aware dispatch.}
+The Split CP layer converts any point forecast into an interval with a
+finite-sample coverage guarantee. For a CPES operator, this means that reserve
+scheduling can be tied to an explicit coverage target (e.g., 90\% intervals)
+rather than to ad hoc safety margins. The global constant width $2\hat{q}$ is
+an acknowledged limitation, but even symmetric intervals provide stronger
+risk-management guarantees than unquantified point forecasts.
+
+\textbf{Climate-adaptive model selection.}
+The finding that SARIMAX outperforms deep learning at Uniandes~6h has a direct
+operational implication: CPES operators in tropical mountain locations should
+benchmark statistical baselines before deploying resource-intensive DL pipelines.
+A hybrid portfolio strategy --- statistical baseline for climatologically
+predictable periods, spatial DL during high-variability windows --- could
+optimise the resilience-cost tradeoff.
+
+\subsection{Limitations}
+
+\textbf{Geographic scope.} Both sites are located in Colombia and represent
+two tropical climate sub-types. Generalisation to other tropical or subtropical
+regions requires additional validation.
+
+\textbf{Flat MLP ablation in progress.} The FlatMLP experiments are currently
+completing their Optuna runs (24/24 configurations being evaluated). Final
+results will be incorporated to quantify what fraction of deep-learning skill
+arises from spatial encoding versus temporal dynamics alone.
+
+\textbf{Single-step output.} Current models produce a single-step forecast at
+horizon $H$. Simultaneous multi-step output (forecasts for all three horizons
+from a single forward pass) could improve consistency and reduce inference cost
+in real-time CPES applications.
