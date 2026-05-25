@@ -1,0 +1,111 @@
+{
+  "run_name": "uniandes_H18_L24_P16_seed13_20260523_144913",
+  "study_name": "mlp_uniandes_P16",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 13,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h3",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/uniandes_H18_L24_P16_seed13_20260523_144913"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "channels": 16,
+    "mlp_input_dim": 384,
+    "note": "spatial avg-pool over P\u00d7P before MLP; no spatial structure exploited"
+  },
+  "target_norm": {
+    "y_mean_train": 176.12705206594896,
+    "y_std_train": 279.60664470861093,
+    "y_percentiles_train": [
+      0.0,
+      1.45,
+      614.2736,
+      846.2329999999998,
+      1086.98496
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54507,
+      "rmse": 297.47920806960843,
+      "mae": 176.6130889610509,
+      "n_day": 24893,
+      "rmse_day": 406.97961339298257,
+      "mae_day": 319.8906504639858,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 12424,
+      "rmse": 279.2358520044971,
+      "mae": 159.75912910495813,
+      "n_day": 5363,
+      "rmse_day": 388.4280430826495,
+      "mae_day": 303.88528883087827,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 50,
+    "best_trial_number": 22,
+    "best_value_val_rmse_day": 274.2191715162119,
+    "best_params": {
+      "n_layers": 1,
+      "hidden_dim": 64,
+      "dropout": 0.0,
+      "lr": 8.260618491972573e-05,
+      "weight_decay": 2.446647988821139e-05,
+      "batch_size": 16
+    }
+  },
+  "best_model": {
+    "arch": "FlatMLP",
+    "best_epoch": 29,
+    "train_seconds_total": 6634.716366767883,
+    "n_params": 24833,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/uniandes_H18_L24_P16_seed13_20260523_144913/best_model.pt",
+    "final_val": {
+      "n": 12407,
+      "rmse": 203.35784971936155,
+      "mae": 149.43316948384063,
+      "n_day": 5356,
+      "rmse_day": 272.4589406630861,
+      "mae_day": 214.66169328810653,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.2717344558030258,
+      "skill_day_vs_persistence": 0.2985600666193102
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 209.59797617729646,
+      "mae": 161.28481838060463,
+      "n_day": 5402,
+      "rmse_day": 269.425352151097,
+      "mae_day": 217.4986737084274,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.27691509046650975,
+      "skill_day_vs_persistence": 0.3347733604893711
+    }
+  }
+}

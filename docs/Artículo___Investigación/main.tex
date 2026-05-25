@@ -29,22 +29,23 @@
 % =========================
 % TITLE & METADATA
 % =========================
-\title{Short-Term Solar Irradiance Forecasting from GOES-16 Satellite Imagery:\\
-       GraphSAGE-LSTM vs.\ ResNet-LSTM at Two Climatologically Distinct Colombian Sites}
+\title{Short-Term Solar Irradiance Forecasting for Resilient Cyber-Physical Energy Systems:\\
+       A Graph Neural Network Approach with Conformal Uncertainty Quantification}
 
 \author{
     \IEEEauthorblockN{
         Esteban Ladino Nieto
     }
     \IEEEauthorblockA{
-        Department of Mechanical and Industrial Engineering\\
+        Department of Industrial Engineering\\
         Universidad de los Andes, Bogotá, Colombia\\
         e.ladino@uniandes.edu.co
     }
 }
 
-\markboth{IEEE Transactions on Sustainable Energy, 2026}
-{Ladino: GHI Forecasting via GraphSAGE-LSTM at Colombian Sites}
+\markboth{Intl.\ J.\ Electrical Power \& Energy Systems ---
+  Special Issue: AI-Enabled Resilience of CPES, 2026}
+{Ladino: Graph-Based GHI Forecasting with Conformal UQ for Resilient CPES}
 
 % =========================
 % DOCUMENT
@@ -57,38 +58,42 @@
 % ABSTRACT
 % =========================
 \begin{abstract}
-Accurate short-term forecasting of global horizontal irradiance (GHI) is critical
-for integrating solar photovoltaic generation into power grids, particularly in
-tropical regions where cloud-induced variability is high and numerical weather
-prediction (NWP) data are scarce. This paper presents a systematic comparison of
-deep-learning architectures for satellite-based GHI forecasting at two Colombian
-sites with contrasting climatic regimes: El~Paso (C{\'e}sar), a low-elevation
-tropical site, and Universidad de los Andes (Bogot{\'a}), a high-altitude equatorial
-mountain station. We propose a GraphSAGE-LSTM model that treats each GOES-16
-satellite patch as a graph of spatially connected pixels, aggregating neighbourhood
-context before temporal modelling with an LSTM. We compare this against a
-ResNet-LSTM baseline, a statistical SARIMAX model on the clear-sky index, and a
-persistence reference, across forecast horizons of 1, 3, and 6~hours and four
-independent random seeds. GraphSAGE-LSTM achieves a daytime skill score of
-$\skillday = 0.636 \pm 0.011$ at the 6-hour horizon for El~Paso, outperforming
-the ResNet-LSTM ($0.614 \pm 0.020$) and SARIMAX ($0.210$) baselines. For
-Universidad de los Andes, where convective variability reduces the advantage of
-spatial deep learning, SARIMAX remains competitive at 6~hours ($0.435$) relative
-to GraphSAGE-LSTM ($0.417 \pm 0.007$). At the 1-hour horizon, all deep-learning
-models exhibit negative or near-zero skill at El~Paso, underscoring the difficulty
-of outperforming persistence at short horizons under clear-sky conditions. These
-results demonstrate that graph-based spatial encoding provides a consistent
-advantage over convolutional encoding for longer forecast horizons and high-irradiance
-regimes, while statistical methods remain a competitive baseline in highly variable
-tropical mountain climates.
+Accurate short-term forecasting of solar irradiance is a key enabler of
+resilient cyber-physical energy systems (CPES): it reduces reserve requirements,
+supports real-time dispatch decisions under renewable uncertainty, and allows
+operators to anticipate abrupt generation changes before they propagate through
+the grid. This paper proposes a graph neural network framework for short-term
+global horizontal irradiance (GHI) forecasting from GOES-16 geostationary
+satellite imagery, and couples it with conformal uncertainty quantification (UQ)
+to produce calibrated prediction intervals suitable for risk-aware grid operation.
+We introduce \textbf{GraphSAGE-LSTM}, which treats each satellite patch as a
+graph of spatially connected pixels, performs neighbourhood aggregation via
+GraphSAGE, and passes the resulting embedding sequence through an LSTM.
+The model is evaluated against a ResNet-LSTM baseline, a SARIMA model on the
+clear-sky index, and persistence, at two Colombian sites representing
+contrasting climatic regimes: El~Paso (C{\'e}sar), a high-irradiance low-elevation
+tropical site, and Universidad de los Andes (Bogot{\'a}), a high-altitude
+equatorial mountain station with intense convective variability.
+Across forecast horizons of 1, 3, and 6~hours and four independent random seeds,
+GraphSAGE-LSTM achieves $\skillday = 0.636 \pm 0.013$ at the 6-hour horizon
+for El~Paso, outperforming ResNet-LSTM ($0.614 \pm 0.023$) and SARIMA ($0.210$).
+At the tropical mountain site (Uniandes), SARIMA ($\skillday = 0.435$) remains
+competitive with GraphSAGE-LSTM ($0.417 \pm 0.008$) at 6~hours, illustrating
+that site-specific climatological structure governs model selection in CPES.
+Split Conformal Prediction is applied as a post-hoc UQ layer, providing
+finite-sample marginal coverage guarantees without distributional assumptions.
+This work establishes a reproducible GOES-16 benchmark for tropical sites and
+lays the foundation for a staged UQ roadmap toward adaptive intervals and
+epistemic uncertainty decomposition relevant to resilient energy system operation.
 \end{abstract}
 
 % =========================
 % KEYWORDS
 % =========================
 \begin{IEEEkeywords}
-Solar irradiance forecasting, GOES-16, GraphSAGE, LSTM, convolutional neural network,
-clear-sky index, SARIMAX, tropical climate, uncertainty quantification
+Cyber-physical energy systems, resilience, artificial intelligence, solar irradiance
+forecasting, GOES-16, graph neural network, GraphSAGE, LSTM, convolutional neural
+network, conformal prediction, uncertainty quantification, clear-sky index, tropical climate
 \end{IEEEkeywords}
 
 % =========================

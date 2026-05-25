@@ -1,23 +1,35 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-05-20_
+_Actualizado: 2026-05-25_
 
 ---
 
 ## Estado actual de runs
 
-| Modelo                | Runs completos | Observaciones                                                    |
-|-----------------------|---------------|------------------------------------------------------------------|
-| resnet_lstm           | 30 / 30       | 2 sitios × 3H × 5 seeds. Val metrics en summary.json            |
-| graphsage_lstm        | 30 / 30       | Ídem                                                             |
-| resnet_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
-| graphsage_lstm_optuna | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                        |
-| sarima                | **2 / 2**     | COMPLETO ✓ — uniandes corrido el 2026-05-11                      |
-| mlp_optuna            | 10 / 24       | EN CURSO — H6 (1h) completo ambos sitios; H18 (3h) elpaso seed42 + uniandes seed42 done |
-| resnet_lstm_optuna_v2 | 0 / 24        | PENDIENTE — lanzar `bash run_sequential.sh resnet_optuna_v2` |
-| graphsage_lstm_optuna_v2 | 0 / 24     | PENDIENTE — lanzar `bash run_sequential.sh gsage_optuna_v2`  |
+| Modelo                   | Runs completos | Observaciones                                                              |
+|--------------------------|---------------|----------------------------------------------------------------------------|
+| resnet_lstm              | 30 / 30       | 2 sitios × 3H × 5 seeds. Val metrics en summary.json                      |
+| graphsage_lstm           | 30 / 30       | Ídem                                                                       |
+| resnet_lstm_optuna       | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                                  |
+| graphsage_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                                  |
+| sarima                   | **2 / 2**     | COMPLETO ✓ — uniandes corrido el 2026-05-11                                |
+| mlp_optuna               | **16 / 24**   | EN CURSO — ver detalle abajo                                               |
+| resnet_lstm_optuna_v2    | 0 / 24        | **⚠ BLOQUEADO** — cambios v2 implementados pero runs NUNCA lanzados        |
+| graphsage_lstm_optuna_v2 | 0 / 24        | **⚠ BLOQUEADO** — ídem                                                     |
 
-`run_sequential.sh` MLP corriendo: H18 seeds 1,7,13 y H36 para ambos sitios (activos a 2026-05-20).
-Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + elpaso_H18 seed42 + uniandes_H18 seed42.
+### MLP Optuna — detalle (2026-05-25)
+
+| Sitio     | Horizonte | Seeds completos     | Estado           |
+|-----------|-----------|---------------------|------------------|
+| elpaso    | H6 (1h)   | 42, 1, 7, 13        | ✓ 4/4            |
+| elpaso    | H18 (3h)  | 42, 1, 7            | 🔄 3/4 — seed13 corriendo |
+| elpaso    | H36 (6h)  | —                   | ⏳ 0/4 — esperando cola   |
+| uniandes  | H6 (1h)   | 42, 1, 7, 13        | ✓ 4/4            |
+| uniandes  | H18 (3h)  | 42, 1, 7, 13        | ✓ 4/4            |
+| uniandes  | H36 (6h)  | 42                  | 🔄 1/4 — seed1 corriendo  |
+
+Procesos activos (verificado 2026-05-25):
+- `run_sequential.sh mlp_optuna elpaso` → `06_mlp_optuna.py --site elpaso --hours_ahead 3 --seed 13`
+- `run_sequential.sh mlp_optuna uniandes` → `06_mlp_optuna.py --site uniandes --hours_ahead 6 --seed 1`
 
 ---
 
@@ -51,7 +63,15 @@ Completos: elpaso_H6 (seeds 42,1,7,13) + uniandes_H6 (seeds 42,1,7,13) + elpaso_
 - [x] `scripts/06_mlp_optuna.py` — `FlatMLP`: spatial avg-pool, flatten L×C, MLP con LayerNorm
   - Hiperparámetros: n_layers, hidden_dim, dropout, lr, weight_decay (n_trials=50)
   - Protocolo Optuna: 4 seeds, 2 sitios, 3 horizontes → `runs/mlp_optuna/`
-- [ ] Esperar a 24/24 runs completos → actualizar tabla de resultados y sección MLP del artículo
+- [ ] Esperar a 24/24 runs completos (actualmente 16/24) → actualizar tabla de resultados y sección MLP del artículo
+
+### Fase 5 — v2 (BLOQUEADO — nunca se lanzaron) ⚠
+> Cambios de arquitectura implementados en código. Los runs v2 requieren lanzamiento manual.
+- [ ] Lanzar runs v2 (ver comandos en "Cambios implementados — v2" abajo)
+  - `resnet_lstm_optuna_v2`: 24 runs × 100 trials
+  - `graphsage_lstm_optuna_v2`: 24 runs × 100 trials
+- [ ] Una vez completos: reemplazar v1 en tabla de resultados con mejores métricas v2
+- [ ] Actualizar figuras del artículo si v2 supera a v1
 
 ---
 

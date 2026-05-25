@@ -51,15 +51,21 @@ in units consistent with each band's native reflectance or brightness temperatur
 
 \subsubsection{Dataset construction and temporal split}
 
-Forecast samples are constructed as pairs $(X, y)$ where the input
+For the deep-learning models (ResNet-LSTM, GraphSAGE-LSTM, FlatMLP), forecast
+samples are constructed as pairs $(X, y)$ where the input
 $X \in \R^{L \times C \times P \times P}$ is a sequence of $L = 24$ satellite
 patch frames covering the most recent 4 hours of observation, and the target
-$y \in \R$ is the GHI at the site $H$ steps ahead. We consider
-$H \in \{6, 18, 36\}$ steps (corresponding to 1, 3, and 6 hours at 10-minute
-resolution).
+$y \in \R$ is the GHI at the site $H$ steps ahead ($H \in \{6, 18, 36\}$ steps,
+corresponding to 1, 3, and 6 hours at 10-minute resolution).
+A pre-computed satellite manifest validates coverage for each timestamp and
+filters out samples where any of the $L$ history frames is missing.
+\textbf{SARIMAX} does not use satellite data or the patch manifest; it operates
+directly on the 1D ground GHI series resampled to hourly resolution
+(Section~\ref{ssec:sarima}).
 
 To prevent data leakage, train, validation, and test sets are defined by
-non-overlapping calendar blocks (Table~\ref{tab:splits}).
+non-overlapping calendar blocks (Table~\ref{tab:splits}); the same boundaries
+apply to both the satellite-based DL pipeline and the SARIMAX ground series.
 
 \begin{table}[t]
   \centering
@@ -136,47 +142,81 @@ count ranges from approximately 50k to 500k depending on the configuration.
 \subsubsection{GraphSAGE-LSTM}
 \label{ssec:gsage}
 
-Instead of convolutional layers, we model the spatial patch as a graph
-$G = (V, E)$ where each pixel is a node ($|V| = P^2 = 256$) and edges connect
-8-connected neighbours (horizontal, vertical, diagonal). Node features at step $\ell$
-are the $C = 16$ channel values at that pixel.
+Instead of convolutional layers, we model the spatial patch as a weighted graph
+$G = (V, E, \mathbf{w})$ where each pixel is a node ($|V| = P^2 = 256$).
+For each node $v$ we connect its $k$ nearest neighbours in the 2D pixel grid
+by Euclidean distance, and assign each edge an inverse-distance weight:
+\begin{equation}
+  w_{vu} = \frac{1}{d(v,u)}, \quad (v, u) \in E.
+  \label{eq:edge_weight}
+\end{equation}
+This $k$-NN graph is more flexible than a fixed 8-connected grid: it can represent
+irregular spatial dependencies and the optimal $k$ is treated as a hyperparameter
+(Section~\ref{ssec:optuna}). Node features at step $\ell$ are the $C = 16$
+channel values at that pixel.
 
 GraphSAGE \cite{hamilton2017} updates each node's representation by aggregating
-its neighbourhood:
+its neighbourhood. With edge weights, the mean aggregation becomes a
+distance-weighted sum:
 \begin{equation}
   \mathbf{h}_v^{(k)} = \sigma\!\left(
     \mathbf{W}^{(k)} \left[ \mathbf{h}_v^{(k-1)} \Vert
-    \text{MEAN}_{u \in \mathcal{N}(v)} \mathbf{h}_u^{(k-1)} \right]
+    \frac{\sum_{u \in \mathcal{N}(v)} w_{vu}\,\mathbf{h}_u^{(k-1)}}
+         {\sum_{u \in \mathcal{N}(v)} w_{vu}} \right]
   \right)
   \label{eq:sage}
 \end{equation}
-where $\mathcal{N}(v)$ denotes the neighbours of $v$, $\Vert$ is concatenation,
-and $\sigma$ is ReLU. After $K$ layers (K~$\in\{2,3,4\}$), a mean readout over
-all nodes yields the graph-level embedding $\mathbf{g}_\ell \in \R^{d_g}$.
-The sequence $(\mathbf{g}_1, \ldots, \mathbf{g}_L)$ is then processed by an
-LSTM identical to that of the ResNet-LSTM variant.
+where $\mathcal{N}(v)$ denotes the $k$-NN neighbours of $v$, $\Vert$ is
+concatenation, and $\sigma$ is ReLU. After $K \in \{2,3,4\}$ layers, a mean
+readout over all nodes yields the graph-level embedding
+$\mathbf{g}_\ell \in \R^{d_g}$. The sequence
+$(\mathbf{g}_1, \ldots, \mathbf{g}_L)$ is then processed by a single- or
+two-layer LSTM whose final hidden state is projected to the scalar output $\hat{y}$.
 
-The edge index is a fixed buffer registered with the model, so both standard
-mini-batch DataLoaders and the existing training loop are reused without
-modification.
+The edge index and weights are fixed buffers registered with the model and
+replicated for each batch element, so standard mini-batch DataLoaders and the
+existing training loop are reused without modification.
 
-\subsubsection{Flat MLP baseline (under evaluation)}
+\subsubsection{Flat MLP baseline}
 \label{ssec:mlp}
 
 As an ablation of spatial structure, we include a \textbf{FlatMLP} baseline that
 applies global average pooling over the $P \times P$ spatial dimensions of each
 frame, yielding a flattened feature vector of size $L \times C = 24 \times 16 = 384$.
 This vector is passed through a multi-layer perceptron with \texttt{LayerNorm} and
-\texttt{ReLU} activations. The FlatMLP uses no spatial inductive bias and serves
-to quantify the benefit of spatial encoding. Results for this model are pending
-and will be included in the final version.
+\texttt{ReLU} activations. By discarding all spatial arrangement information,
+the FlatMLP quantifies how much of the forecasting skill of the spatial models
+(ResNet-LSTM and GraphSAGE-LSTM) arises from spatial encoding per se, versus
+simple temporal statistics of the patch mean. The MLP follows the same Optuna
+HPO protocol as the other deep-learning models (50 trials, 4 seeds, 2 sites,
+3 horizons). Experiments are currently being finalised; results will be
+incorporated in the version submitted for review.
 
 \subsection{Hyperparameter optimisation}
 \label{ssec:optuna}
 
-For ResNet-LSTM and GraphSAGE-LSTM we use Optuna \cite{akiba2019} with the TPE
-sampler and Median pruner. Each study runs 50 trials with $n_\text{jobs}=2$.
-The search space is summarised in Table~\ref{tab:hpspace}.
+For the three deep-learning models (ResNet-LSTM, GraphSAGE-LSTM, and FlatMLP)
+we use Optuna \cite{akiba2019} with the TPE sampler and Median pruner.
+The study budget is 50 trials per configuration
+(site $\times$ horizon $\times$ seed) with $n_\text{jobs}=2$; an extended
+run with 100 trials is being evaluated to confirm convergence.
+SARIMAX does not use Optuna: its model order is selected via statistical tests
+and information-criterion grid search as described in Section~\ref{ssec:sarima}.
+
+The ResNet-LSTM and GraphSAGE-LSTM search spaces (Table~\ref{tab:hpspace})
+include \texttt{n\_lstm\_layers}~$\in\{1,2\}$ to allow stacked recurrent
+processing, and a categorical L1 regularisation coefficient
+(\texttt{l1\_reg}) to penalise large weights in high-capacity configurations;
+both are new relative to the initial baseline study.
+For \textbf{ResNet-LSTM} specifically, the embedding dimension
+(\texttt{emb\_dim}) and temporal hidden size (\texttt{hidden\_t}) are extended
+to 256 to increase capacity.
+For \textbf{GraphSAGE-LSTM}, the number of nearest neighbours
+($k \in \{4, 8, 12, 16\}$) used to build the weighted pixel graph is
+additionally tunable, allowing the study to determine the optimal spatial
+connectivity for each site-horizon combination.
+For \textbf{FlatMLP}, the study searches over MLP depth, hidden dimension,
+dropout, learning rate, and weight decay (50 trials).
 
 \begin{table}[t]
   \centering
@@ -187,14 +227,16 @@ The search space is summarised in Table~\ref{tab:hpspace}.
     \toprule
     \textbf{Hyperparameter} & \textbf{ResNet-LSTM} & \textbf{GraphSAGE-LSTM} \\
     \midrule
-    \texttt{base} / \texttt{hidden\_g}  & $\{16,24,32,48\}$   & $\{64,96,128,192\}$ \\
-    \texttt{emb\_dim} / \texttt{n\_sage\_layers} & $\{64,128,192\}$ & $\{2,3,4\}$   \\
-    \texttt{hidden\_t} (LSTM)  & $\{64,128,192\}$  & $\{64,96,128\}$    \\
-    \texttt{n\_lstm\_layers}   & $\{1,2\}$         & $\{1,2\}$          \\
-    \texttt{dropout}           & $\{0,0.1,0.2,0.3\}$ & $\{0,0.1,0.2\}$  \\
+    \texttt{base} / \texttt{hidden\_g}  & $\{16,24,32,48\}$          & $\{64,96,128,192,256\}$      \\
+    \texttt{emb\_dim} / \texttt{n\_sage\_layers} & $\{64,128,192,256\}$ & $\{2,3,4\}$            \\
+    \texttt{hidden\_t} (LSTM)  & $\{64,128,192,256\}$       & $\{64,96,128,192,256\}$      \\
+    \texttt{n\_lstm\_layers}   & $\{1,2\}$                  & $\{1,2\}$                    \\
+    \texttt{k\_neighbors}      & ---                        & $\{4,8,12,16\}$              \\
+    \texttt{l1\_reg}           & $\{0,10^{-5},10^{-4},10^{-3}\}$ & $\{0,10^{-5},10^{-4},10^{-3}\}$ \\
+    \texttt{dropout}           & $\{0,0.1,0.2,0.3\}$        & $\{0,0.1,0.2\}$              \\
     \texttt{lr}                & $[3\text{e-}4, 3\text{e-}3]$ & $[5\text{e-}5, 2\text{e-}3]$ \\
-    \texttt{weight\_decay}     & $[10^{-6}, 10^{-3}]$ & $[10^{-6}, 10^{-3}]$ \\
-    \texttt{batch\_size}       & $\{16,32,64\}$    & $\{8,16,32\}$      \\
+    \texttt{weight\_decay}     & $[10^{-6}, 10^{-3}]$       & $[10^{-6}, 10^{-3}]$         \\
+    \texttt{batch\_size}       & $\{16,32,64\}$             & $\{8,16,32\}$                \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -211,6 +253,62 @@ and $s_y$ estimated from the training set). Training uses early stopping with
 patience~6 (trials) or~8 (final retraining). Automatic Mixed Precision (AMP) is
 enabled when a GPU is available. Each experiment is replicated with four seeds
 $\{42, 1, 7, 13\}$ to report mean~$\pm$~std statistics.
+
+\subsection{Uncertainty quantification: Split Conformal Prediction}
+\label{ssec:uq}
+
+All point-forecast models are used as the backbone for a three-stage uncertainty
+quantification (UQ) pipeline whose long-term goal is to decompose total forecast
+uncertainty into its \emph{aleatoric} component (irreducible cloud stochasticity)
+and its \emph{epistemic} component (uncertainty due to limited data and model
+capacity).
+
+\textbf{Stage~1 --- Split Conformal Prediction (implemented, \cite{vovk2005,angelopoulos2023}).}
+We apply Inductive Conformal Prediction as a distribution-free, finite-sample
+calibration method.  A non-conformity score is computed over the validation set:
+\begin{equation}
+  s_i = |y_i - \hat{y}_i| \quad [\text{W/m}^2].
+  \label{eq:score}
+\end{equation}
+The calibrated conformal quantile at miscoverage level $\alpha$ is
+\begin{equation}
+  \hat{q} = \mathrm{Quantile}\!\left(\{s_i\}_{i=1}^{n_\text{cal}},\;
+    \frac{\lceil(n_\text{cal}+1)(1-\alpha)\rceil}{n_\text{cal}}\right),
+  \label{eq:qhat}
+\end{equation}
+and the prediction interval for a new test point is
+\begin{equation}
+  \mathcal{C}_{1-\alpha}(x) = \bigl[\hat{y}(t+H)-\hat{q},\;\hat{y}(t+H)+\hat{q}\bigr].
+  \label{eq:interval}
+\end{equation}
+Under exchangeability, this guarantees marginal coverage
+$\mathbb{P}(Y \in \mathcal{C}_{1-\alpha}) \geq 1-\alpha$ exactly in finite samples
+\cite{angelopoulos2023}.  Because $\hat{q}$ is a global constant, the interval
+has fixed width $2\hat{q}$ and does not adapt to local prediction difficulty.
+We evaluate empirical coverage at $\alpha \in \{0.05, 0.10, 0.20\}$ (intervals
+of 95\%, 90\%, and 80\%) reporting both overall and daytime-only metrics.
+
+\textbf{Stage~2 --- Conformalized Quantile Regression (planned, \cite{romano2019}).}
+To obtain intervals whose width adapts to local uncertainty, we will train
+quantile-regression heads on the DL encoders and apply the CQR correction.
+This is expected to reduce unnecessary interval width during low-variability
+periods (clear-sky mornings) without sacrificing coverage.
+
+\textbf{Stage~3 --- Bayesian uncertainty decomposition (planned,
+\cite{kendall2017,welling2011}).}
+Gaussian variance heads (NLL loss) will model aleatoric uncertainty, while
+Stochastic Gradient Langevin Dynamics (SGLD, \cite{welling2011}) will sample
+the posterior weight distribution to quantify epistemic uncertainty.
+SGLD injects calibrated Langevin noise into gradient updates, enabling
+approximate Bayesian inference without the computational overhead of full
+MCMC: running the chain for $T$ epochs and collecting snapshots every
+$\Delta$ epochs yields $T/\Delta$ approximate posterior samples, whose
+ensemble mean serves as the point forecast and whose standard deviation
+quantifies model-knowledge uncertainty.
+Together, the aleatoric head and SGLD ensemble will decompose total forecast
+uncertainty into its irreducible (cloud stochasticity) and reducible
+(model-knowledge) components \cite{kendall2017}, supporting risk-stratified
+dispatch decisions in CPES.
 
 \subsection{Evaluation metrics}
 

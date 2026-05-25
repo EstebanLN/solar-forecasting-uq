@@ -1,0 +1,111 @@
+{
+  "run_name": "elpaso_H18_L24_P16_seed1_20260522_044411",
+  "study_name": "mlp_elpaso_P16",
+  "site": "elpaso",
+  "device": "cuda",
+  "seed": 1,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/elpaso/h3",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/elpaso/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_elpaso.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/elpaso_H18_L24_P16_seed1_20260522_044411"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "channels": 16,
+    "mlp_input_dim": 384,
+    "note": "spatial avg-pool over P\u00d7P before MLP; no spatial structure exploited"
+  },
+  "target_norm": {
+    "y_mean_train": 257.92697964785924,
+    "y_std_train": 333.79023189628583,
+    "y_percentiles_train": [
+      0.0,
+      46.8406,
+      830.73338,
+      940.32124,
+      1060.9813360000005
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 67757,
+      "rmse": 309.1336034108842,
+      "mae": 195.06606843573357,
+      "n_day": 37140,
+      "rmse_day": 386.88765276155976,
+      "mae_day": 299.70014026117394,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 16980,
+      "rmse": 328.47743608830115,
+      "mae": 215.02438442285043,
+      "n_day": 8438,
+      "rmse_day": 430.63078605216106,
+      "mae_day": 361.2121933278028,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17447,
+      "rmse": 316.2031679603426,
+      "mae": 209.22957659196422,
+      "n_day": 8861,
+      "rmse_day": 411.01905686516415,
+      "mae_day": 344.8571918970771,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 50,
+    "best_trial_number": 2,
+    "best_value_val_rmse_day": 272.54915139155594,
+    "best_params": {
+      "n_layers": 3,
+      "hidden_dim": 256,
+      "dropout": 0.0,
+      "lr": 0.0008670546083279865,
+      "weight_decay": 0.000996775280028081,
+      "batch_size": 32
+    }
+  },
+  "best_model": {
+    "arch": "FlatMLP",
+    "best_epoch": 7,
+    "train_seconds_total": 3763.864559173584,
+    "n_params": 231937,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/elpaso_H18_L24_P16_seed1_20260522_044411/best_model.pt",
+    "final_val": {
+      "n": 16974,
+      "rmse": 244.08574771628076,
+      "mae": 172.70487633214424,
+      "n_day": 8433,
+      "rmse_day": 285.26823413421135,
+      "mae_day": 235.78021502237536,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.25691776390185594,
+      "skill_day_vs_persistence": 0.33755726860722646
+    },
+    "final_test": {
+      "n": 17429,
+      "rmse": 264.9404582240333,
+      "mae": 198.47206573337496,
+      "n_day": 8861,
+      "rmse_day": 269.4615787479274,
+      "mae_day": 230.67306017103454,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.16211953241005927,
+      "skill_day_vs_persistence": 0.3444061187743802
+    }
+  }
+}

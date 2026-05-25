@@ -1,7 +1,24 @@
 \section{Introduction}
 \label{sec:intro}
 
-\IEEEPARstart{S}{olar} photovoltaic (PV) generation has grown rapidly across Latin America, with
+\IEEEPARstart{M}{odern} power grids are increasingly characterised as
+cyber-physical energy systems (CPES) \cite{deng2017} --- tightly coupled
+infrastructures in which physical generation, transmission, and distribution
+assets are monitored and controlled through digital communication layers.
+The integration of variable renewable energy (VRE), particularly solar
+photovoltaic (PV), introduces a new source of operational uncertainty that
+challenges the \emph{resilience} of CPES: the ability to anticipate,
+withstand, and recover from disruptive events \cite{bhusal2020}.
+Unlike cyber attacks or extreme weather damage --- which are discrete and
+locatable --- the uncertainty arising from cloud-induced irradiance variability
+is continuous, stochastic, and correlated across spatially distributed
+generation assets.
+Accurate, uncertainty-aware short-term solar forecasting is therefore a
+foundational \emph{AI-enabled resilience mechanism} for CPES operators,
+providing the situational awareness needed to schedule reserves, trigger demand
+response, and prevent grid imbalances before they cascade.
+
+Solar photovoltaic (PV) generation has grown rapidly across Latin America, with
 Colombia reaching over 1~GW of installed capacity and targeting 9~GW by 2030
 under its National Energy Plan \cite{upme2023}. Reliable short-term forecasts of
 global horizontal irradiance (GHI) are a prerequisite for efficient dispatch of
@@ -40,14 +57,15 @@ This paper makes the following contributions:
 
 \begin{enumerate}
   \item We propose \textbf{GraphSAGE-LSTM}, a model that treats a GOES-16 satellite
-        patch as an 8-connected pixel graph, applies GraphSAGE neighbourhood
-        aggregation \cite{hamilton2017}, and passes the resulting sequence of
-        graph embeddings through an LSTM to produce a point forecast.
+        patch as a $k$-nearest-neighbour weighted pixel graph, applies GraphSAGE
+        neighbourhood aggregation \cite{hamilton2017} with inverse-distance edge
+        weights, and passes the resulting sequence of graph embeddings through an
+        LSTM to produce a point forecast of GHI at horizons of 1, 3, and 6~hours.
 
-  \item We conduct a \textbf{rigorous empirical comparison} across two sites,
-        three forecast horizons (1, 3, and 6~hours), and four random seeds,
+  \item We conduct a \textbf{rigorous empirical comparison} across two climatologically
+        distinct Colombian sites, three forecast horizons, and four random seeds,
         including Bayesian hyperparameter optimisation via Optuna \cite{akiba2019}
-        for both GraphSAGE-LSTM and ResNet-LSTM.
+        for GraphSAGE-LSTM, ResNet-LSTM, and a flat MLP spatial-ablation baseline.
 
   \item We show that GraphSAGE-LSTM \textbf{consistently outperforms} ResNet-LSTM
         at the 6-hour horizon for the low-elevation high-irradiance site
@@ -55,13 +73,25 @@ This paper makes the following contributions:
         the high-altitude, high-variability site.
 
   \item We identify a \textbf{regime-dependence} of statistical vs.\ deep-learning
-        methods: SARIMAX on the clear-sky index remains competitive at 6~hours
-        for the tropical mountain site (Bogot{\'a}), where the regular diurnal
-        cycle dominates over cloud-driven variability.
+        methods: SARIMAX on the clear-sky index outperforms deep-learning models
+        at 6~hours for the tropical mountain site (Bogot{\'a}, $\skillday = 0.435$
+        vs.\ $0.417$), where the regular diurnal cycle dominates over
+        cloud-driven spatial variability.
 
-  \item We provide a \textbf{fully reproducible experimental framework} including
-        manifests, patch extraction, model code, and evaluation scripts, which
-        we release openly.
+  \item We implement \textbf{Split Conformal Prediction} \cite{vovk2005,angelopoulos2023}
+        as a post-hoc UQ layer applicable to any trained backbone.
+        The calibration procedure produces marginal-coverage-valid prediction
+        intervals without distributional assumptions, supporting risk-aware
+        dispatch decisions in CPES. This constitutes Stage~1 of a staged UQ
+        roadmap: Split~CP (this work) $\to$ Conformalized Quantile Regression
+        \cite{romano2019} for adaptive-width intervals $\to$ Bayesian
+        uncertainty decomposition \cite{kendall2017} for aleatoric/epistemic
+        separation.
+
+  \item We establish a \textbf{reproducible GOES-16 benchmark for tropical sites},
+        including data manifests, patch extraction, model code, Optuna studies,
+        and evaluation scripts, addressing the scarcity of published benchmarks
+        for Latin American and equatorial CPES contexts.
 \end{enumerate}
 
 \subsection*{Paper organisation}

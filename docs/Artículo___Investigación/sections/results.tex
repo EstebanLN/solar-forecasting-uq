@@ -97,11 +97,11 @@ models use a single run.
 
 \paragraph{1-hour horizon.}
 All deep-learning models fail to beat persistence at El~Paso: both ResNet-LSTM
-($\skillday = -0.167 \pm 0.095$) and GraphSAGE-LSTM ($-0.197 \pm 0.034$) show
+($\skillday = -0.167 \pm 0.110$) and GraphSAGE-LSTM ($-0.197 \pm 0.040$) show
 negative skill, meaning they produce higher RMSE than simply repeating the last
 observation. SARIMAX is even worse ($-1.205$). At Uniandes the picture is more
-nuanced: ResNet-LSTM achieves modest positive skill ($+0.161 \pm 0.012$) and
-GraphSAGE-LSTM $+0.147 \pm 0.015$, while SARIMAX reaches $+0.081$. The key
+nuanced: ResNet-LSTM achieves modest positive skill ($+0.161 \pm 0.014$) and
+GraphSAGE-LSTM $+0.147 \pm 0.017$, while SARIMAX reaches $+0.081$. The key
 difference between sites is the persistence reference: El~Paso's 1-hour persistence
 RMSE (204.4~W/m²) is comparatively low because irradiance changes slowly under
 predominantly clear-sky conditions, leaving little room for improvement from data-driven
@@ -124,16 +124,16 @@ autocorrelation structure of the Bogot{\'a} clear-sky index.
 
 \paragraph{6-hour horizon.}
 This is the most favourable horizon for the deep-learning models.
-\textbf{GraphSAGE-LSTM achieves the best overall result}: $\rmseday = 206.1 \pm 6.4$~W/m²
-and $\skillday = 0.636 \pm 0.011$ at El~Paso, reducing the persistence RMSE by
-63.6\%. ResNet-LSTM is close ($0.614 \pm 0.020$) but consistently below GraphSAGE
+\textbf{GraphSAGE-LSTM achieves the best overall result}: $\rmseday = 206.1 \pm 7.4$~W/m²
+and $\skillday = 0.636 \pm 0.013$ at El~Paso, reducing the persistence RMSE by
+63.6\%. ResNet-LSTM is close ($0.614 \pm 0.023$) but consistently below GraphSAGE
 across all seeds. SARIMAX achieves positive skill ($+0.210$) but is substantially
 below the DL methods.
 
 At Uniandes the DL advantage over SARIMAX narrows significantly: GraphSAGE-LSTM
-achieves $0.417 \pm 0.007$ while SARIMAX reaches $0.435$, making SARIMAX the
+achieves $0.417 \pm 0.008$ while SARIMAX reaches $0.435$, making SARIMAX the
 best-performing model at this site-horizon combination. ResNet-LSTM underperforms
-both ($0.368 \pm 0.016$), exhibiting the largest gap between the two sites.
+both ($0.368 \pm 0.019$), exhibiting the largest gap between the two sites.
 
 \begin{figure}[t]
   \centering
@@ -150,8 +150,44 @@ both ($0.368 \pm 0.016$), exhibiting the largest gap between the two sites.
 
 The standard deviation across seeds provides a measure of training stability.
 GraphSAGE-LSTM consistently shows lower seed-to-seed variability than ResNet-LSTM
-(e.g., El~Paso 6h: $\pm 0.011$ vs.\ $\pm 0.020$), suggesting that the graph
+(e.g., El~Paso 6h: $\pm 0.013$ vs.\ $\pm 0.023$), suggesting that the graph
 structure regularises training and reduces sensitivity to weight initialisation.
 The most unstable model is ResNet-LSTM at El~Paso 3h ($\pm 0.090$), which may
 reflect the interaction between the high-irradiance regime and the CNN's sensitivity
 to specific initialisation-driven features.
+
+\subsection{Conformal prediction intervals}
+\label{ssec:cp_results}
+
+Table~\ref{tab:conformal} will report the Split~CP calibration results for the
+best-performing model at each site-horizon combination, evaluated at nominal
+coverage levels 80\%, 90\%, and 95\%.  The conformal quantile $\hat{q}$ (W/m²)
+sets the half-width of the symmetric prediction interval; daytime empirical
+coverage $\hat{\text{cov}}_\text{day}$ should meet or exceed the nominal level
+to satisfy the marginal coverage guarantee of Eq.~\eqref{eq:qhat}.
+
+The backbone for El~Paso is GraphSAGE-LSTM (best overall model); for Uniandes
+the best backbone per horizon is used (SARIMAX at 6h, GraphSAGE-LSTM at 1h
+and 3h), consistent with Table~\ref{tab:main}.
+
+\begin{table}[t]
+  \centering
+  \caption{Split Conformal Prediction results. $\hat{q}$: calibrated half-width
+           (W/m²). $\hat{\text{cov}}_\text{day}$: empirical daytime coverage on
+           the test set. Nominal level $1-\alpha$ in parentheses.
+           \textit{[Conformal calibration in progress; final values to be
+           populated prior to submission.]}}
+  \label{tab:conformal}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{llcccc}
+    \toprule
+    \textbf{Site} & \textbf{H} & \textbf{Level} &
+    $\hat{q}$ (W/m²) & $\hat{\text{cov}}_\text{day}$ & Width (W/m²) \\
+    \midrule
+    El Paso  & 6h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
+    El Paso  & 3h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
+    Uniandes & 6h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
+    Uniandes & 3h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
