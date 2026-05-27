@@ -13,8 +13,8 @@ climatologically contrasting regimes (Table~\ref{tab:sites}).
     \toprule
     & \textbf{El Paso (César)} & \textbf{Uniandes (Bogotá)} \\
     \midrule
-    Latitude  & $9.737°\text{N}$ & $4.602°\text{N}$ \\
-    Longitude & $73.695°\text{W}$ & $74.066°\text{W}$ \\
+    Latitude  & $9.737^{\circ}\text{N}$ & $4.602^{\circ}\text{N}$ \\
+    Longitude & $73.695^{\circ}\text{W}$ & $74.066^{\circ}\text{W}$ \\
     Elevation & 50~m a.s.l.      & 2\,600~m a.s.l.  \\
     Climate   & Tropical semi-arid & Equatorial mountain \\
     Avg.\ GHI & ${\sim}$5.5~kWh/m²/day & ${\sim}$4.2~kWh/m²/day \\
@@ -74,7 +74,7 @@ apply to both the satellite-based DL pipeline and the SARIMAX ground series.
   \setlength{\tabcolsep}{4pt}
   \begin{tabular}{llccc}
     \toprule
-    \textbf{Site} & \textbf{Split} & \textbf{Start} & \textbf{End} & \textbf{Samples (approx.)} \\
+    \textbf{Site} & \textbf{Split} & \textbf{Start} & \textbf{End} & $n$ (approx.) \\
     \midrule
     \multirow{3}{*}{El Paso}
       & Train & 2022-03-01 & 2023-06-30 & 69\,984 \\
@@ -103,8 +103,8 @@ serves as the standard benchmark for short-term solar forecasting.
 Raw GHI is non-stationary due to the deterministic diurnal envelope. We first
 compute the clear-sky index $k_t$:
 \begin{equation}
-  k_t = \frac{\text{GHI}_t}{\ghics_t}, \quad
-  k_t = 0 \text{ if } \ghics_t < 10\,\text{W/m}^2
+  k_t = \frac{\text{GHI}_t}{\ghicst}, \quad
+  k_t = 0 \text{ if } \ghicst < 10\,\text{W/m}^2
   \label{eq:csi}
 \end{equation}
 where $\ghics$ is the Ineichen clear-sky model \cite{ineichen2002} evaluated with
@@ -218,28 +218,31 @@ connectivity for each site-horizon combination.
 For \textbf{FlatMLP}, the study searches over MLP depth, hidden dimension,
 dropout, learning rate, and weight decay (50 trials).
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
-  \caption{Optuna hyperparameter search spaces.}
+  \caption{Optuna hyperparameter search spaces. L1 coefficient and LSTM depth are
+           new relative to the initial baseline study. The \texttt{k\_neighbors}
+           parameter determines the weighted $k$-NN graph built per trial for
+           GraphSAGE-LSTM.}
   \label{tab:hpspace}
-  \setlength{\tabcolsep}{4pt}
+  \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lll}
     \toprule
     \textbf{Hyperparameter} & \textbf{ResNet-LSTM} & \textbf{GraphSAGE-LSTM} \\
     \midrule
-    \texttt{base} / \texttt{hidden\_g}  & $\{16,24,32,48\}$          & $\{64,96,128,192,256\}$      \\
-    \texttt{emb\_dim} / \texttt{n\_sage\_layers} & $\{64,128,192,256\}$ & $\{2,3,4\}$            \\
-    \texttt{hidden\_t} (LSTM)  & $\{64,128,192,256\}$       & $\{64,96,128,192,256\}$      \\
-    \texttt{n\_lstm\_layers}   & $\{1,2\}$                  & $\{1,2\}$                    \\
-    \texttt{k\_neighbors}      & ---                        & $\{4,8,12,16\}$              \\
-    \texttt{l1\_reg}           & $\{0,10^{-5},10^{-4},10^{-3}\}$ & $\{0,10^{-5},10^{-4},10^{-3}\}$ \\
-    \texttt{dropout}           & $\{0,0.1,0.2,0.3\}$        & $\{0,0.1,0.2\}$              \\
-    \texttt{lr}                & $[3\text{e-}4, 3\text{e-}3]$ & $[5\text{e-}5, 2\text{e-}3]$ \\
-    \texttt{weight\_decay}     & $[10^{-6}, 10^{-3}]$       & $[10^{-6}, 10^{-3}]$         \\
-    \texttt{batch\_size}       & $\{16,32,64\}$             & $\{8,16,32\}$                \\
+    \texttt{base} / \texttt{hidden\_g}           & $\{16,24,32,48\}$                     & $\{64,96,128,192,256\}$               \\
+    \texttt{emb\_dim} / \texttt{n\_sage\_layers} & $\{64,128,192,256\}$                  & $\{2,3,4\}$                           \\
+    \texttt{hidden\_t} (LSTM)                    & $\{64,128,192,256\}$                  & $\{64,96,128,192,256\}$               \\
+    \texttt{n\_lstm\_layers}                     & $\{1,2\}$                             & $\{1,2\}$                             \\
+    \texttt{k\_neighbors}                        & ---                                   & $\{4,8,12,16\}$                       \\
+    \texttt{l1\_reg}                             & $\{0,\,10^{-5},\,10^{-4},\,10^{-3}\}$& $\{0,\,10^{-5},\,10^{-4},\,10^{-3}\}$\\
+    \texttt{dropout}                             & $\{0,0.1,0.2,0.3\}$                  & $\{0,0.1,0.2\}$                       \\
+    \texttt{lr}                                  & $[3{\times}10^{-4},\;3{\times}10^{-3}]$ & $[5{\times}10^{-5},\;2{\times}10^{-3}]$ \\
+    \texttt{weight\_decay}                       & $[10^{-6},\;10^{-3}]$                & $[10^{-6},\;10^{-3}]$                 \\
+    \texttt{batch\_size}                         & $\{16,32,64\}$                        & $\{8,16,32\}$                         \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
 
 The Optuna study identifies the best trial on validation $\rmseday$; the winning
 configuration is then retrained for up to 30~epochs with patience~8 and evaluated
