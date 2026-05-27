@@ -1,5 +1,21 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-05-25_
+_Actualizado: 2026-05-27_
+
+---
+
+## Metadata del entorno de entrenamiento
+
+| Campo              | Valor                                    |
+|--------------------|------------------------------------------|
+| **GPU**            | NVIDIA GeForce RTX 5070 (11.5 GB VRAM)  |
+| **PyTorch**        | 2.11.0.dev20260206+cu130                 |
+| **CUDA**           | 13.0                                     |
+| **cuDNN**          | 9.1.7.01                                 |
+| **Tiempo típico**  | 0.67 h – 2.51 h por run (HPO completo)  |
+| **Tiempo mediano** | ~1.4 h por run (ResNet/GraphSAGE Optuna)|
+
+> Mediana calculada sobre los 48 runs de `resnet_lstm_optuna` + `graphsage_lstm_optuna`.  
+> Los runs v2 (100 trials) se estiman en el doble: ~2.8 h mediana.
 
 ---
 
@@ -164,6 +180,114 @@ nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_unian
 
 > Estimado: ~4-5 días con GPU disponible (100 trials × 20 épocas × 24 combos).
 > Los runs v1 no se tocan — `already_done()` distingue por directorio.
+
+---
+
+## Fase 6 — SGLD (implementado, pendiente de correr) ⚠
+
+> Sugerido por asesor: muestrear la distribución a posteriori de los pesos
+> mediante Stochastic Gradient Langevin Dynamics (SGLD, Welling & Teh 2011).
+> Esto proporciona cuantificación de incertidumbre (UQ) nativa sin calibración
+> post-hoc (a diferencia de conformal prediction).
+
+### Qué es SGLD y por qué
+
+En entrenamiento estándar (Adam/AdamW) encontramos **un** conjunto óptimo de
+parámetros θ*. SGLD es como SGD pero con ruido gaussiano inyectado en cada
+paso:
+
+```
+θ_{t+1} = θ_t  −  ε · ∇loss(θ_t)  +  N(0, 2ε)
+```
+
+Con ε suficientemente pequeño y muchos pasos, la cadena de Markov converge a
+muestras de `p(θ | D)` (la distribución a posteriori de los parámetros). Al
+promediar las predicciones de N muestras se obtiene:
+- **Media**: predicción puntual (comparable con Optuna)
+- **Std por muestra**: incertidumbre epistémica del modelo
+
+### Archivos creados (2026-05-27)
+
+| Archivo | Rol |
+|---|---|
+| `src/solar_uq/sgld.py` | Optimizer SGLD (subclase de `torch.optim.Optimizer`) |
+| `src/solar_uq/train_sgld.py` | Loop burn-in + sampling + ensemble inference |
+| `scripts/07_sgld.py` | Entry point unificado para las 3 arquitecturas |
+
+### Decisiones de diseño
+
+**Modularidad**: un único script `07_sgld.py` maneja ResNet, GraphSAGE y MLP
+mediante `--arch resnet|graphsage|mlp`. El dataset correcto
+(`PatchSeqDataset` vs `GraphSeqDataset`) se selecciona internamente.
+
+**Hiperparámetros**: el script lee automáticamente los `best_params` del run
+de Optuna correspondiente a `(arch, optuna_version, site, hours_ahead, seed)`.
+No hay búsqueda adicional de HPs — SGLD reutiliza la arquitectura ya optimizada.
+
+**v1 vs v2**: flag `--optuna_version v1|v2` (default `v2`). Para MLP no hay v2;
+ambas opciones apuntan al mismo directorio `mlp_optuna/`.
+
+**SGLD LR (ε)**: default `1e-5`. Regla de dedo: `ε ≈ adam_lr × 0.01`.
+Valor elegido conservadoramente para garantizar estabilidad de la cadena.
+El LR de Adam encontrado por Optuna es típicamente `3e-4 – 3e-3`, lo que
+sugiere `ε ∈ [3e-6, 3e-5]`.
+
+**AMP deshabilitado**: la inyección de ruido debe ocurrir en la misma escala
+numérica que el gradiente. Mezclar fp16 (gradiente escalado) con fp32 (ruido)
+produce una posterior mal calibrada.
+
+**Protocolo de muestreo**:
+```
+burn_in=500 épocas → descartadas (chain travels away from init)
+sampling: 10 checkpoints × 100 épocas = 1 000 épocas adicionales
+Total: 1 500 épocas por run
+```
+
+**weight_decay en SGLD**: actúa como precisión del prior gaussiano (σ² = 1/wd).
+Se hereda directamente de `best_params["weight_decay"]` del run Optuna.
+
+**l1_reg**: se hereda de `best_params["l1_reg"]` si > 0. No es un prior
+bayesiano propio (prior de Laplace, no gaussiano), pero mantiene consistencia
+con el entrenamiento Optuna.
+
+**grad_clip_norm=1.0**: igual que en `train_one_model` para evitar explosión
+de gradientes, especialmente en las primeras épocas del burn-in.
+
+**Ensemble inference**: al final del sampling, se cargan todos los checkpoints
+y se corre inferencia en el test set. Se reporta media (= predicción puntual)
+y std (= incertidumbre). El `summary.json` tiene la clave `best_model.final_test`
+con las métricas del ensemble → compatible con `08_results_table.py` sin cambios.
+
+**Outputs por run**:
+```
+runs/{arch}_sgld/{site}_H{H}_L{L}_P{patch}_seed{seed}_{ts}/
+  checkpoint_e0600.pt    ← sample #1 (burn_in=500, sample_every=100)
+  checkpoint_e0700.pt
+  …
+  checkpoint_e1500.pt    ← sample #10
+  train_log.json         ← métricas por época (phase: burn-in | sample)
+  summary.json           ← compatible con 08_results_table.py
+```
+
+### Cómo correr (cuando los v2 estén completos)
+
+```bash
+# Un run individual (smoke-test rápido):
+.venv/bin/python scripts/07_sgld.py --arch resnet --site elpaso --hours_ahead 3 --seed 42 --debug
+
+# Run real (v2, todos los parámetros default):
+.venv/bin/python scripts/07_sgld.py --arch resnet    --site elpaso   --hours_ahead 3 --seed 42
+.venv/bin/python scripts/07_sgld.py --arch graphsage --site uniandes --hours_ahead 6 --seed 42
+.venv/bin/python scripts/07_sgld.py --arch mlp       --site elpaso   --hours_ahead 1 --seed 42
+
+# Con v1 como fuente de hiperparámetros:
+.venv/bin/python scripts/07_sgld.py --arch resnet --optuna_version v1 --site elpaso --hours_ahead 3 --seed 42
+```
+
+> **Pendiente**: añadir grupo `sgld` a `run_sequential.sh` para lanzar todos
+> los runs (2 sitios × 3H × 4 seeds × 3 arquitecturas = 72 runs).
+> Cada run cuesta ~1 500 épocas × ~15s/época ≈ **6 h por run** en la RTX 5070.
+> Estimado total: ~18 días si secuencial, ~4-5 días si 4 procesos paralelos.
 
 ---
 

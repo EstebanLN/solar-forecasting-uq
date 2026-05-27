@@ -26,16 +26,22 @@ MODEL_ORDER = [
     "SARIMA",
     "ResNet+LSTM",
     "GraphSAGE+LSTM",
+    "MLP (Optuna)",
     "ResNet+LSTM (Optuna)",
     "GraphSAGE+LSTM (Optuna)",
+    "ResNet+LSTM (Optuna v2)",
+    "GraphSAGE+LSTM (Optuna v2)",
 ]
 
 # Expected seeds per model family (for progress tracking)
 EXPECTED_SEEDS: dict[str, int] = {
-    "ResNet+LSTM":             5,
-    "GraphSAGE+LSTM":          5,
-    "ResNet+LSTM (Optuna)":    4,
-    "GraphSAGE+LSTM (Optuna)": 4,
+    "ResNet+LSTM":                 5,
+    "GraphSAGE+LSTM":              5,
+    "MLP (Optuna)":                4,
+    "ResNet+LSTM (Optuna)":        4,
+    "GraphSAGE+LSTM (Optuna)":     4,
+    "ResNet+LSTM (Optuna v2)":     4,
+    "GraphSAGE+LSTM (Optuna v2)":  4,
 }
 
 
@@ -67,6 +73,7 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
         temporal  = d.get("temporal", {})
         pers_test = d.get("baselines", {}).get("persistence_test", {})
 
+        optuna = d.get("optuna", {})
         records.append({
             "model":         model_label,
             "site":          d.get("site"),
@@ -74,9 +81,11 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
             "seed":          d.get("seed"),
             "rmse":          test.get("rmse"),
             "rmse_day":      test.get("rmse_day"),
+            "mae_day":       test.get("mae_day"),
             "skill":         test.get("skill_vs_persistence"),
             "skill_day":     test.get("skill_day_vs_persistence"),
             "pers_rmse_day": pers_test.get("rmse_day"),
+            "best_trial":    optuna.get("best_trial_number"),
         })
     return records
 
@@ -301,7 +310,13 @@ def _print_progress(all_records: list[dict]) -> None:
     if df.empty:
         return
 
-    optuna_models = ["ResNet+LSTM (Optuna)", "GraphSAGE+LSTM (Optuna)"]
+    optuna_models = [
+        "MLP (Optuna)",
+        "ResNet+LSTM (Optuna)",
+        "GraphSAGE+LSTM (Optuna)",
+        "ResNet+LSTM (Optuna v2)",
+        "GraphSAGE+LSTM (Optuna v2)",
+    ]
     sub = df[df["model"].isin(optuna_models)]
     if sub.empty:
         return
@@ -330,6 +345,27 @@ def _print_progress(all_records: list[dict]) -> None:
 # ──────────────────────────────────────────────────────────────────────
 # Markdown output
 # ──────────────────────────────────────────────────────────────────────
+
+def _save_flat_csv(records: list[dict], path: Path) -> None:
+    """One row per run: arch, site, horizon, seed, rmse_day, skill_day, mae_day, best_trial."""
+    rows = []
+    for r in records:
+        if r.get("model") in ("Persistence",):
+            continue
+        rows.append({
+            "arch":        r["model"],
+            "site":        r.get("site"),
+            "horizon":     r.get("horizon_hours"),
+            "seed":        r.get("seed"),
+            "rmse_day":    r.get("rmse_day"),
+            "skill_day":   r.get("skill_day"),
+            "mae_day":     r.get("mae_day"),
+            "best_trial":  r.get("best_trial"),
+        })
+    df = pd.DataFrame(rows).sort_values(["arch", "site", "horizon", "seed"]).reset_index(drop=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False, float_format="%.4f")
+
 
 def _save_markdown(table: pd.DataFrame, sites: list, horizons: list, path: Path) -> None:
     lines = ["# Results Summary\n"]
@@ -361,17 +397,22 @@ def _save_markdown(table: pd.DataFrame, sites: list, horizons: list, path: Path)
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Results comparison table")
-    ap.add_argument("--latex",    action="store_true", help="Print LaTeX table")
+    ap.add_argument("--latex",       action="store_true", help="Print LaTeX table")
     ap.add_argument("--no-progress", action="store_true", help="Skip HPO progress section")
+    ap.add_argument("--flat",        action="store_true",
+                    help="Also save per-seed flat CSV to results/master.csv")
     ap.add_argument("--out", default=str(PROJECT_ROOT / "results" / "summary.csv"),
-                    help="Save CSV (default: results/summary.csv)")
+                    help="Save aggregated CSV (default: results/summary.csv)")
     args = ap.parse_args()
 
     all_records: list[dict] = []
-    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm",            "ResNet+LSTM")
-    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm",         "GraphSAGE+LSTM")
-    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna",     "ResNet+LSTM (Optuna)")
-    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna",  "GraphSAGE+LSTM (Optuna)")
+    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm",                "ResNet+LSTM")
+    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm",             "GraphSAGE+LSTM")
+    all_records += _load_nn_runs(RUNS_ROOT / "mlp_optuna",                 "MLP (Optuna)")
+    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna",         "ResNet+LSTM (Optuna)")
+    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna",      "GraphSAGE+LSTM (Optuna)")
+    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna_v2",      "ResNet+LSTM (Optuna v2)")
+    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna_v2",   "GraphSAGE+LSTM (Optuna v2)")
     all_records += _load_sarima_runs(RUNS_ROOT / "sarima")
 
     if not all_records:
@@ -399,6 +440,11 @@ def main() -> None:
 
     print(f"Saved → {out}")
     print(f"Saved → {md_out}")
+
+    if args.flat:
+        flat_out = out.parent / "master.csv"
+        _save_flat_csv(all_records, flat_out)
+        print(f"Saved → {flat_out}")
 
     if args.latex:
         _print_latex(table, sites, horizons)

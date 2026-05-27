@@ -170,24 +170,33 @@ The backbone for El~Paso is GraphSAGE-LSTM (best overall model); for Uniandes
 the best backbone per horizon is used (SARIMAX at 6h, GraphSAGE-LSTM at 1h
 and 3h), consistent with Table~\ref{tab:main}.
 
-\begin{table}[t]
+\begin{table*}[t]
   \centering
-  \caption{Split Conformal Prediction results. $\hat{q}$: calibrated half-width
-           (W/m²). $\hat{\text{cov}}_\text{day}$: empirical daytime coverage on
-           the test set. Nominal level $1-\alpha$ in parentheses.
-           \textit{[Conformal calibration in progress; final values to be
-           populated prior to submission.]}}
+  \caption{Split Conformal Prediction results. $\hat{q}$: calibrated half-width (W/m²);
+           $\hat{\text{cov}}_\text{day}$: empirical daytime coverage on the test set.
+           Three nominal levels $1-\alpha \in \{80\%, 90\%, 95\%\}$ are reported per
+           site-horizon combination. Backbone: GraphSAGE-LSTM for El~Paso; best-per-horizon
+           backbone for Uniandes (SARIMAX at 6h, GraphSAGE-LSTM otherwise).
+           \textit{[Conformal calibration in progress; values to be populated prior to
+           submission.]}}
   \label{tab:conformal}
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{llcccc}
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{llccccccc}
     \toprule
-    \textbf{Site} & \textbf{H} & \textbf{Level} &
-    $\hat{q}$ (W/m²) & $\hat{\text{cov}}_\text{day}$ & Width (W/m²) \\
+    & & \multicolumn{3}{c}{\textbf{El Paso}} & & \multicolumn{3}{c}{\textbf{Uniandes}} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){7-9}
+    \textbf{Level} & \textbf{H} &
+    $\hat{q}$ & $\hat{\text{cov}}_\text{day}$ & Width &&
+    $\hat{q}$ & $\hat{\text{cov}}_\text{day}$ & Width \\
     \midrule
-    El Paso  & 6h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
-    El Paso  & 3h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
-    Uniandes & 6h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
-    Uniandes & 3h & 80\% / 90\% / 95\% & --- / --- / --- & --- / --- / --- & --- \\
+    80\% & 3h & --- & --- & --- && --- & --- & --- \\
+    80\% & 6h & --- & --- & --- && --- & --- & --- \\
+    \midrule
+    90\% & 3h & --- & --- & --- && --- & --- & --- \\
+    90\% & 6h & --- & --- & --- && --- & --- & --- \\
+    \midrule
+    95\% & 3h & --- & --- & --- && --- & --- & --- \\
+    95\% & 6h & --- & --- & --- && --- & --- & --- \\
     \bottomrule
   \end{tabular}
-\end{table}
+\end{table*}
