@@ -282,9 +282,14 @@ def main() -> None:
     print(f"  H={H} ({H * FREQ_MIN / 60:.1f}h) | L={L} ({L * FREQ_MIN / 60:.1f}h)")
 
     if args.debug:
-        train_man = train_man.sample(n=2000, random_state=args.seed).reset_index(drop=True)
-        val_man   = val_man.sample(n=600,   random_state=args.seed).reset_index(drop=True)
-        test_man  = test_man.sample(n=600,  random_state=args.seed).reset_index(drop=True)
+        train_man = train_man.sample(n=400, random_state=args.seed).reset_index(drop=True)
+        val_man   = val_man.sample(n=120,  random_state=args.seed).reset_index(drop=True)
+        test_man  = test_man.sample(n=120, random_state=args.seed).reset_index(drop=True)
+        # Override SGLD schedule for a fast end-to-end smoke-test
+        args.burn_in      = 3
+        args.n_samples    = 2
+        args.sample_every = 2
+        args.num_workers  = 0  # avoid subprocess spawn overhead in debug
 
     seed_everything(args.seed)
 
