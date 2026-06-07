@@ -40,32 +40,63 @@ GHI is measured at 10-minute resolution and stored in time-zone-aware (UTC) Parq
 files. Missing values account for less than 2\% of the record at both sites and are
 excluded during dataset construction.
 
-\subsubsection{Satellite data}
+\subsubsection{Satellite data and patch extraction}
+\label{sssec:satellite}
 
 We use the GOES-16 ABI Level-2 Multi-Band Cloud and Moisture Imagery Product
 (ABI-L2-MCMIPF), which provides all 16 ABI spectral channels at a unified
 10-minute cadence and ${\sim}2$~km spatial resolution in the visible bands.
-For each observation timestamp, a $16 \times 16$ pixel patch ($P = 16$) centred
-on the target site is extracted, yielding a tensor of shape $(C, P, P) = (16, 16, 16)$
-in units consistent with each band's native reflectance or brightness temperature.
+Raw hourly ABI-L2-MCMIPF granules are pre-processed into compact per-hour
+archives: each archive is a compressed NumPy array of shape
+$(6, 16, P, P)$, holding the six 10-minute slots within that hour, the
+$C = 16$ spectral channels, and a $P \times P = 16 \times 16$ pixel patch
+($P = 16$) centred on the target site, in units consistent with each band's
+native reflectance or brightness temperature. At inference/training time, a
+single timestamp is resolved to its $(C, P, P) = (16, 16, 16)$ frame by
+selecting the corresponding hourly archive and 10-minute slot, so no
+redundant decoding of the original satellite granules is required.
 
-\subsubsection{Dataset construction and temporal split}
+\subsubsection{Manifests, sequence construction, and temporal split}
+\label{sssec:manifest}
 
 For the deep-learning models (ResNet-LSTM, GraphSAGE-LSTM, FlatMLP), forecast
 samples are constructed as pairs $(X, y)$ where the input
 $X \in \R^{L \times C \times P \times P}$ is a sequence of $L = 24$ satellite
-patch frames covering the most recent 4 hours of observation, and the target
-$y \in \R$ is the GHI at the site $H$ steps ahead ($H \in \{6, 18, 36\}$ steps,
-corresponding to 1, 3, and 6 hours at 10-minute resolution).
-A pre-computed satellite manifest validates coverage for each timestamp and
-filters out samples where any of the $L$ history frames is missing.
-\textbf{SARIMAX} does not use satellite data or the patch manifest; it operates
-directly on the 1D ground GHI series resampled to hourly resolution
-(Section~\ref{ssec:sarima}).
+patch frames covering the most recent 4 hours of observation (10-minute
+cadence), and the target $y \in \R$ is the ground-measured GHI at the site
+$H$ steps ahead ($H \in \{6, 18, 36\}$ steps, corresponding to 1, 3, and
+6 hours).
+
+A pre-computed \textbf{manifest} (one Parquet table per site and horizon)
+enumerates every valid forecast sample: for each candidate target timestamp it
+stores the label $y$, the list of $L = 24$ history timestamps
+\texttt{history\_ts}, and a coverage flag confirming that (i) all $L$ history
+steps exist in the ground-truth series and (ii) a satellite archive is
+available for each of them. Samples for which any of the $L$ history frames
+is missing on disk are filtered out at load time, so every batch the models
+see contains a complete 4-hour satellite history. Two thin
+\texttt{Dataset} wrappers consume the same manifest and patch archives but
+reshape the retrieved frames differently for the two model families:
+
+\begin{itemize}
+  \item \textbf{\texttt{PatchSeqDataset}} (used by ResNet-LSTM and FlatMLP)
+        returns each sample as an image-like sequence
+        $X \in \R^{L \times C \times P \times P}$ --- i.e., $L$ stacked
+        $(16, 16, 16)$ tensors preserving the 2-D pixel grid, ready to be
+        consumed by 2-D convolutions.
+  \item \textbf{\texttt{GraphSeqDataset}} (used by GraphSAGE-LSTM) returns
+        each sample as a node-feature sequence $X \in \R^{L \times N \times C}$
+        with $N = P^2 = 256$: every frame is transposed and reshaped from
+        $(C, P, P)$ to $(P^2, C)$, so that each of the 256 pixels becomes a
+        graph node carrying a $C = 16$-dimensional feature vector (its
+        16-channel spectral signature at that location).
+\end{itemize}
 
 To prevent data leakage, train, validation, and test sets are defined by
-non-overlapping calendar blocks (Table~\ref{tab:splits}); the same boundaries
-apply to both the satellite-based DL pipeline and the SARIMAX ground series.
+non-overlapping calendar blocks (Table~\ref{tab:splits}), and the manifest
+coverage check, splitting boundaries, and patch archives are shared across
+all three deep-learning models, ensuring that ResNet-LSTM, GraphSAGE-LSTM,
+and FlatMLP are trained and evaluated on \emph{exactly} the same samples.
 
 \begin{table}[t]
   \centering
@@ -97,67 +128,82 @@ The persistence model assumes irradiance is unchanged over the forecast horizon:
 $\hat{y}(t+H) = \text{GHI}(t)$. It is optimal under no-change dynamics and
 serves as the standard benchmark for short-term solar forecasting.
 
-\subsubsection{SARIMAX on the clear-sky index}
-\label{ssec:sarima}
-
-Raw GHI is non-stationary due to the deterministic diurnal envelope. We first
-compute the clear-sky index $k_t$:
-\begin{equation}
-  k_t = \frac{\text{GHI}_t}{\ghicst}, \quad
-  k_t = 0 \text{ if } \ghicst < 10\,\text{W/m}^2
-  \label{eq:csi}
-\end{equation}
-where $\ghics$ is the Ineichen clear-sky model \cite{ineichen2002} evaluated with
-\texttt{pvlib} \cite{holmgren2018}. The series $k_t$ lies in $[0, 1.5]$ and is
-more stationary than raw GHI.
-
-Because the 10-minute resolution would require an intractable seasonal period of
-$m = 144$, we resample $k_t$ to hourly resolution ($m = 24$). Order selection
-via ADF/KPSS tests, ACF/PACF analysis, and AIC grid search \cite{hyndman2018}
-yields the model:
-\begin{equation}
-  \text{SARIMAX}(2,1,2)(1,1,1)_{24}
-  \label{eq:sarima}
-\end{equation}
-
-The fitted model forecasts $k_t$ out-of-sample; the final GHI prediction is
-recovered as $\hat{\text{GHI}}(t) = \hat{k}(t)\cdot\ghics(t)$.
-
-\subsubsection{ResNet-LSTM}
+\subsubsection{ResNet-LSTM: convolutional spatial encoder}
 \label{ssec:resnet}
 
-The ResNet-LSTM encoder-decoder processes the patch sequence $X$ as follows.
-A lightweight ResNet \cite{he2016} (three residual stages with stride-2 downsampling,
-followed by global average pooling) encodes each frame $(C, P, P)$ into a
-$d_e$-dimensional embedding $\mathbf{e}_\ell \in \R^{d_e}$. The sequence
-$(\mathbf{e}_1, \ldots, \mathbf{e}_L)$ is then processed by a single- or two-layer
-LSTM \cite{hochreiter1997} whose final hidden state is projected to the scalar
-output $\hat{y}$.
+ResNet-LSTM is an encoder--decoder that treats each satellite frame as a
+conventional multi-channel image and lets a convolutional network learn its
+spatial representation, before a recurrent network reasons over the sequence
+of representations.
 
-The ResNet encoder has three hyperparameters: base channel width
-(\texttt{base}~$\in\{16, 24, 32, 48\}$), embedding dimension
-(\texttt{emb\_dim}~$\in\{64, 128, 192\}$), and head dropout. The total parameter
-count ranges from approximately 50k to 500k depending on the configuration.
+\textbf{Spatial encoder (per frame).} Each frame $X_\ell \in \R^{C \times P
+\times P}$ ($\ell = 1,\ldots,L$) is passed independently through a lightweight
+ResNet \cite{he2016}: a $3\times3$ convolutional stem, followed by three
+residual stages of \texttt{BasicBlock} units (two $3\times3$ convolutions with
+batch normalisation and a skip connection). The first stage preserves the
+$16\times16$ spatial resolution, while the second and third stages apply
+stride-2 downsampling, taking the spatial grid through
+$16 \to 8 \to 4$. A global-average-pooling layer then collapses the
+$4\times4$ feature map to a single vector, which a final linear layer projects
+to a $d_e$-dimensional frame embedding $\mathbf{e}_\ell \in \R^{d_e}$
+(\texttt{emb\_dim}, tuned in $\{64,128,192,256\}$). The encoder's channel
+width is controlled by \texttt{base}~$\in\{16,24,32,48\}$ (the three stages
+use \texttt{base}, $2\times$\texttt{base}, and $4\times$\texttt{base}
+channels respectively); the resulting parameter count ranges from
+approximately 50k to 500k depending on the configuration. Because the same
+encoder weights are applied to every one of the $L = 24$ frames, the model is
+translation-equivariant and shares a single spatial template across the whole
+4-hour history.
 
-\subsubsection{GraphSAGE-LSTM}
+\textbf{Temporal encoder.} The $L$ frame embeddings are normalised
+(\texttt{LayerNorm}) and stacked into a sequence
+$(\mathbf{e}_1,\ldots,\mathbf{e}_L) \in \R^{L \times d_e}$, which a
+single- or two-layer LSTM \cite{hochreiter1997} (\texttt{hidden\_t}, \texttt{n\_lstm\_layers})
+processes step by step; only its final hidden state $\mathbf{h}_L \in
+\R^{d_t}$ is retained. A two-layer MLP head
+(\texttt{Linear} $\to$ \texttt{ReLU} $\to$ \texttt{Dropout} $\to$
+\texttt{Linear}) maps $\mathbf{h}_L$ to the scalar point forecast $\hat{y}$.
+
+\subsubsection{GraphSAGE-LSTM: graph-based spatial encoder}
 \label{ssec:gsage}
 
-Instead of convolutional layers, we model the spatial patch as a weighted graph
-$G = (V, E, \mathbf{w})$ where each pixel is a node ($|V| = P^2 = 256$).
-For each node $v$ we connect its $k$ nearest neighbours in the 2D pixel grid
-by Euclidean distance, and assign each edge an inverse-distance weight:
+GraphSAGE-LSTM shares the same encoder--decoder skeleton as ResNet-LSTM ---
+spatial encoder per frame, then LSTM over the embedding sequence, then MLP
+head --- but \emph{replaces the convolutional encoder with a graph neural
+network} that treats individual pixels, rather than the whole frame, as the
+basic spatial unit.
+
+\textbf{From pixels to a graph.} Each $(C, P, P)$ frame is reshaped (by
+\texttt{GraphSeqDataset}, Section~\ref{sssec:manifest}) into $N = P^2 = 256$
+nodes, one per pixel, each carrying its native $C = 16$-channel spectral
+vector as a node feature --- no convolution or pooling is applied beforehand.
+A single $k$-nearest-neighbour graph $G = (V, E, \mathbf{w})$ is built once
+over the $16\times16$ pixel grid (by Euclidean distance in 2-D pixel
+coordinates) and reused for every frame and every sample: each node connects
+to its $k$ closest pixels ($k \in \{4,8,12,16\}$, tuned per
+site/horizon, Section~\ref{ssec:optuna}), and every edge is assigned an
+inverse-distance weight $w_{vu} = 1/d(v,u)$ (Eq.~\ref{eq:edge_weight} below).
+Larger $k$ values progressively
+add diagonal, two-step, and knight-move neighbours, so $k$ effectively
+controls the spatial receptive field of a single graph layer. Unlike a fixed
+8-connected grid or a convolutional filter, this $k$-NN topology lets the
+model learn \emph{different} aggregation weights for differently-located
+pixels (e.g.\ patch centre vs.\ periphery), rather than sliding one shared
+template across the image. The edge index and weights are precomputed once,
+registered as model buffers, and replicated across the batch dimension, so
+the same mini-batch \texttt{DataLoader} and training loop used for
+ResNet-LSTM apply unchanged.
+
 \begin{equation}
   w_{vu} = \frac{1}{d(v,u)}, \quad (v, u) \in E.
   \label{eq:edge_weight}
 \end{equation}
-This $k$-NN graph is more flexible than a fixed 8-connected grid: it can represent
-irregular spatial dependencies and the optimal $k$ is treated as a hyperparameter
-(Section~\ref{ssec:optuna}). Node features at step $\ell$ are the $C = 16$
-channel values at that pixel.
 
-GraphSAGE \cite{hamilton2017} updates each node's representation by aggregating
-its neighbourhood. With edge weights, the mean aggregation becomes a
-distance-weighted sum:
+\textbf{Spatial encoder (per frame).} GraphSAGE \cite{hamilton2017} updates
+every node's representation by aggregating its neighbourhood. With edge
+weights, the neighbourhood mean becomes a distance-weighted average, and the
+update concatenates each node's own (self) representation with that
+weighted-neighbour summary before a shared linear projection and ReLU:
 \begin{equation}
   \mathbf{h}_v^{(k)} = \sigma\!\left(
     \mathbf{W}^{(k)} \left[ \mathbf{h}_v^{(k-1)} \Vert
@@ -167,30 +213,50 @@ distance-weighted sum:
   \label{eq:sage}
 \end{equation}
 where $\mathcal{N}(v)$ denotes the $k$-NN neighbours of $v$, $\Vert$ is
-concatenation, and $\sigma$ is ReLU. After $K \in \{2,3,4\}$ layers, a mean
-readout over all nodes yields the graph-level embedding
-$\mathbf{g}_\ell \in \R^{d_g}$. The sequence
-$(\mathbf{g}_1, \ldots, \mathbf{g}_L)$ is then processed by a single- or
-two-layer LSTM whose final hidden state is projected to the scalar output $\hat{y}$.
+concatenation, and $\sigma$ is ReLU. The same layer (with shared weights
+$\mathbf{W}^{(k)}$, output width \texttt{hidden\_g}) is applied to all 256
+nodes simultaneously and stacked $K \in \{2,3,4\}$ times
+(\texttt{n\_sage\_layers}); each additional layer extends a node's effective
+receptive field by one more $k$-NN hop. A final \emph{mean readout} over all
+$N = 256$ nodes collapses the per-pixel representations into a single
+graph-level (frame) embedding $\mathbf{g}_\ell \in \R^{d_g}$, with
+$d_g = $~\texttt{hidden\_g}~$\in \{64,96,128,192,256\}$ --- the GraphSAGE
+analogue of the ResNet's $d_e$-dimensional frame embedding.
 
-The edge index and weights are fixed buffers registered with the model and
-replicated for each batch element, so standard mini-batch DataLoaders and the
-existing training loop are reused without modification.
+\textbf{Temporal encoder.} As in ResNet-LSTM, the $L$ graph-level embeddings
+are normalised and stacked into $(\mathbf{g}_1,\ldots,\mathbf{g}_L) \in
+\R^{L \times d_g}$ and processed by a single- or two-layer LSTM whose final
+hidden state feeds an identical MLP head producing $\hat{y}$. The two
+architectures are thus directly comparable: they differ \emph{only} in how
+the per-frame spatial embedding is produced --- convolution-and-downsampling
+over a regular grid (ResNet) versus weighted message-passing over a learned
+$k$-NN pixel graph at full $256$-node resolution, with no spatial downsampling
+(GraphSAGE) --- while sharing the same temporal model, output head, training
+protocol, and data pipeline.
 
-\subsubsection{Flat MLP baseline}
+\subsubsection{FlatMLP: temporal-only ablation}
 \label{ssec:mlp}
 
-As an ablation of spatial structure, we include a \textbf{FlatMLP} baseline that
-applies global average pooling over the $P \times P$ spatial dimensions of each
-frame, yielding a flattened feature vector of size $L \times C = 24 \times 16 = 384$.
-This vector is passed through a multi-layer perceptron with \texttt{LayerNorm} and
-\texttt{ReLU} activations. By discarding all spatial arrangement information,
-the FlatMLP quantifies how much of the forecasting skill of the spatial models
-(ResNet-LSTM and GraphSAGE-LSTM) arises from spatial encoding per se, versus
-simple temporal statistics of the patch mean. The MLP follows the same Optuna
-HPO protocol as the other deep-learning models (50 trials, 4 seeds, 2 sites,
-3 horizons). Experiments are currently being finalised; results will be
-incorporated in the version submitted for review.
+To isolate the contribution of \emph{spatial} encoding from that of temporal
+modelling, FlatMLP discards all pixel-level spatial structure. For every
+frame $X_\ell \in \R^{C \times P \times P}$, a global spatial average pool
+collapses the $P \times P$ grid to its per-channel mean, $\bar{\mathbf{x}}_\ell
+\in \R^{C}$ --- i.e.\ each frame is reduced to a 16-dimensional ``patch-mean
+spectral signature'' with no notion of pixel location. The $L = 24$ resulting
+vectors are concatenated into a single flat input
+$\bar{\mathbf{x}} \in \R^{L \times C} = \R^{384}$ ($24 \times 16$). This
+vector is passed through a fully-connected feed-forward network of
+\texttt{n\_layers} blocks, each consisting of \texttt{Linear} $\to$
+\texttt{LayerNorm} $\to$ \texttt{ReLU} $\to$ \texttt{Dropout}
+(\texttt{hidden\_dim} units), followed by a final \texttt{Linear} layer that
+outputs the scalar $\hat{y}$ directly --- every unit in one layer is connected
+to every unit in the next (a standard dense MLP), with no recurrence, no
+convolution, and no graph structure. Because FlatMLP receives exactly the
+same $L\times C \times P \times P$ input tensors (via \texttt{PatchSeqDataset})
+and is trained with the same protocol, its skill gap relative to ResNet-LSTM
+and GraphSAGE-LSTM directly quantifies how much of their forecasting skill
+stems from \emph{spatial} encoding of the satellite patch, as opposed to
+simple per-frame statistics processed over time.
 
 \subsection{Hyperparameter optimisation}
 \label{ssec:optuna}
@@ -200,8 +266,6 @@ we use Optuna \cite{akiba2019} with the TPE sampler and Median pruner.
 The study budget is 50 trials per configuration
 (site $\times$ horizon $\times$ seed) with $n_\text{jobs}=2$; an extended
 run with 100 trials is being evaluated to confirm convergence.
-SARIMAX does not use Optuna: its model order is selected via statistical tests
-and information-criterion grid search as described in Section~\ref{ssec:sarima}.
 
 The ResNet-LSTM and GraphSAGE-LSTM search spaces (Table~\ref{tab:hpspace})
 include \texttt{n\_lstm\_layers}~$\in\{1,2\}$ to allow stacked recurrent
@@ -311,7 +375,7 @@ quantifies model-knowledge uncertainty.
 Together, the aleatoric head and SGLD ensemble will decompose total forecast
 uncertainty into its irreducible (cloud stochasticity) and reducible
 (model-knowledge) components \cite{kendall2017}, supporting risk-stratified
-dispatch decisions in CPES.
+dispatch decisions for solar-integrated power systems.
 
 \subsection{Evaluation metrics}
 

@@ -3,19 +3,37 @@
 05_sarima_baseline.py — SARIMA statistical benchmark for GHI forecasting.
 
 Methodology:
-  1. Compute clear-sky GHI with pvlib (Ineichen model) at hourly resolution.
-  2. Derive clear-sky index  k = GHI / GHI_cs  (0 at night, ~[0,1.2] during day).
-  3. Fit SARIMAX(2,1,2)(1,1,1)[24] on training k series (hourly, m=24).
-  4. Forecast k at each test target timestamp; convert back: GHI_pred = k_pred * GHI_cs.
-  5. Evaluate with same metrics as DL baselines (rmse_day, mae_day, skill vs persistence).
+  1. Load the same ground-truth GHI tabular data (`ground_10min_utc_{site}.parquet`)
+     used to train and evaluate every other model, and resample it to hourly
+     resolution (m=24 seasonal period is tractable; m=144 at native 10-min
+     resolution is not).
+  2. Fit SARIMAX(2,1,2)(1,1,1)[24] directly on the raw hourly GHI series —
+     no clear-sky normalisation or derived index. The model target is the same
+     physical quantity (GHI, W/m²) that the persistence baseline and the
+     deep-learning models predict.
+  3. Forecast GHI directly at each test target timestamp (clipped at zero).
+  4. Evaluate with the same metrics and on-the-hour subset of the test manifest
+     (rmse_day, mae_day, skill vs. persistence — persistence recomputed on the
+     identical evaluated subset, so the skill score is internally consistent).
 
 Note on temporal resolution:
-  The manifests are at 10-min resolution but SARIMA operates hourly (m=24 is standard
-  in solar forecasting literature; m=144 is intractable on 2+ years of data).
-  Only test rows where t_label falls on an exact hour are evaluated.
+  The manifests are at 10-min resolution but SARIMA operates hourly (m=24 is
+  standard in solar forecasting literature; m=144 is intractable on 2+ years
+  of data). Only test rows where t_label falls on an exact hour are evaluated,
+  and the persistence reference is recomputed on that same on-the-hour subset
+  so RMSE/skill are computed on a like-for-like basis (these numbers are NOT
+  directly comparable to the full-resolution persistence/DL metrics reported
+  elsewhere, which are computed over the full 10-min test manifest).
+
+Order selection:
+  SARIMA_ORDER / SARIMA_SEASONAL_ORDER below were re-selected for the raw
+  hourly GHI series via `notebooks/05b_sarima_order_selection.ipynb` (the
+  clear-sky-index orders from the earlier version of this script do not
+  necessarily transfer to raw GHI, which has very different stationarity
+  and scale properties). Re-run that notebook if the data or sites change.
 
 Dependencies (must be installed in .venv):
-    pip install pvlib statsmodels
+    pip install statsmodels
 
 Usage (from project root):
     python scripts/05_sarima_baseline.py --site uniandes --hours_ahead 6
@@ -40,33 +58,13 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from solar_uq.metrics import metrics_from_arrays, skill_score, eval_persistence
 
 # ---------------------------------------------------------------------------
-# Site coordinates  — verify before running
+# SARIMA order — (p,d,q)(P,D,Q)[m] — selected on raw hourly GHI, see docstring
 # ---------------------------------------------------------------------------
-SITE_META: dict[str, dict] = {
-    "uniandes": {
-        "lat":       4.6024,
-        "lon":      -74.0663,
-        "elevation": 2600,    # m a.s.l., Bogotá
-        "tz":       "America/Bogota",
-    },
-    "elpaso": {
-        # El Paso, César — centro del municipio (rango confirmado por usuario)
-        "lat":       9.737,
-        "lon":      -73.695,
-        "elevation": 50,
-        "tz":       "America/Bogota",
-    },
-}
-
-# SARIMA order — (p,d,q)(P,D,Q)[m]
 SARIMA_ORDER          = (2, 1, 2)
 SARIMA_SEASONAL_ORDER = (1, 1, 1, 24)   # m=24 hours (daily seasonality)
 
-CS_FLOOR   = 10.0   # W/m²: below this, k is set to 0 (night/twilight)
-K_MAX      = 1.5    # hard ceiling on clear-sky index
-RUNS_DIR   = PROJECT_ROOT / "runs" / "sarima"
-
-GROUND_DIR = PROJECT_ROOT / "data" / "ground_aligned"
+RUNS_DIR    = PROJECT_ROOT / "runs" / "sarima"
+GROUND_DIR  = PROJECT_ROOT / "data" / "ground_aligned"
 DATASET_DIR = PROJECT_ROOT / "data" / "datasets" / "manifest_v1"
 
 
@@ -85,45 +83,14 @@ def parse_args() -> argparse.Namespace:
 
 
 # ---------------------------------------------------------------------------
-# Clear-sky index series
-# ---------------------------------------------------------------------------
-
-def compute_clearsky_index(
-    ghi_hourly: pd.Series,
-    lat: float,
-    lon: float,
-    elevation: float,
-    tz: str,
-) -> pd.Series:
-    """Return hourly clear-sky index series aligned to ghi_hourly.index."""
-    try:
-        import pvlib
-    except ImportError:
-        raise ImportError("pvlib is required: pip install pvlib")
-
-    loc = pvlib.location.Location(
-        latitude=lat, longitude=lon, altitude=elevation, tz=tz
-    )
-    times_local = ghi_hourly.index.tz_convert(tz)
-    cs = loc.get_clearsky(times_local, model="ineichen")    # W/m²
-    ghi_cs = cs["ghi"].values.astype(np.float64)
-
-    ghi_vals = ghi_hourly.values.astype(np.float64)
-    k = np.where(ghi_cs >= CS_FLOOR, ghi_vals / ghi_cs, 0.0)
-    k = np.clip(k, 0.0, K_MAX)
-    k = np.nan_to_num(k, nan=0.0)
-    return pd.Series(k, index=ghi_hourly.index, name="k")
-
-
-# ---------------------------------------------------------------------------
 # SARIMA fit + forecast
 # ---------------------------------------------------------------------------
 
 def fit_and_forecast(
-    k_train: pd.Series,
+    ghi_train: pd.Series,
     n_forecast: int,
 ) -> pd.Series:
-    """Fit SARIMAX on k_train; return out-of-sample forecast of length n_forecast."""
+    """Fit SARIMAX on raw hourly GHI; return out-of-sample forecast (clipped at 0)."""
     try:
         from statsmodels.tsa.statespace.sarimax import SARIMAX
     except ImportError:
@@ -132,7 +99,7 @@ def fit_and_forecast(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         model = SARIMAX(
-            k_train,
+            ghi_train,
             order=SARIMA_ORDER,
             seasonal_order=SARIMA_SEASONAL_ORDER,
             enforce_stationarity=False,
@@ -141,11 +108,11 @@ def fit_and_forecast(
         result = model.fit(disp=False, maxiter=200)
 
     fc = result.forecast(steps=n_forecast)
-    # statsmodels may return RangeIndex when k_train has no inferred freq
+    # statsmodels may return RangeIndex when ghi_train has no inferred freq
     if not isinstance(fc.index, pd.DatetimeIndex):
-        start = k_train.index[-1] + pd.Timedelta(hours=1)
+        start = ghi_train.index[-1] + pd.Timedelta(hours=1)
         fc.index = pd.date_range(start=start, periods=len(fc), freq="1h")
-    fc = fc.clip(0.0, K_MAX)
+    fc = fc.clip(lower=0.0)   # GHI cannot be negative
     return fc
 
 
@@ -157,14 +124,12 @@ def evaluate_horizon(
     site: str,
     hours_ahead: int,
     ground: pd.DataFrame,
-    k_series: pd.Series,
-    ghi_cs_series: pd.Series,
     fc_series: pd.Series,
     day_threshold: float,
 ) -> dict:
     """
     Load test manifest for (site, hours_ahead), filter to hourly t_label rows,
-    look up SARIMA predictions from fc_series, compute metrics.
+    look up SARIMA GHI predictions from fc_series, compute metrics.
     """
     manifest_dir = DATASET_DIR / site / f"h{hours_ahead}"
     test_man  = pd.read_parquet(manifest_dir / "manifest_test.parquet")
@@ -178,20 +143,18 @@ def evaluate_horizon(
     t_label = pd.to_datetime(test_man["t_label"], utc=True)
     on_hour = t_label.dt.minute == 0
     test_sub = test_man[on_hour.values].copy()
-    t_label_h = pd.to_datetime(test_sub["t_label"], utc=True)
     t_target_h = pd.to_datetime(test_sub["t_target"], utc=True)
     y_true = test_sub["y"].astype(float).to_numpy()
 
     if len(test_sub) == 0:
         raise ValueError(f"No on-the-hour test rows found for {site} h{hours_ahead}")
 
-    # Look up predicted k at t_target; convert to GHI
+    # Look up predicted GHI directly at t_target — same target variable (GHI,
+    # W/m²) and same `y` ground-truth column as every other model.
     y_pred = np.full(len(test_sub), np.nan)
     for i, t_tgt in enumerate(t_target_h):
         if t_tgt in fc_series.index:
-            k_pred = float(fc_series.loc[t_tgt])
-            ghi_cs_tgt = float(ghi_cs_series.get(t_tgt, 0.0))
-            y_pred[i] = k_pred * ghi_cs_tgt if ghi_cs_tgt >= CS_FLOOR else 0.0
+            y_pred[i] = float(fc_series.loc[t_tgt])
 
     valid = np.isfinite(y_pred)
     y_true_v = y_true[valid]
@@ -202,12 +165,15 @@ def evaluate_horizon(
 
     test_metrics = metrics_from_arrays(y_true_v, y_pred_v, day_threshold)
 
-    # Persistence baseline on the same filtered subset
+    # Persistence baseline recomputed on the SAME evaluated on-the-hour subset,
+    # so the skill score is internally consistent (see module docstring for
+    # why this differs from the full-resolution persistence reported for DL
+    # models).
     pers = eval_persistence(test_sub[valid], ground, day_threshold)
     test_metrics["skill_vs_persistence"]     = skill_score(test_metrics["rmse"],     pers["rmse"])
     test_metrics["skill_day_vs_persistence"] = skill_score(test_metrics["rmse_day"], pers["rmse_day"])
 
-    # Val/train persistence for reference
+    # Val/train persistence for reference (full manifests — informational only)
     pers_val   = eval_persistence(val_man,   ground, day_threshold)
     pers_train = eval_persistence(train_man, ground, day_threshold)
 
@@ -238,19 +204,12 @@ def evaluate_horizon(
 def main() -> None:
     args = parse_args()
     site = args.site
-    smeta = SITE_META[site]
-
-    if smeta["lat"] is None:
-        raise ValueError(
-            f"Coordinates for site '{site}' are not set. "
-            f"Edit SITE_META in this script and fill in lat/lon/elevation."
-        )
 
     print(f"SARIMA baseline | site={site} | horizons={args.hours_ahead}h")
-    print(f"Location: lat={smeta['lat']}, lon={smeta['lon']}, elev={smeta['elevation']}m")
 
     # ------------------------------------------------------------------
-    # Load ground data (10-min, UTC-indexed)
+    # Load ground data — same tabular GHI table used by every other model
+    # (10-min, UTC-indexed)
     # ------------------------------------------------------------------
     ground_path = GROUND_DIR / f"ground_10min_utc_{site}.parquet"
     assert ground_path.exists(), f"Missing: {ground_path}"
@@ -258,35 +217,12 @@ def main() -> None:
     assert "ghi" in ground.columns and str(ground.index.tz) == "UTC"
 
     # ------------------------------------------------------------------
-    # Resample to hourly
+    # Resample to hourly — fit directly on raw GHI (W/m²), no clear-sky
+    # normalisation: SARIMA forecasts the same physical quantity that
+    # persistence and the deep-learning models forecast.
     # ------------------------------------------------------------------
     ghi_hourly = ground["ghi"].resample("1h").mean()
     ghi_hourly = ghi_hourly.dropna()
-
-    # ------------------------------------------------------------------
-    # Clear-sky GHI and clear-sky index
-    # ------------------------------------------------------------------
-    print("Computing clear-sky GHI ...", end=" ", flush=True)
-    t0 = time.time()
-    k_all = compute_clearsky_index(
-        ghi_hourly,
-        lat=smeta["lat"], lon=smeta["lon"],
-        elevation=smeta["elevation"], tz=smeta["tz"],
-    )
-    # Store GHI_cs for back-conversion at prediction time
-    import pvlib
-    loc = pvlib.location.Location(
-        latitude=smeta["lat"], longitude=smeta["lon"],
-        altitude=smeta["elevation"], tz=smeta["tz"],
-    )
-    times_local = ghi_hourly.index.tz_convert(smeta["tz"])
-    cs = loc.get_clearsky(times_local, model="ineichen")
-    ghi_cs_hourly = pd.Series(
-        cs["ghi"].values.astype(np.float64),
-        index=ghi_hourly.index,
-        name="ghi_cs",
-    )
-    print(f"{time.time()-t0:.1f}s")
 
     # ------------------------------------------------------------------
     # Determine training period (union of train splits across all horizons)
@@ -304,15 +240,17 @@ def main() -> None:
     train_end   = max(train_ends)
     print(f"Training window: {train_start.date()} → {train_end.date()}")
 
-    k_train = k_all.loc[
-        (k_all.index >= train_start) & (k_all.index <= train_end)
+    ghi_train = ghi_hourly.loc[
+        (ghi_hourly.index >= train_start) & (ghi_hourly.index <= train_end)
     ].copy()
-    print(f"Training k series: {len(k_train):,} hourly observations")
+    print(f"Training GHI series: {len(ghi_train):,} hourly observations "
+          f"(mean={ghi_train.mean():.1f}, std={ghi_train.std():.1f} W/m²)")
 
     # ------------------------------------------------------------------
     # Fit SARIMA
     # ------------------------------------------------------------------
-    print(f"Fitting SARIMAX{SARIMA_ORDER}x{SARIMA_SEASONAL_ORDER} ...", end=" ", flush=True)
+    print(f"Fitting SARIMAX{SARIMA_ORDER}x{SARIMA_SEASONAL_ORDER} on raw hourly GHI ...",
+          end=" ", flush=True)
     t0 = time.time()
 
     # Forecast through the end of the latest test period
@@ -325,7 +263,7 @@ def main() -> None:
     test_end_global = max(test_ends)
 
     n_forecast = int((test_end_global - train_end).total_seconds() / 3600) + 24
-    fc_series = fit_and_forecast(k_train, n_forecast)
+    fc_series = fit_and_forecast(ghi_train, n_forecast)
     print(f"{time.time()-t0:.1f}s  |  forecast steps={len(fc_series)}")
 
     # Align forecast index to UTC
@@ -333,25 +271,6 @@ def main() -> None:
         fc_series.index = fc_series.index.tz_localize("UTC")
     else:
         fc_series.index = fc_series.index.tz_convert("UTC")
-
-    ghi_cs_hourly_utc = ghi_cs_hourly.copy()
-    if ghi_cs_hourly_utc.index.tz is None:
-        ghi_cs_hourly_utc.index = ghi_cs_hourly_utc.index.tz_localize("UTC")
-    else:
-        ghi_cs_hourly_utc.index = ghi_cs_hourly_utc.index.tz_convert("UTC")
-
-    # Extend ghi_cs to cover forecast period
-    forecast_times = fc_series.index
-    new_times = forecast_times.difference(ghi_cs_hourly_utc.index)
-    if len(new_times) > 0:
-        new_times_local = new_times.tz_convert(smeta["tz"])
-        cs_new = loc.get_clearsky(new_times_local, model="ineichen")
-        extra = pd.Series(
-            cs_new["ghi"].values.astype(np.float64),
-            index=new_times,
-            name="ghi_cs",
-        )
-        ghi_cs_hourly_utc = pd.concat([ghi_cs_hourly_utc, extra]).sort_index()
 
     # ------------------------------------------------------------------
     # Evaluate each horizon
@@ -363,8 +282,6 @@ def main() -> None:
             site=site,
             hours_ahead=h,
             ground=ground,
-            k_series=k_all,
-            ghi_cs_series=ghi_cs_hourly_utc,
             fc_series=fc_series,
             day_threshold=args.day_threshold,
         )
@@ -387,10 +304,8 @@ def main() -> None:
             "order":          list(SARIMA_ORDER),
             "seasonal_order": list(SARIMA_SEASONAL_ORDER),
             "resolution":     "hourly",
-            "cs_model":       "ineichen (pvlib)",
-            "cs_floor_wm2":   CS_FLOOR,
+            "target":         "ghi_raw_wm2",
         },
-        "location": {k: smeta[k] for k in ("lat", "lon", "elevation", "tz")},
         "results":  results_by_horizon,
     }
 

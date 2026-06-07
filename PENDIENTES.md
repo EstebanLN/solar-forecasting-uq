@@ -27,7 +27,7 @@ _Actualizado: 2026-05-27_
 | graphsage_lstm           | 30 / 30       | Ídem                                                                       |
 | resnet_lstm_optuna       | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                                  |
 | graphsage_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                                  |
-| sarima                   | **2 / 2**     | COMPLETO ✓ — uniandes corrido el 2026-05-11                                |
+| sarima                   | **0 / 2 (re-run pendiente)** | ⚠ Runs existentes (2026-04-21 elpaso, 2026-05-11 uniandes) quedaron OBSOLETOS: usaban índice de cielo despejado (k = GHI/GHI_cs vía pvlib) en vez de GHI cruda. Script reescrito (2026-06-07) para ajustar SARIMAX directamente sobre la GHI horaria cruda — los mismos datos tabulares que el resto de modelos. Hay que re-correr `05_sarima_baseline.py` para ambos sitios y, antes, re-derivar el orden SARIMA sobre GHI cruda con `notebooks/05b_sarima_order_selection.ipynb` (los órdenes (2,1,2)(1,1,1)[24] eran para k, no necesariamente válidos para GHI). |
 | mlp_optuna               | **16 / 24**   | EN CURSO — ver detalle abajo                                               |
 | resnet_lstm_optuna_v2    | 0 / 24        | **⚠ BLOQUEADO** — cambios v2 implementados pero runs NUNCA lanzados        |
 | graphsage_lstm_optuna_v2 | 0 / 24        | **⚠ BLOQUEADO** — ídem                                                     |
@@ -314,6 +314,27 @@ SARIMA peor que persistencia en todos los horizontes (skill_day < 0 en elpaso).
 - **Datos en el servidor, nunca en git** (ver .gitignore)
 
 ---
+
+## Cambios recientes en scripts (2026-06-07)
+
+### SARIMA reescrito para usar GHI cruda en vez de índice de cielo despejado
+`05_sarima_baseline.py` ajustaba SARIMAX sobre `k = GHI / GHI_cs` (modelo Ineichen vía
+pvlib) — una transformación que ningún otro modelo del proyecto usa. Esto significaba
+que SARIMA no estaba prediciendo "lo mismo" que persistencia / DL (GHI cruda en W/m²),
+incluso si partía del mismo parquet de entrada. Reescrito para:
+- Cargar la misma tabla `ground_10min_utc_{site}.parquet`, re-muestreada a horaria
+  (sin normalización de cielo despejado).
+- Ajustar SARIMAX directamente sobre la serie de GHI cruda y pronosticar GHI
+  directamente (clip en 0, sin reconversión vía GHI_cs).
+- Eliminada la dependencia de `pvlib` y las constantes `CS_FLOOR`/`K_MAX`.
+- `notebooks/05b_sarima_order_selection.ipynb` reescrito en paralelo: todo el
+  análisis (estacionariedad, ACF/PACF, grid search AIC/BIC, diagnóstico de
+  residuales) ahora opera sobre `ghi_train` (GHI horaria cruda) en vez de `k_train`.
+  **Los órdenes (2,1,2)(1,1,1)[24] elegidos para `k` no necesariamente son válidos
+  para GHI cruda** — hay que re-correr el notebook para re-derivarlos antes de
+  relanzar `05_sarima_baseline.py` con el orden correcto.
+- Los runs existentes en `runs/sarima/` quedaron obsoletos (usaban la metodología
+  anterior) y deben regenerarse.
 
 ## Cambios recientes en scripts (2026-05-11)
 

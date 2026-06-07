@@ -18,7 +18,11 @@
 #                     l1_reg en búsqueda → runs/resnet_lstm_optuna_v2/
 #   mlp_optuna        FlatMLP Optuna (50 trials)
 #   sarima            SARIMA baseline
-#   all               Todo lo anterior
+#   sgld_resnet       SGLD posterior sampling — ResNet+LSTM (24 runs, 1500 épocas c/u)
+#   sgld_gsage        SGLD posterior sampling — GraphSAGE+LSTM (24 runs, 1500 épocas c/u)
+#   sgld_mlp          SGLD posterior sampling — FlatMLP (24 runs, 1500 épocas c/u)
+#   sgld              SGLD todas las arquitecturas (72 runs total)
+#   all               Todo lo anterior (sin sgld — lanzar aparte tras v2)
 # ================================================================
 set -uo pipefail   # sin -e: un run fallido loguea el error y sigue al siguiente
 
@@ -57,7 +61,10 @@ runs_dir, site = sys.argv[1], sys.argv[2]
 for f in glob.glob(f"{runs_dir}/*/summary.json"):
     try:
         d = json.load(open(f))
-        if d.get("site") == site and len(d.get("results", {})) >= 3:
+        # Require the post-2026-06-07 methodology (raw-GHI target): older runs
+        # used a clear-sky-index transform and are stale — must be re-run.
+        target_ok = d.get("model", {}).get("target") == "ghi_raw_wm2"
+        if d.get("site") == site and target_ok and len(d.get("results", {})) >= 3:
             sys.exit(0)
     except Exception:
         pass
@@ -233,6 +240,63 @@ run_optuna_mlp() {
 }
 
 # ----------------------------------------------------------------
+# SGLD — ResNet+LSTM  (24 runs × 1500 épocas, usa best_params de v2)
+# ----------------------------------------------------------------
+run_sgld_resnet() {
+    echo ""
+    echo "=== SGLD ResNet+LSTM [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        for hours in 1 3 6; do
+            for seed in 42 1 7 13; do
+                run_one "sgld_resnet" "runs/resnet_lstm_sgld" \
+                    "scripts/07_sgld.py" \
+                    "$site" "$hours" "$seed" \
+                    --arch resnet
+            done
+        done
+    done
+}
+
+# ----------------------------------------------------------------
+# SGLD — GraphSAGE+LSTM  (24 runs × 1500 épocas, usa best_params de v2)
+# ----------------------------------------------------------------
+run_sgld_gsage() {
+    echo ""
+    echo "=== SGLD GraphSAGE+LSTM [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        for hours in 1 3 6; do
+            for seed in 42 1 7 13; do
+                run_one "sgld_gsage" "runs/graphsage_lstm_sgld" \
+                    "scripts/07_sgld.py" \
+                    "$site" "$hours" "$seed" \
+                    --arch graphsage
+            done
+        done
+    done
+}
+
+# ----------------------------------------------------------------
+# SGLD — FlatMLP  (24 runs × 1500 épocas, usa best_params de mlp_optuna)
+# ----------------------------------------------------------------
+run_sgld_mlp() {
+    echo ""
+    echo "=== SGLD FlatMLP [site=${SITE_FILTER}] ==="
+    for site in uniandes elpaso; do
+        [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
+        for hours in 1 3 6; do
+            for seed in 42 1 7 13; do
+                run_one "sgld_mlp" "runs/mlp_sgld" \
+                    "scripts/07_sgld.py" \
+                    "$site" "$hours" "$seed" \
+                    --arch mlp
+            done
+        done
+    done
+}
+
+# ----------------------------------------------------------------
 # SARIMA baseline (una ejecución por sitio cubre h1, h3, h6)
 # ----------------------------------------------------------------
 run_sarima() {
@@ -292,6 +356,20 @@ case "$GROUP" in
     sarima)
         run_sarima
         ;;
+    sgld_resnet)
+        run_sgld_resnet
+        ;;
+    sgld_gsage)
+        run_sgld_gsage
+        ;;
+    sgld_mlp)
+        run_sgld_mlp
+        ;;
+    sgld)
+        run_sgld_resnet
+        run_sgld_gsage
+        run_sgld_mlp
+        ;;
     all)
         run_baseline_resnet
         run_baseline_gsage
@@ -303,7 +381,7 @@ case "$GROUP" in
         run_sarima
         ;;
     *)
-        echo "Uso: bash run_sequential.sh [baseline|optuna|optuna_v2|resnet_optuna|resnet_optuna_v2|gsage_optuna|gsage_optuna_v2|mlp_optuna|sarima|all] [uniandes|elpaso|all]"
+        echo "Uso: bash run_sequential.sh [baseline|optuna|optuna_v2|resnet_optuna|resnet_optuna_v2|gsage_optuna|gsage_optuna_v2|mlp_optuna|sarima|sgld|sgld_resnet|sgld_gsage|sgld_mlp|all] [uniandes|elpaso|all]"
         exit 1
         ;;
 esac
