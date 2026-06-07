@@ -67,29 +67,30 @@ variability concentrated in the afternoon \cite{poveda2004}. Few published studi
 address satellite-based forecasting for Colombian or equivalent tropical mountain
 conditions, motivating the present work.
 
-\subsection{AI-enabled resilience in cyber-physical energy systems}
+\subsection{Forecasting for power system operation and decision-making}
 
-Cyber-physical energy systems integrate physical generation, transmission, and
-distribution assets with digital control and communication layers, creating a
-complex interdependency where operational uncertainty propagates bidirectionally
-between the cyber and physical domains \cite{deng2017}. The concept of CPES
-resilience encompasses the ability to anticipate, withstand, and recover from
-disruptive events, including both deliberate attacks and natural uncertainty
-sources such as renewable variability \cite{bhusal2020}.
-
-AI-based methods have been applied to improve CPES resilience through improved
-situational awareness, predictive analytics, and adaptive control.
-For renewable integration specifically, accurate forecasting reduces the need for
+Accurate short-term irradiance forecasts feed directly into operational
+decision-making for solar-integrated power systems: they support reserve
+scheduling, unit commitment, and demand-response triggers, reducing the cost
+of accommodating variable renewable generation \cite{energyrev2021}. For
+renewable integration specifically, accurate forecasting reduces the need for
 spinning reserves and allows pre-emptive load balancing, directly limiting the
-impact of generation uncertainty on grid stability \cite{energyrev2021}.
-Uncertainty quantification methods that accompany point forecasts with calibrated
-confidence intervals enable operators to make risk-aware dispatch decisions:
-when forecasts carry explicit probabilistic guarantees, reserve scheduling can
-be optimised to the desired risk level rather than relying on conservative
-worst-case margins.
+impact of generation uncertainty on grid stability.
 
-This work contributes to the CPES resilience literature by (i) developing
-AI-based spatial deep learning for solar generation situational awareness at
-tropical sites underrepresented in existing benchmarks, and (ii) coupling
-point forecasters with distribution-free conformal prediction intervals
-suitable for integration into risk-aware CPES dispatch frameworks.
+Beyond point forecasts, uncertainty quantification (UQ) methods that
+accompany predictions with calibrated confidence intervals enable operators to
+make risk-aware dispatch decisions: when forecasts carry explicit
+probabilistic guarantees, reserve scheduling can be optimised to a desired
+risk level rather than relying on conservative worst-case margins.
+Distribution-free approaches such as conformal prediction
+\cite{vovk2005,angelopoulos2023} are particularly attractive for operational
+deployment because they provide finite-sample coverage guarantees without
+assumptions on the residual distribution --- a property that is valuable in
+tropical climates, where forecast errors are heavy-tailed due to abrupt cloud
+passages.
+
+This work contributes to this literature by (i) developing spatially-aware
+deep learning for solar forecasting at tropical Andean sites that remain
+underrepresented in existing benchmarks, and (ii) coupling point forecasters
+with distribution-free conformal prediction intervals suitable for
+integration into operational, risk-aware dispatch pipelines.

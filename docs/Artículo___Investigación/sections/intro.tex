@@ -1,33 +1,28 @@
 \section{Introduction}
 \label{sec:intro}
 
-\IEEEPARstart{M}{odern} power grids are increasingly characterised as
-cyber-physical energy systems (CPES) \cite{deng2017} --- tightly coupled
-infrastructures in which physical generation, transmission, and distribution
-assets are monitored and controlled through digital communication layers.
-The integration of variable renewable energy (VRE), particularly solar
-photovoltaic (PV), introduces a new source of operational uncertainty that
-challenges the \emph{resilience} of CPES: the ability to anticipate,
-withstand, and recover from disruptive events \cite{bhusal2020}.
-Unlike cyber attacks or extreme weather damage --- which are discrete and
-locatable --- the uncertainty arising from cloud-induced irradiance variability
-is continuous, stochastic, and correlated across spatially distributed
-generation assets.
-Accurate, uncertainty-aware short-term solar forecasting is therefore a
-foundational \emph{AI-enabled resilience mechanism} for CPES operators,
-providing the situational awareness needed to schedule reserves, trigger demand
-response, and prevent grid imbalances before they cascade.
+Solar photovoltaic (PV) generation has grown rapidly across
+Latin America, with Colombia reaching over 1~GW of installed capacity and
+targeting 9~GW by 2030 under its National Energy Plan \cite{upme2023}.
+Reliable short-term forecasts of global horizontal irradiance (GHI) are a
+prerequisite for efficient operation of PV-integrated power systems: they
+enable reserve scheduling, reduce imbalance penalties, and support real-time
+dispatch and grid management. The growing share of variable renewable
+generation makes this forecasting problem increasingly important: unlike
+slowly-varying demand, cloud-induced irradiance variability is continuous,
+stochastic, and correlated across spatially distributed generation assets,
+and accurate, uncertainty-aware short-term forecasts provide operators with
+the situational awareness needed to schedule reserves, trigger demand
+response, and avoid costly imbalances.
 
-Solar photovoltaic (PV) generation has grown rapidly across Latin America, with
-Colombia reaching over 1~GW of installed capacity and targeting 9~GW by 2030
-under its National Energy Plan \cite{upme2023}. Reliable short-term forecasts of
-global horizontal irradiance (GHI) are a prerequisite for efficient dispatch of
-PV-integrated power systems: they enable reserve scheduling, reduce imbalance
-penalties, and support real-time grid management. In tropical countries such as
-Colombia, the forecasting challenge is compounded by the high frequency and spatial
-heterogeneity of convective cloud systems, which can reduce surface irradiance by
-more than 80\% within minutes and are poorly captured by coarse-resolution numerical
-weather prediction (NWP) models.
+In tropical countries such as Colombia, the forecasting challenge is compounded
+by the high frequency and spatial heterogeneity of convective cloud systems,
+which can reduce surface irradiance by more than 80\% within minutes and are
+poorly captured by coarse-resolution numerical weather prediction (NWP) models.
+Most published forecasting benchmarks, however, are built around temperate or
+semi-arid climates, leaving tropical and high-altitude equatorial sites ---
+where cloud dynamics differ substantially --- underrepresented in the
+literature.
 
 Satellite-based nowcasting methods bypass NWP limitations by inferring cloud
 motion and optical depth directly from geostationary imagery. Instruments such as
@@ -67,31 +62,30 @@ This paper makes the following contributions:
         including Bayesian hyperparameter optimisation via Optuna \cite{akiba2019}
         for GraphSAGE-LSTM, ResNet-LSTM, and a flat MLP spatial-ablation baseline.
 
-  \item We show that GraphSAGE-LSTM \textbf{consistently outperforms} ResNet-LSTM
-        at the 6-hour horizon for the low-elevation high-irradiance site
-        ($\skillday = 0.636$ vs.\ $0.614$), while the advantage diminishes for
-        the high-altitude, high-variability site.
-
-  \item We identify a \textbf{regime-dependence} of statistical vs.\ deep-learning
-        methods: SARIMAX on the clear-sky index outperforms deep-learning models
-        at 6~hours for the tropical mountain site (Bogot{\'a}, $\skillday = 0.435$
-        vs.\ $0.417$), where the regular diurnal cycle dominates over
-        cloud-driven spatial variability.
+  \item We show that GraphSAGE-LSTM \textbf{achieves the best skill among the
+        deep-learning models} at the 6-hour horizon at both sites
+        (El~Paso: $\skillday = 0.636$ vs.\ $0.614$ for ResNet-LSTM; Uniandes:
+        $0.417$ vs.\ $0.368$), with consistently lower seed-to-seed variance,
+        while the absolute skill of both models is markedly lower at the
+        climatologically harder high-altitude site --- evidence that
+        site-specific cloud dynamics, not just model architecture, govern
+        attainable forecasting skill.
 
   \item We implement \textbf{Split Conformal Prediction} \cite{vovk2005,angelopoulos2023}
         as a post-hoc UQ layer applicable to any trained backbone.
         The calibration procedure produces marginal-coverage-valid prediction
         intervals without distributional assumptions, supporting risk-aware
-        dispatch decisions in CPES. This constitutes Stage~1 of a staged UQ
-        roadmap: Split~CP (this work) $\to$ Conformalized Quantile Regression
-        \cite{romano2019} for adaptive-width intervals $\to$ Bayesian
-        uncertainty decomposition \cite{kendall2017} for aleatoric/epistemic
-        separation.
+        operational decisions for solar-integrated power systems. This
+        constitutes Stage~1 of a staged UQ roadmap: Split~CP (this work)
+        $\to$ Conformalized Quantile Regression \cite{romano2019} for
+        adaptive-width intervals $\to$ Bayesian uncertainty decomposition
+        \cite{kendall2017} for aleatoric/epistemic separation.
 
-  \item We establish a \textbf{reproducible GOES-16 benchmark for tropical sites},
-        including data manifests, patch extraction, model code, Optuna studies,
-        and evaluation scripts, addressing the scarcity of published benchmarks
-        for Latin American and equatorial CPES contexts.
+  \item We establish a \textbf{reproducible GOES-16 benchmark for tropical
+        Andean sites}, including data manifests, patch extraction, model code,
+        Optuna studies, and evaluation scripts, addressing the scarcity of
+        published satellite-based GHI forecasting benchmarks for Latin American
+        and equatorial tropical contexts.
 \end{enumerate}
 
 \subsection*{Paper organisation}

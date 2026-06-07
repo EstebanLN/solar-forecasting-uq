@@ -87,9 +87,9 @@ forecasting pipeline.
    with substantially different cloud climatologies, enabling cross-site
    generalisation analysis.
 
-3. **A rigorous SARIMA statistical baseline** on the clear-sky index, following
-   the solar-forecasting literature convention, with documented parameter
-   selection rationale.
+3. **A rigorous SARIMA statistical baseline** fit directly on the raw hourly
+   GHI series — the same tabular ground-truth used to train and evaluate
+   every other model — with documented parameter selection rationale.
 
 4. **Hyperparameter optimisation via Optuna** for both architectures, with
    transparent reporting of the search space and convergence.
@@ -190,7 +190,7 @@ GOES-16 patches (16×16×16 channels)
 ├── scripts/
 │   ├── 05_resnet_lstm_baseline.py       # Train ResNet+LSTM (fixed hparams)
 │   ├── 05_graphsage_lstm_baseline.py    # Train GraphSAGE+LSTM (fixed hparams)
-│   ├── 05_sarima_baseline.py            # SARIMA on clear-sky index
+│   ├── 05_sarima_baseline.py            # SARIMA on raw hourly GHI
 │   ├── 06_resnet_lstm_optuna.py         # Optuna HPO — ResNet+LSTM
 │   ├── 06_graphsage_lstm_optuna.py      # Optuna HPO — GraphSAGE+LSTM
 │   ├── 07_conformal_explore.py          # Split Conformal Prediction evaluation
@@ -333,8 +333,10 @@ Outputs are saved to `runs/resnet_lstm/<run_name>/` and
     --site uniandes --hours_ahead 1 3 6
 ```
 
-The script fits SARIMAX(2,1,2)(1,1,1)₂₄ on the hourly clear-sky index
-and evaluates all three horizons from a single model fit per site.
+The script fits SARIMAX(2,1,2)(1,1,1)₂₄ directly on the raw hourly GHI
+series (the same tabular ground-truth `ground_10min_utc_{site}.parquet`
+resampled to hourly — no clear-sky normalisation) and evaluates all three
+horizons from a single model fit per site.
 Output: `runs/sarima/<run_name>/summary.json`.
 
 ### Step 3 — Hyperparameter optimisation (Optuna)

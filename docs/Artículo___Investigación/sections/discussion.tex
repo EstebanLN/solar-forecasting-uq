@@ -25,30 +25,39 @@ over-smoothing at the patch scale ($P = 16$). The lower seed variance of
 GraphSAGE ($\pm 0.013$ vs.\ $\pm 0.023$ at El~Paso 6h) is consistent with a
 more stable loss landscape.
 
-\subsection{Why does SARIMAX remain competitive at Uniandes 6h?}
+\subsection{Why is forecasting skill lower at Uniandes than at El~Paso?}
 
-The finding that SARIMAX ($\skillday = 0.435$) outperforms GraphSAGE-LSTM ($0.417$)
-at the 6-hour horizon for Uniandes is counterintuitive given the richer information
-available to the DL models. We attribute it to the \emph{predictability structure}
-of the Bogot{\'a} climate:
+Across all deep-learning models and horizons, absolute skill is markedly lower
+at the Uniandes mountain site than at El~Paso (e.g., GraphSAGE-LSTM at 6h:
+$\skillday = 0.417$ vs.\ $0.636$). We attribute this gap to two related
+properties of the Bogot{\'a} climate:
 
-\textbf{Diurnal regularity.} At $4.6^{\circ}\text{N}$, the solar declination varies little
-across the year ($\pm 4.6^{\circ}$), producing a highly repeatable clear-sky envelope.
-Cloud formation in Bogot{\'a} is predominantly triggered by orographic lifting in
-the early afternoon, creating a systematic diurnal pattern that the seasonal MA
-and AR terms of SARIMAX($\cdot$)(1,1,1)$_{24}$ can capture efficiently.
+\textbf{Diurnal regularity narrows the room for improvement.}
+At $4.6^{\circ}\text{N}$, the solar declination varies little across the year
+($\pm 4.6^{\circ}$), producing a highly repeatable clear-sky envelope. Cloud
+formation in Bogot{\'a} is predominantly triggered by orographic lifting in
+the early afternoon, generating a strong, regular diurnal cycle. Much of the
+predictable structure in the Uniandes GHI series is therefore already encoded
+in its own recent history and time-of-day, leaving comparatively less
+\emph{additional} information for a 4-hour satellite patch sequence to
+contribute --- which compresses the achievable skill ceiling for every model,
+spatially-aware or not.
 
-\textbf{Satellite signal saturation.} At 6 hours, the satellite patch at $t$
-may have low predictive relevance for the ground GHI at $t+6\text{h}$: the cloud
-system that will arrive has not yet entered the patch. SARIMAX effectively uses
-the historical autocorrelation of $k_t$ (which encodes the regular afternoon cloud
-cycle) as its predictive feature, a signal that does not degrade with forecast
-horizon in the same way that satellite spatial features do.
+\textbf{Satellite signal saturation at longer horizons.} At 6 hours, the
+satellite patch observed at $t$ may carry little predictive information about
+the ground GHI at $t + 6\,\text{h}$: the cloud system that will eventually
+affect the site has often not yet entered the $16\times16$-pixel field of
+view, particularly at a site where convection forms locally through
+orographic lifting rather than advecting in from a stable upstream direction.
+This limits how much spatial encoding --- regardless of architecture --- can
+contribute at the longest horizon.
 
-This result suggests that \emph{site-specific climatological structure should inform
-model selection}: in climates with strong, regular diurnal cloud patterns,
-statistical baselines may remain competitive at multi-hour horizons even when
-high-resolution satellite data are available.
+This result suggests that \emph{site-specific climatological structure should
+inform both model design and expectation-setting}: in climates with strong,
+regular diurnal cloud patterns and locally-forming convection, the marginal
+benefit of spatial deep learning over simpler temporal signals is smaller, and
+reported skill scores should always be interpreted relative to the local
+persistence baseline rather than compared at face value across sites.
 
 \subsection{Why is the 1-hour horizon intractable at El~Paso?}
 
@@ -61,8 +70,9 @@ the occasional cloud event), learn a slightly smoothed version of the target
 trajectory that incurs higher error on the flat clear-sky majority.
 
 A potential remedy is a loss function that differentially weights cloud events
-(e.g., weighted MSE by clear-sky departure $|k_t - 1|$), or dedicated cloud-event
-detection as a preprocessing step.
+relative to the clear-sky envelope (e.g., scaling the per-sample MSE by the
+departure of observed GHI from the clear-sky reference), or dedicated
+cloud-event detection as a preprocessing step.
 
 \subsection{Practical implications}
 
@@ -74,9 +84,13 @@ detection as a preprocessing step.
         nowcasting model.
 
   \item For \textbf{Uniandes-type sites} (tropical mountain, high convective
-        variability), SARIMAX on the clear-sky index provides a surprisingly strong
-        baseline at 6h and should be included in any benchmarking suite. DL models
-        add modest value but require careful hyperparameter tuning to outperform it.
+        variability), even the best models achieve markedly lower skill than at
+        El~Paso ($\skillday \leq 0.42$ vs.\ $0.64$ at 6h); operators should
+        calibrate reserve margins to the local persistence baseline rather than
+        assume that skill levels transfer across climates. GraphSAGE-LSTM remains
+        the most consistent top performer at 3h and 6h, but gains over
+        persistence are smaller and more sensitive to careful hyperparameter
+        tuning.
 
   \item The high seed variance of ResNet-LSTM at El~Paso 3h ($\pm 0.090$) suggests
         that multiple retraining runs should be averaged for production deployment,
@@ -115,34 +129,38 @@ uncertainty (epistemic). Under the formulation of \cite{kendall2017}, SGLD
 \cite{welling2011} can further sample the posterior weight distribution for a
 fully Bayesian treatment.
 
-\subsection{Implications for CPES resilience}
+\subsection{Implications for solar-integrated power system operation}
 
-The results presented here connect directly to the resilience of solar-integrated
-cyber-physical energy systems.
+The results presented here connect directly to operational decision-making in
+solar-integrated power systems.
 
 \textbf{Situational awareness under cloud-induced uncertainty.}
 GraphSAGE-LSTM, by learning spatially-aware representations of incoming cloud
 systems from satellite imagery, provides operators with earlier detection of
-impending irradiance ramps --- the primary source of generation-side uncertainty
-in PV-heavy CPES. The 63.6\% RMSE reduction over persistence at 6h for El~Paso
-translates to significantly tighter dispatch intervals and reduced reserve
-requirements.
+impending irradiance ramps --- the primary source of generation-side
+uncertainty in PV-heavy grids. The 63.6\% RMSE reduction over persistence at
+6h for El~Paso translates to significantly tighter dispatch intervals and
+reduced reserve requirements.
 
 \textbf{Calibrated prediction intervals for risk-aware dispatch.}
 The Split CP layer converts any point forecast into an interval with a
-finite-sample coverage guarantee. For a CPES operator, this means that reserve
-scheduling can be tied to an explicit coverage target (e.g., 90\% intervals)
-rather than to ad hoc safety margins. The global constant width $2\hat{q}$ is
-an acknowledged limitation, but even symmetric intervals provide stronger
-risk-management guarantees than unquantified point forecasts.
+finite-sample coverage guarantee. For a system operator, this means that
+reserve scheduling can be tied to an explicit coverage target (e.g., 90\%
+intervals) rather than to ad hoc safety margins. The global constant width
+$2\hat{q}$ is an acknowledged limitation, but even symmetric intervals provide
+stronger risk-management guarantees than unquantified point forecasts.
 
-\textbf{Climate-adaptive model selection.}
-The finding that SARIMAX outperforms deep learning at Uniandes~6h has a direct
-operational implication: CPES operators in tropical mountain locations should
-benchmark statistical baselines before deploying resource-intensive DL pipelines.
-A hybrid portfolio strategy --- statistical baseline for climatologically
-predictable periods, spatial DL during high-variability windows --- could
-optimise the resilience-cost tradeoff.
+\textbf{Climate- and horizon-adaptive model selection.}
+The marked difference in absolute skill between El~Paso (up to $\skillday =
+0.636$ at 6h) and Uniandes (up to $0.417$) has a direct operational
+implication: forecasting pipelines should be benchmarked and calibrated
+locally rather than assuming that skill levels transfer across climates.
+Within a site, the best architecture also depends on the horizon ---
+persistence is hard to beat at 1h in the clear-sky-dominated El~Paso regime,
+while GraphSAGE-LSTM is the most consistent top performer at 3h and 6h at
+both sites. A horizon-aware portfolio strategy --- a light-weight nowcasting
+fallback at very short horizons, spatial deep learning at multi-hour horizons
+--- could optimise the accuracy-cost tradeoff for operational deployment.
 
 \subsection{Limitations}
 
@@ -158,4 +176,4 @@ arises from spatial encoding versus temporal dynamics alone.
 \textbf{Single-step output.} Current models produce a single-step forecast at
 horizon $H$. Simultaneous multi-step output (forecasts for all three horizons
 from a single forward pass) could improve consistency and reduce inference cost
-in real-time CPES applications.
+in real-time operational forecasting pipelines.

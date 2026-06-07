@@ -4,37 +4,42 @@
 % =============================================================
 
 We presented a graph neural network framework for satellite-based solar
-irradiance forecasting that addresses the situational awareness requirements
-of resilient cyber-physical energy systems (CPES) operating under tropical
-renewable uncertainty. The key contributions are: (i) a weighted $k$-NN
-GraphSAGE-LSTM architecture that explicitly models spatial cloud structure
-from GOES-16 patches; (ii) a rigorous comparative evaluation against
-ResNet-LSTM, SARIMA, and persistence at two Colombian sites with contrasting
-climatic regimes; and (iii) Split Conformal Prediction as a
+irradiance forecasting that addresses the situational-awareness needs of
+solar-integrated power system operators in tropical climates. The key
+contributions are: (i) a weighted $k$-NN GraphSAGE-LSTM architecture that
+explicitly models spatial cloud structure from GOES-16 patches; (ii) a
+rigorous comparative evaluation against a ResNet-LSTM baseline, a flat-MLP
+spatial-ablation baseline, and persistence at two Colombian sites with
+contrasting climatic regimes; and (iii) Split Conformal Prediction as a
 distribution-free post-hoc UQ layer that transforms point forecasts into
-coverage-guaranteed prediction intervals usable in risk-aware dispatch.
+coverage-guaranteed prediction intervals usable in risk-aware operational
+decisions.
 
-\textbf{GraphSAGE-LSTM} consistently outperforms ResNet-LSTM at the 6-hour horizon
-for El~Paso ($\skillday = 0.636$ vs.\ $0.614$), with lower seed variance, confirming
-that distance-weighted neighbourhood aggregation on the pixel graph provides a
-more stable and expressive spatial representation than fixed convolutional filters
-for this high-irradiance regime.
+\textbf{GraphSAGE-LSTM} achieves the best skill among the deep-learning models
+at the 6-hour horizon at \emph{both} sites (El~Paso: $\skillday = 0.636$ vs.\
+$0.614$ for ResNet-LSTM; Uniandes: $0.417$ vs.\ $0.368$), with lower seed
+variance throughout, confirming that distance-weighted neighbourhood
+aggregation on the pixel graph provides a more stable and expressive spatial
+representation than fixed convolutional filters.
 
-At the \textbf{tropical mountain site} (Uniandes), SARIMAX on the clear-sky index
-achieves competitive or superior skill at 6~hours ($0.435$) relative to
-GraphSAGE-LSTM ($0.417$), revealing that the strong diurnal autocorrelation of
-the Bogot{\'a} clear-sky index limits the marginal benefit of satellite spatial
-features at longer horizons. This finding has a direct CPES implication:
-model selection should be climate-aware, and lightweight statistical baselines
-should be included in any resilience-oriented benchmarking suite.
+At the \textbf{tropical mountain site} (Uniandes), however, the absolute skill
+of every model is markedly lower than at El~Paso even at the most favourable
+horizon ($\skillday \leq 0.42$ vs.\ $0.64$ at 6h), revealing that the strong
+diurnal autocorrelation of the Bogot{\'a} clear-sky cycle and the locally-driven
+nature of orographic convection limit the marginal benefit of satellite
+spatial features at this site. This finding has a direct operational
+implication: model selection and skill expectations should be climate-aware,
+and forecasting pipelines should always be benchmarked and calibrated against
+the local persistence reference rather than assumed to transfer across sites.
 
 At the \textbf{1-hour horizon}, no model consistently beats persistence at El~Paso,
 consistent with the low persistence error ($204.4$~W/m²) in a predominantly
 clear-sky regime. Modest positive skill ($\approx 0.15$) is achieved at Uniandes,
 where frequent cloud passages create exploitable structure.
 
-\textbf{Future work} follows a staged uncertainty-quantification roadmap for
-CPES resilience.  Split Conformal Prediction has been implemented as Stage~1;
+\textbf{Future work} follows a staged uncertainty-quantification roadmap
+toward fully probabilistic, operationally-deployable solar forecasts.
+Split Conformal Prediction has been implemented as Stage~1;
 Conformalized Quantile Regression \cite{romano2019} will yield adaptive-width
 intervals that contract during predictable clear-sky conditions and expand
 during uncertain cloud events (Stage~2), enabling tighter reserve scheduling.
@@ -43,8 +48,8 @@ Gaussian variance heads will capture aleatoric uncertainty (irreducible cloud
 stochasticity), while Stochastic Gradient Langevin Dynamics (SGLD,
 \cite{welling2011}) will sample the posterior weight distribution to provide
 epistemic uncertainty estimates \cite{kendall2017}, completing the transition
-from point forecasts to risk-stratified probabilistic outputs for resilient
-CPES dispatch.
+from point forecasts to risk-stratified probabilistic outputs for
+solar-integrated power system operation.
 Additional planned work includes the FlatMLP spatial-ablation analysis,
 multi-step joint-horizon outputs, and extension to further Latin American sites
-to build a broader tropical CPES forecasting benchmark.
+to build a broader tropical solar forecasting benchmark.
