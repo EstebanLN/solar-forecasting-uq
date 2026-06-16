@@ -49,6 +49,7 @@ from solar_uq.data import (
     read_history_steps_from_manifest,
 )
 from solar_uq.models.graphsage_lstm import GraphSAGE_LSTM, build_edge_index_8n
+from solar_uq.models.mlp import FlatMLP
 from solar_uq.models.resnet_lstm import ResNetLSTM
 from solar_uq.train import collect_predictions
 
@@ -75,6 +76,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--n_sage_layers", type=int,   default=2)
     p.add_argument("--n_lstm_layers", type=int,   default=1)
     p.add_argument("--dropout_head",  type=float, default=0.10)
+    # Fallback arch hparams for FlatMLP
+    p.add_argument("--n_layers",   type=int,   default=2)
+    p.add_argument("--hidden_dim", type=int,   default=256)
     return p.parse_args()
 
 
@@ -106,6 +110,17 @@ def _load_graphsage(ckpt: dict, patch: int, fallback: argparse.Namespace) -> Gra
         input_bn=hp.get("input_bn",      True),
         concat_agg=hp.get("concat_agg",  True),
         edge_index=edge_index,
+    )
+
+
+def _load_mlp(ckpt: dict, L: int, fallback: argparse.Namespace) -> FlatMLP:
+    hp = ckpt["meta"].get("arch_hparams", {})
+    return FlatMLP(
+        L=hp.get("L", L),
+        C=hp.get("C", 16),
+        n_layers=hp.get("n_layers",   fallback.n_layers),
+        hidden_dim=hp.get("hidden_dim", fallback.hidden_dim),
+        dropout=hp.get("dropout",    0.1),
     )
 
 
@@ -165,10 +180,16 @@ def main() -> None:
         model = _load_resnet(ckpt, args)
         val_ds  = PatchSeqDataset(val_man,  PATCHES_ROOT, normalizer)
         test_ds = PatchSeqDataset(test_man, PATCHES_ROOT, normalizer)
-    else:
+    elif "FlatMLP" in arch:
+        model = _load_mlp(ckpt, L, args)
+        val_ds  = PatchSeqDataset(val_man,  PATCHES_ROOT, normalizer)
+        test_ds = PatchSeqDataset(test_man, PATCHES_ROOT, normalizer)
+    elif "GraphSAGE" in arch:
         model = _load_graphsage(ckpt, patch, args)
         val_ds  = GraphSeqDataset(val_man,  PATCHES_ROOT, normalizer)
         test_ds = GraphSeqDataset(test_man, PATCHES_ROOT, normalizer)
+    else:
+        raise ValueError(f"Unknown arch in checkpoint: {arch!r}")
 
     model.load_state_dict(ckpt["model_state"])
     model = model.to(DEVICE)
