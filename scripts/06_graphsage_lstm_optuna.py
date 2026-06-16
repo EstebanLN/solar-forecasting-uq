@@ -42,12 +42,14 @@ from solar_uq.data import (
     make_loader,
     read_history_steps_from_manifest,
 )
+from solar_uq.loaders import FusionGraphSeqDataset, FusionPatchSeqDataset, n_tab_features
 from solar_uq.metrics import eval_persistence, skill_score
 from solar_uq.models.graphsage_lstm import (
     GraphSAGE_LSTM,
     build_edge_index_8n,
     build_weighted_knn_edge_index,
 )
+from solar_uq.models.fusion.fusion_graphsage_lstm import FusionGraphSAGE_LSTM
 from solar_uq.train import seed_everything, train_one_model, eval_model
 
 
@@ -64,9 +66,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int,   default=4)
     p.add_argument("--day_threshold", type=float, default=20.0)
-    p.add_argument("--runs_root",     default=None,
+    p.add_argument("--runs_root",       default=None,
                    help="Directorio raíz donde guardar los runs "
-                        "(default: runs/graphsage_lstm_optuna)")
+                        "(default: runs/graphsage_lstm_optuna or runs/fusion_graphsage_lstm)")
+    p.add_argument("--fusion",          action="store_true",
+                   help="Use FusionGraphSAGE_LSTM + FusionGraphSeqDataset (satellite + surface)")
+    p.add_argument("--surface_parquet", default=None,
+                   help="Path to ground_10min_utc_{site}.parquet (required when --fusion)")
     return p.parse_args()
 
 
@@ -81,6 +87,8 @@ def make_objective(
     seed: int,
     day_threshold: float,
     use_amp: bool,
+    fusion: bool = False,
+    d_tab: int = 0,
 ):
     def objective(trial: optuna.Trial) -> float:
         hidden_g      = trial.suggest_categorical("hidden_g",      [64, 96, 128, 192, 256])
@@ -101,18 +109,35 @@ def make_objective(
 
         edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)
 
-        model = GraphSAGE_LSTM(
-            in_dim=16,
-            hidden_g=hidden_g,
-            n_sage_layers=n_sage_layers,
-            hidden_t=hidden_t,
-            n_lstm_layers=n_lstm_layers,
-            dropout_head=dropout_head,
-            input_bn=input_bn,
-            concat_agg=concat_agg,
-            edge_index=edge_index,
-            edge_weight=edge_weight,
-        ).to(device)
+        if fusion:
+            tab_hidden = trial.suggest_categorical("tab_hidden", [32, 64, 128])
+            model = FusionGraphSAGE_LSTM(
+                in_dim=16,
+                hidden_g=hidden_g,
+                n_sage_layers=n_sage_layers,
+                hidden_t=hidden_t,
+                n_lstm_layers=n_lstm_layers,
+                dropout_head=dropout_head,
+                input_bn=input_bn,
+                concat_agg=concat_agg,
+                d_tab=d_tab,
+                tab_hidden=tab_hidden,
+                edge_index=edge_index,
+                edge_weight=edge_weight,
+            ).to(device)
+        else:
+            model = GraphSAGE_LSTM(
+                in_dim=16,
+                hidden_g=hidden_g,
+                n_sage_layers=n_sage_layers,
+                hidden_t=hidden_t,
+                n_lstm_layers=n_lstm_layers,
+                dropout_head=dropout_head,
+                input_bn=input_bn,
+                concat_agg=concat_agg,
+                edge_index=edge_index,
+                edge_weight=edge_weight,
+            ).to(device)
 
         out = train_one_model(
             model=model,
@@ -127,6 +152,7 @@ def make_objective(
             patience=6,
             day_threshold=day_threshold,
             device=device,
+            fusion=fusion,
         )
 
         vm = out["final_val"]
@@ -152,7 +178,8 @@ def main() -> None:
     # Directories
     DATASET_ROOT = PROJECT_ROOT / "data" / "datasets" / "manifest_v1"
     GROUND_DIR   = PROJECT_ROOT / "data" / "ground_aligned"
-    RUNS_ROOT    = Path(args.runs_root) if args.runs_root else PROJECT_ROOT / "runs" / "graphsage_lstm_optuna"
+    default_runs = "fusion_graphsage_lstm" if args.fusion else "graphsage_lstm_optuna"
+    RUNS_ROOT    = Path(args.runs_root) if args.runs_root else PROJECT_ROOT / "runs" / default_runs
     RUNS_ROOT.mkdir(parents=True, exist_ok=True)
 
     SITE_DIR = DATASET_ROOT / args.site / f"h{args.hours_ahead}"
@@ -203,12 +230,33 @@ def main() -> None:
     N_NODES = args.patch * args.patch
     print(f"Graph: {N_NODES} nodes | k_neighbors in {[4, 8, 12, 16]} (chosen per trial)")
 
-    train_ds = GraphSeqDataset(train_man, PATCHES_ROOT, normalizer)
-    val_ds   = GraphSeqDataset(val_man,   PATCHES_ROOT, normalizer)
-    test_ds  = GraphSeqDataset(test_man,  PATCHES_ROOT, normalizer)
+    if args.fusion:
+        if args.surface_parquet is None:
+            surface_path = PROJECT_ROOT / "data" / "ground_aligned" / f"ground_10min_utc_{args.site}.parquet"
+        else:
+            surface_path = Path(args.surface_parquet)
+        assert surface_path.exists(), f"Missing surface parquet: {surface_path}"
+        print(f"Fusion mode: computing tab_stats from training split ...")
+        tab_stats = FusionPatchSeqDataset.compute_tab_stats(
+            train_man, PATCHES_ROOT, normalizer, surface_path,
+            n_samples=5_000, seed=args.seed,
+        )
+        D_TAB = tab_stats["d_tab"]
+        print(f"  d_tab={D_TAB}  feature_cols={tab_stats['feature_cols']}")
+        train_ds = FusionGraphSeqDataset(train_man, PATCHES_ROOT, normalizer, surface_path, tab_stats=tab_stats)
+        val_ds   = FusionGraphSeqDataset(val_man,   PATCHES_ROOT, normalizer, surface_path, tab_stats=tab_stats)
+        test_ds  = FusionGraphSeqDataset(test_man,  PATCHES_ROOT, normalizer, surface_path, tab_stats=tab_stats)
+    else:
+        tab_stats    = None
+        D_TAB        = 0
+        surface_path = None
+        train_ds = GraphSeqDataset(train_man, PATCHES_ROOT, normalizer)
+        val_ds   = GraphSeqDataset(val_man,   PATCHES_ROOT, normalizer)
+        test_ds  = GraphSeqDataset(test_man,  PATCHES_ROOT, normalizer)
 
     # Optuna study
-    STUDY_NAME = f"graphsage_lstm_{args.site}_P{args.patch}"
+    prefix     = "fusion_graphsage_lstm" if args.fusion else "graphsage_lstm"
+    STUDY_NAME = f"{prefix}_{args.site}_P{args.patch}"
     study = optuna.create_study(
         study_name=STUDY_NAME,
         direction="minimize",
@@ -218,7 +266,8 @@ def main() -> None:
 
     print(f"\nStarting Optuna ({args.n_trials} trials) ...")
     study.optimize(
-        make_objective(train_ds, val_ds, normalizer, args.patch, DEVICE, args.seed, args.day_threshold, USE_AMP),
+        make_objective(train_ds, val_ds, normalizer, args.patch, DEVICE, args.seed, args.day_threshold, USE_AMP,
+                       fusion=args.fusion, d_tab=D_TAB),
         n_trials=args.n_trials,
         n_jobs=2,
         show_progress_bar=True,
@@ -253,18 +302,34 @@ def main() -> None:
     best_k = bp["k_neighbors"]
     best_edge_index, best_edge_weight = build_weighted_knn_edge_index(args.patch, best_k)
 
-    best_model = GraphSAGE_LSTM(
-        in_dim=16,
-        hidden_g=bp["hidden_g"],
-        n_sage_layers=bp["n_sage_layers"],
-        hidden_t=bp["hidden_t"],
-        n_lstm_layers=bp["n_lstm_layers"],
-        dropout_head=bp["dropout_head"],
-        input_bn=bp["input_bn"],
-        concat_agg=bp["concat_agg"],
-        edge_index=best_edge_index,
-        edge_weight=best_edge_weight,
-    ).to(DEVICE)
+    if args.fusion:
+        best_model = FusionGraphSAGE_LSTM(
+            in_dim=16,
+            hidden_g=bp["hidden_g"],
+            n_sage_layers=bp["n_sage_layers"],
+            hidden_t=bp["hidden_t"],
+            n_lstm_layers=bp["n_lstm_layers"],
+            dropout_head=bp["dropout_head"],
+            input_bn=bp["input_bn"],
+            concat_agg=bp["concat_agg"],
+            d_tab=D_TAB,
+            tab_hidden=bp.get("tab_hidden", 64),
+            edge_index=best_edge_index,
+            edge_weight=best_edge_weight,
+        ).to(DEVICE)
+    else:
+        best_model = GraphSAGE_LSTM(
+            in_dim=16,
+            hidden_g=bp["hidden_g"],
+            n_sage_layers=bp["n_sage_layers"],
+            hidden_t=bp["hidden_t"],
+            n_lstm_layers=bp["n_lstm_layers"],
+            dropout_head=bp["dropout_head"],
+            input_bn=bp["input_bn"],
+            concat_agg=bp["concat_agg"],
+            edge_index=best_edge_index,
+            edge_weight=best_edge_weight,
+        ).to(DEVICE)
 
     out = train_one_model(
         model=best_model,
@@ -279,10 +344,11 @@ def main() -> None:
         patience=8,
         day_threshold=args.day_threshold,
         device=DEVICE,
+        fusion=args.fusion,
     )
 
     final_val  = out["final_val"]
-    final_test = eval_model(best_model, test_loader, normalizer, args.day_threshold, DEVICE)
+    final_test = eval_model(best_model, test_loader, normalizer, args.day_threshold, DEVICE, fusion=args.fusion)
 
     final_val["skill_vs_persistence"]      = skill_score(final_val["rmse"],      baseline_val["rmse"])
     final_val["skill_day_vs_persistence"]  = skill_score(final_val["rmse_day"],  baseline_val["rmse_day"])
@@ -301,25 +367,30 @@ def main() -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
 
     BEST_PATH = RUN_DIR / "best_model.pt"
+    arch_hparams = {
+        "hidden_g":      bp["hidden_g"],
+        "n_sage_layers": bp["n_sage_layers"],
+        "hidden_t":      bp["hidden_t"],
+        "n_lstm_layers": bp["n_lstm_layers"],
+        "dropout_head":  bp["dropout_head"],
+        "input_bn":      bp["input_bn"],
+        "concat_agg":    bp["concat_agg"],
+        "k_neighbors":   bp["k_neighbors"],
+        "l1_reg":        bp.get("l1_reg", 0.0),
+        "weighted_graph": "knn_inverse_distance",
+    }
+    if args.fusion:
+        arch_hparams["d_tab"]      = D_TAB
+        arch_hparams["tab_hidden"] = bp.get("tab_hidden", 64)
     torch.save(
         {
             "epoch":             out["best_epoch"],
             "model_state":       best_model.state_dict(),
             "best_val_rmse_day": out["best_val_rmse_day"],
             "meta": {
-                "arch": "GraphSAGE_LSTM",
-                "arch_hparams": {
-                    "hidden_g":      bp["hidden_g"],
-                    "n_sage_layers": bp["n_sage_layers"],
-                    "hidden_t":      bp["hidden_t"],
-                    "n_lstm_layers": bp["n_lstm_layers"],
-                    "dropout_head":  bp["dropout_head"],
-                    "input_bn":      bp["input_bn"],
-                    "concat_agg":    bp["concat_agg"],
-                    "k_neighbors":   bp["k_neighbors"],
-                    "l1_reg":        bp.get("l1_reg", 0.0),
-                    "weighted_graph": "knn_inverse_distance",
-                },
+                "arch":         "FusionGraphSAGE_LSTM" if args.fusion else "GraphSAGE_LSTM",
+                "fusion":       args.fusion,
+                "arch_hparams": arch_hparams,
                 "site": args.site, "patch": args.patch,
                 "L": L, "H": H, "seed": args.seed,
                 "y_mean_train": normalizer.mean, "y_std_train": normalizer.std,

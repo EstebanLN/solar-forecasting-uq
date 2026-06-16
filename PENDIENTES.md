@@ -1,5 +1,5 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-05-27_
+_Actualizado: 2026-06-15_
 
 ---
 
@@ -180,6 +180,60 @@ nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_unian
 
 > Estimado: ~4-5 días con GPU disponible (100 trials × 20 épocas × 24 combos).
 > Los runs v1 no se tocan — `already_done()` distingue por directorio.
+
+---
+
+## Fase 7 — Arquitectura Fusion (satellite + surface) ✅ IMPLEMENTADA 2026-06-15
+
+> Objetivo: fusionar el embedding satelital (ResNet / GraphSAGE) con features
+> tabulares de superficie (GHI, kt, temperatura, viento, hour_sin/cos, doy_sin/cos)
+> mediante adición residual en el dominio del embedding.
+>
+> Fórmula de fusión: z_ℓ = LayerNorm(e_ℓ + p_ℓ) donde
+>   e_ℓ = encoder_satelital(patch_ℓ) ∈ R^{d_emb}
+>   p_ℓ = TabularProjector(tab_ℓ)   ∈ R^{d_emb}
+
+### Archivos creados
+
+| Archivo | Rol |
+|---|---|
+| `src/solar_uq/loaders/__init__.py` | Paquete loaders; exporta FusionPatchSeqDataset, FusionGraphSeqDataset, n_tab_features |
+| `src/solar_uq/loaders/fusion_dataset.py` | FusionPatchSeqDataset + FusionGraphSeqDataset (satellite + tabular) |
+| `src/solar_uq/models/fusion/__init__.py` | Paquete fusion; exporta TabularProjector, FusionResNetLSTM, FusionGraphSAGE_LSTM |
+| `src/solar_uq/models/fusion/tabular_projector.py` | Linear→LayerNorm→ReLU→Linear proyector D_tab→d_emb |
+| `src/solar_uq/models/fusion/fusion_resnet_lstm.py` | SmallResNetEncoder + TabularProjector + LSTM + head |
+| `src/solar_uq/models/fusion/fusion_graphsage_lstm.py` | GraphSAGELayer×N + mean readout + TabularProjector + LSTM + head |
+| `tests/test_fusion_forward.py` | 6 tests smoke-test (todos pasan ✓) |
+| `scripts/compare_fusion_vs_satellite.py` | Tabla comparativa fusion vs satellite-only → results/fusion_comparison.{csv,tex} |
+
+### Modificaciones en archivos existentes
+
+| Archivo | Cambio |
+|---|---|
+| `src/solar_uq/train.py` | `fusion: bool = False` en eval_model, collect_predictions, train_one_model — soporta batches de 3-tupla (sat_seq, tab_seq, y) |
+| `scripts/06_resnet_lstm_optuna.py` | `--fusion`, `--surface_parquet`; Optuna busca también `tab_hidden ∈ {32,64,128}`; guarda en `runs/fusion_resnet_lstm/` |
+| `scripts/06_graphsage_lstm_optuna.py` | Ídem para GraphSAGE; guarda en `runs/fusion_graphsage_lstm/` |
+
+### Decisiones de diseño
+
+- **Paths de paquete**: `src/solar_uq/models/fusion/` y `src/solar_uq/loaders/` (Opción A confirmada)
+- **Reuso de encoders**: SmallResNetEncoder y GraphSAGELayer importados directamente, no copiados
+- **D_tab = 9** con DEFAULT_FEATURE_COLS (hour_of_day expande a hour_sin + hour_cos)
+- **Tab stats**: se computan sobre el split de train con compute_tab_stats(); se pasan a val/test para evitar data leakage
+- **Imputation**: si el timestamp no existe en el parquet de superficie → usar mediana de la columna + logging.warning (no excepción)
+- **Checkpoint meta**: arch="FusionResNetLSTM" / "FusionGraphSAGE_LSTM"; fusion=True en metadata
+
+### Pendientes de fusión
+
+- [ ] Lanzar runs fusion con Optuna (24 runs × 2 arches = 48 runs adicionales):
+  ```bash
+  .venv/bin/python scripts/06_resnet_lstm_optuna.py --fusion --site elpaso --hours_ahead 6 --seed 42
+  .venv/bin/python scripts/06_graphsage_lstm_optuna.py --fusion --site elpaso --hours_ahead 6 --seed 42
+  ```
+- [ ] Una vez completos: correr `compare_fusion_vs_satellite.py` → `results/fusion_comparison.csv`
+- [ ] Añadir tabla comparativa al artículo LaTeX (Sección Experimentos / Ablación)
+- [ ] Evaluar si fusion mejora ≥ 2% RMSE_day sobre satellite-only antes de incluirla en resultados principales
+- [ ] Soporte de conformal prediction sobre runs fusion (07_conformal_explore.py)
 
 ---
 

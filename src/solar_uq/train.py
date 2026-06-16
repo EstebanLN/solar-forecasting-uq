@@ -40,20 +40,33 @@ def eval_model(
     normalizer: TargetNormalizer,
     day_threshold: float = 20.0,
     device: str = "cpu",
+    fusion: bool = False,
 ) -> Dict[str, float]:
     """Run inference, denormalize, and compute metrics in physical units (W/m²).
 
     Both ResNetLSTM and GraphSAGE_LSTM expose the same ``model(x_seq)``
     signature — GraphSAGE stores its edge_index as a registered buffer.
+
+    When ``fusion=True`` the loader is expected to yield 3-tuples
+    ``(sat_seq, tab_seq, y)`` and the model is called as
+    ``model(sat_seq, tab_seq)``.
     """
     model.eval()
     ys: list = []
     yhats: list = []
 
-    for x_seq, y in loader:
-        x_seq = x_seq.to(device, non_blocking=True)
-        y     = y.to(device, non_blocking=True)
-        yhat  = model(x_seq)
+    for batch in loader:
+        if fusion:
+            x_seq, tab_seq, y = batch
+            x_seq   = x_seq.to(device, non_blocking=True)
+            tab_seq = tab_seq.to(device, non_blocking=True)
+            y       = y.to(device, non_blocking=True)
+            yhat    = model(x_seq, tab_seq)
+        else:
+            x_seq, y = batch
+            x_seq = x_seq.to(device, non_blocking=True)
+            y     = y.to(device, non_blocking=True)
+            yhat  = model(x_seq)
         ys.append(y.detach().cpu().numpy())
         yhats.append(yhat.detach().cpu().numpy())
 
@@ -72,18 +85,28 @@ def collect_predictions(
     loader: DataLoader,
     normalizer: TargetNormalizer,
     device: str = "cpu",
+    fusion: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Return (y_true, y_pred) arrays in physical units (W/m²).
 
     Companion to eval_model — use this when you need the raw arrays
     (e.g. for conformal calibration) rather than aggregated metrics.
+
+    When ``fusion=True`` the loader yields ``(sat_seq, tab_seq, y)`` 3-tuples.
     """
     model.eval()
     ys: list = []
     yhats: list = []
-    for x_seq, y in loader:
-        x_seq = x_seq.to(device, non_blocking=True)
-        yhat  = model(x_seq)
+    for batch in loader:
+        if fusion:
+            x_seq, tab_seq, y = batch
+            x_seq   = x_seq.to(device, non_blocking=True)
+            tab_seq = tab_seq.to(device, non_blocking=True)
+            yhat    = model(x_seq, tab_seq)
+        else:
+            x_seq, y = batch
+            x_seq = x_seq.to(device, non_blocking=True)
+            yhat  = model(x_seq)
         ys.append(y.numpy())
         yhats.append(yhat.detach().cpu().numpy())
     y_phys    = normalizer.denormalize(np.concatenate(ys))
@@ -111,6 +134,7 @@ def train_one_model(
     min_delta: float = 0.0,
     day_threshold: float = 20.0,
     device: str = "cpu",
+    fusion: bool = False,
 ) -> Dict[str, Any]:
     """Train model with early stopping on val RMSE_day.
 
@@ -145,14 +169,21 @@ def train_one_model(
         model.train()
         tr_losses: list = []
 
-        for x_seq, y in train_loader:
-            x_seq = x_seq.to(device, non_blocking=True)
-            y     = y.to(device, non_blocking=True)
+        for batch in train_loader:
+            if fusion:
+                x_seq, tab_seq, y = batch
+                x_seq   = x_seq.to(device, non_blocking=True)
+                tab_seq = tab_seq.to(device, non_blocking=True)
+                y       = y.to(device, non_blocking=True)
+            else:
+                x_seq, y = batch
+                x_seq = x_seq.to(device, non_blocking=True)
+                y     = y.to(device, non_blocking=True)
 
             opt.zero_grad(set_to_none=True)
 
             with torch.amp.autocast("cuda", enabled=use_amp):
-                yhat = model(x_seq)
+                yhat = model(x_seq, tab_seq) if fusion else model(x_seq)
                 loss = loss_fn(yhat, y)
                 if l1_reg > 0.0:
                     l1 = sum(p.abs().sum() for p in model.parameters())
@@ -169,7 +200,7 @@ def train_one_model(
 
             tr_losses.append(loss.item())
 
-        val_metrics  = eval_model(model, val_loader, normalizer, day_threshold, device)
+        val_metrics  = eval_model(model, val_loader, normalizer, day_threshold, device, fusion=fusion)
         val_rmse     = float(val_metrics["rmse"])
         val_rmse_day = float(val_metrics["rmse_day"])
 
@@ -218,7 +249,7 @@ def train_one_model(
     assert best_state is not None, "Training finished with no improvement recorded."
     model.load_state_dict(best_state)
 
-    final_val = eval_model(model, val_loader, normalizer, day_threshold, device)
+    final_val = eval_model(model, val_loader, normalizer, day_threshold, device, fusion=fusion)
 
     return {
         "model": model,
