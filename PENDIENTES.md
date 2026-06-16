@@ -96,11 +96,11 @@ Procesos activos (verificado 2026-05-25):
 ### Tabla comparativa y figuras
 - [x] Correr `scripts/08_results_table.py` → `results/summary.csv` (48 Optuna runs + SARIMA ambos sitios)
 - [x] `scripts/09_paper_figures.py` — fig1 skill_day, fig2 RMSE_day, fig3 serie temporal (GraphSAGE elpaso 6h)
-- [x] Figuras integradas en `docs/Artículo___Investigación/sections/results.tex`
+- [x] Figuras integradas en `docs/article/sections/results.tex`
 - [ ] Guardar y_true / y_pred del test set en disco para todos los modelos (scatter, distribución por hora)
 - [x] SARIMA para uniandes (skill_day: h1=0.081, h3=0.353, h6=0.435)
 
-### Documento de artículo (`docs/Artículo___Investigación/`)
+### Documento de artículo (`docs/article/`)
 - [ ] Definir venue objetivo (NeurIPS workshop, Solar Energy journal, Applied Energy, etc.)
 - [x] Estructura base del LaTeX: Abstract, Intro, Related Work, Metodología, Experimentos, Conclusión
 - [x] Sección de datos: descripción El Paso / Uniandes, preprocesamiento, split temporal

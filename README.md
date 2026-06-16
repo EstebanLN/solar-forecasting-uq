@@ -36,7 +36,7 @@ Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 ├── data_processed/                      # Raw GOES-16 NetCDF + processed GOES_v2/ — NOT in git
 │
 ├── docs/
-│   ├── Artículo___Investigación/        # LaTeX manuscript (main.tex, sections/, figures/)
+│   ├── article/                         # LaTeX manuscript (main.tex, sections/, figures/)
 │   └── avances.tex                      # Progress notes
 │
 ├── notebooks/
