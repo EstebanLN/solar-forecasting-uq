@@ -61,6 +61,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int,   default=4)
     p.add_argument("--day_threshold", type=float, default=20.0)
+    p.add_argument("--runs_root",     default=None,
+                   help="Directorio raíz donde guardar los runs (default: runs/mlp_optuna)")
     return p.parse_args()
 
 
@@ -130,7 +132,7 @@ def main() -> None:
 
     DATASET_ROOT = PROJECT_ROOT / "data" / "datasets" / "manifest_v1"
     GROUND_DIR   = PROJECT_ROOT / "data" / "ground_aligned"
-    RUNS_ROOT    = PROJECT_ROOT / "runs" / "mlp_optuna"
+    RUNS_ROOT    = Path(args.runs_root) if args.runs_root else PROJECT_ROOT / "runs" / "mlp_optuna"
     RUNS_ROOT.mkdir(parents=True, exist_ok=True)
 
     SITE_DIR = DATASET_ROOT / args.site / f"h{args.hours_ahead}"

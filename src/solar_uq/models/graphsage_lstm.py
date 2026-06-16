@@ -161,7 +161,7 @@ class GraphSAGELayer(nn.Module):
         N, F = x.shape
 
         if edge_weight is not None:
-            w = edge_weight.to(x.device).view(-1, 1)        # (E, 1)
+            w = edge_weight.to(x.device, dtype=x.dtype).view(-1, 1)   # (E, 1)
             nei_wsum = torch.zeros((N, F), device=x.device, dtype=x.dtype)
             nei_wsum.index_add_(0, dst, x[src] * w)         # Σ w·x_j  per dst
             w_total = torch.zeros((N, 1), device=x.device, dtype=x.dtype)
