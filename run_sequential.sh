@@ -250,7 +250,7 @@ run_sgld_resnet() {
         for hours in 1 3 6; do
             for seed in 42 1 7 13; do
                 run_one "sgld_resnet" "runs/resnet_lstm_sgld" \
-                    "scripts/07_sgld.py" \
+                    "scripts/08_sgld.py" \
                     "$site" "$hours" "$seed" \
                     --arch resnet
             done
@@ -269,7 +269,7 @@ run_sgld_gsage() {
         for hours in 1 3 6; do
             for seed in 42 1 7 13; do
                 run_one "sgld_gsage" "runs/graphsage_lstm_sgld" \
-                    "scripts/07_sgld.py" \
+                    "scripts/08_sgld.py" \
                     "$site" "$hours" "$seed" \
                     --arch graphsage
             done
@@ -288,7 +288,7 @@ run_sgld_mlp() {
         for hours in 1 3 6; do
             for seed in 42 1 7 13; do
                 run_one "sgld_mlp" "runs/mlp_sgld" \
-                    "scripts/07_sgld.py" \
+                    "scripts/08_sgld.py" \
                     "$site" "$hours" "$seed" \
                     --arch mlp
             done
