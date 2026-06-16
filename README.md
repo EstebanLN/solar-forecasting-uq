@@ -14,8 +14,8 @@ Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 
 | Site | Coordinates | Elevation | Climate | Data period |
 |------|------------|-----------|---------|-------------|
-| **El Paso** (César, Colombia) | 9.737° N, 73.695° W | ~50 m | Semi-arid (BSh) | Mar 2022 – Mar 2024 |
-| **Uniandes** (Bogotá, Colombia) | 4.602° N, 74.066° W | ~2 600 m | Andean equatorial (Cfb) | Sep 2023 – Mar 2025 |
+| **El Paso** (César, Colombia) | 9.737° N, 74.066° W | ~50 m | Semi-arid (BSh) | Mar 2022 – Mar 2023 |
+| **Uniandes** (Bogotá, Colombia) | 4.602° N, 73.695° W | ~2 600 m | Andean equatorial (Cfb) | Sep 2023 – Jan 2025 |
 
 ---
 
