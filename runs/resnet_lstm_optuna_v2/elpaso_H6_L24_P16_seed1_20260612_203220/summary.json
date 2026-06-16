@@ -1,0 +1,116 @@
+{
+  "run_name": "elpaso_H6_L24_P16_seed1_20260612_203220",
+  "study_name": "resnet_lstm_elpaso_P16",
+  "site": "elpaso",
+  "device": "cuda",
+  "seed": 1,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/elpaso/h1",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/elpaso/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_elpaso.parquet",
+    "run_dir": "runs/resnet_lstm_optuna_v2/elpaso_H6_L24_P16_seed1_20260612_203220"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 6,
+    "history_hours": 4.0,
+    "horizon_hours": 1.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 91,
+      "col": 53
+    },
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 253.3309569286842,
+    "y_std_train": 330.9109172989493,
+    "y_percentiles_train": [
+      0.0,
+      42.4958,
+      822.1867000000001,
+      934.66228,
+      1058.4838319999997
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 67769,
+      "rmse": 151.52752842368395,
+      "mae": 85.47757769629182,
+      "n_day": 36929,
+      "rmse_day": 202.8858811687818,
+      "mae_day": 149.8020352839232,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 16980,
+      "rmse": 161.44602724739167,
+      "mae": 93.13768978798586,
+      "n_day": 8355,
+      "rmse_day": 228.16763051915703,
+      "mae_day": 181.34662143626574,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17459,
+      "rmse": 146.5248386757287,
+      "mae": 87.05203624491666,
+      "n_day": 8757,
+      "rmse_day": 204.44875164413472,
+      "mae_day": 165.10202031517645,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 100,
+    "best_trial_number": 77,
+    "best_value_val_rmse_day": 246.16801270756392,
+    "best_params": {
+      "base": 48,
+      "emb_dim": 256,
+      "hidden_t": 128,
+      "n_lstm_layers": 1,
+      "dropout": 0.0,
+      "lr": 0.0019049657038907955,
+      "weight_decay": 8.46206475529541e-06,
+      "l1_reg": 1e-05,
+      "batch_size": 16
+    }
+  },
+  "best_model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "best_epoch": 18,
+    "train_seconds_total": 6192.472795009613,
+    "n_params": 1831969,
+    "best_ckpt_path": "runs/resnet_lstm_optuna_v2/elpaso_H6_L24_P16_seed1_20260612_203220/best_model.pt",
+    "final_val": {
+      "n": 16974,
+      "rmse": 229.96711242966177,
+      "mae": 157.6354420426963,
+      "n_day": 8355,
+      "rmse_day": 246.8433870594894,
+      "mae_day": 194.1828542968458,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": -0.42442100527670745,
+      "skill_day_vs_persistence": -0.08185103424985285
+    },
+    "final_test": {
+      "n": 17429,
+      "rmse": 206.03764648160794,
+      "mae": 136.36967061162235,
+      "n_day": 8757,
+      "rmse_day": 222.13247157413042,
+      "mae_day": 167.63072299205837,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": -0.4061619063617228,
+      "skill_day_vs_persistence": -0.08649463392554746
+    }
+  }
+}
