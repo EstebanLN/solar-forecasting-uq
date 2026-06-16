@@ -1,5 +1,5 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-06-15_
+_Actualizado: 2026-06-16_
 
 ---
 
@@ -19,33 +19,39 @@ _Actualizado: 2026-06-15_
 
 ---
 
-## Estado actual de runs
+## Estado actual de runs (2026-06-16)
 
-| Modelo                   | Runs completos | Observaciones                                                              |
-|--------------------------|---------------|----------------------------------------------------------------------------|
-| resnet_lstm              | 30 / 30       | 2 sitios × 3H × 5 seeds. Val metrics en summary.json                      |
-| graphsage_lstm           | 30 / 30       | Ídem                                                                       |
-| resnet_lstm_optuna       | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                                  |
-| graphsage_lstm_optuna    | **24 / 24**   | COMPLETO ✓ — test metrics en summary.json                                  |
-| sarima                   | **0 / 2 (re-run pendiente)** | ⚠ Runs existentes (2026-04-21 elpaso, 2026-05-11 uniandes) quedaron OBSOLETOS: usaban índice de cielo despejado (k = GHI/GHI_cs vía pvlib) en vez de GHI cruda. Script reescrito (2026-06-07) para ajustar SARIMAX directamente sobre la GHI horaria cruda — los mismos datos tabulares que el resto de modelos. Hay que re-correr `05_sarima_baseline.py` para ambos sitios y, antes, re-derivar el orden SARIMA sobre GHI cruda con `notebooks/05b_sarima_order_selection.ipynb` (los órdenes (2,1,2)(1,1,1)[24] eran para k, no necesariamente válidos para GHI). |
-| mlp_optuna               | **16 / 24**   | EN CURSO — ver detalle abajo                                               |
-| resnet_lstm_optuna_v2    | 0 / 24        | **⚠ BLOQUEADO** — cambios v2 implementados pero runs NUNCA lanzados        |
-| graphsage_lstm_optuna_v2 | 0 / 24        | **⚠ BLOQUEADO** — ídem                                                     |
+| Modelo                   | Completos | Estado                                                                     |
+|--------------------------|-----------|----------------------------------------------------------------------------|
+| resnet_lstm              | 30 / 30   | ✓ COMPLETO                                                                 |
+| graphsage_lstm           | 30 / 30   | ✓ COMPLETO                                                                 |
+| resnet_lstm_optuna       | 24 / 24   | ✓ COMPLETO (v1)                                                            |
+| graphsage_lstm_optuna    | 24 / 24   | ✓ COMPLETO (v1)                                                            |
+| sarima                   |  0 /  2   | ⚠ OBSOLETO — ver sección SARIMA abajo                                     |
+| mlp_optuna               | 16 / 24   | 🔄 EN CURSO — ventana tmux [mlp] reanudada 2026-06-16                     |
+| resnet_lstm_optuna_v2    |  7 / 24   | 🔄 EN CURSO — ventanas tmux [0][1], smoke test OK ✓                       |
+| graphsage_lstm_optuna_v2 |  0 / 24   | 🔄 EN CURSO — ventanas tmux [2][3], bug dtype corregido 2026-06-16 ✓      |
+| fusion_resnet_lstm       |  0 / 24   | ⏳ EN COLA — arranca auto tras resnet_v2 + mlp (ventanas [0][1])          |
+| fusion_graphsage_lstm    |  0 / 24   | ⏳ EN COLA — arranca auto tras gsage_v2 (ventanas [2][3])                 |
 
-### MLP Optuna — detalle (2026-05-25)
+### Pipeline tmux activo (`tmux attach -t solar_runs`)
+```
+[0] resnet_ep  : resnet_optuna_v2 elpaso   → mlp_optuna elpaso   → fusion_resnet elpaso
+[1] resnet_uni : resnet_optuna_v2 uniandes → mlp_optuna uniandes → fusion_resnet uniandes
+[2] gsage_ep   : gsage_optuna_v2 elpaso    → fusion_gsage elpaso
+[3] gsage_uni  : gsage_optuna_v2 uniandes  → fusion_gsage uniandes
+```
+Gestión: `bash run_sequential.sh --status` / `--force` / `--launch` / `<grupo> [site]`
 
-| Sitio     | Horizonte | Seeds completos     | Estado           |
-|-----------|-----------|---------------------|------------------|
-| elpaso    | H6 (1h)   | 42, 1, 7, 13        | ✓ 4/4            |
-| elpaso    | H18 (3h)  | 42, 1, 7            | 🔄 3/4 — seed13 corriendo |
-| elpaso    | H36 (6h)  | —                   | ⏳ 0/4 — esperando cola   |
-| uniandes  | H6 (1h)   | 42, 1, 7, 13        | ✓ 4/4            |
-| uniandes  | H18 (3h)  | 42, 1, 7, 13        | ✓ 4/4            |
-| uniandes  | H36 (6h)  | 42                  | 🔄 1/4 — seed1 corriendo  |
-
-Procesos activos (verificado 2026-05-25):
-- `run_sequential.sh mlp_optuna elpaso` → `06_mlp_optuna.py --site elpaso --hours_ahead 3 --seed 13`
-- `run_sequential.sh mlp_optuna uniandes` → `06_mlp_optuna.py --site uniandes --hours_ahead 6 --seed 1`
+### ⚠ Nota gsage_v2 — segundo pase necesario
+Los runs de `gsage_optuna_v2` que corrieron antes del fix (h1 y parte de h3) fallaron sin
+generar `summary.json`. El script los marcó como FAIL y continuó. Al terminar el pase
+actual, quedará `gsage_v2 < 24/24`. Relanzar:
+```bash
+bash run_sequential.sh gsage_optuna_v2 elpaso
+bash run_sequential.sh gsage_optuna_v2 uniandes
+```
+`already_done` saltará los que sí completaron.
 
 ---
 
@@ -81,12 +87,13 @@ Procesos activos (verificado 2026-05-25):
   - Protocolo Optuna: 4 seeds, 2 sitios, 3 horizontes → `runs/mlp_optuna/`
 - [ ] Esperar a 24/24 runs completos (actualmente 16/24) → actualizar tabla de resultados y sección MLP del artículo
 
-### Fase 5 — v2 (BLOQUEADO — nunca se lanzaron) ⚠
-> Cambios de arquitectura implementados en código. Los runs v2 requieren lanzamiento manual.
-- [ ] Lanzar runs v2 (ver comandos en "Cambios implementados — v2" abajo)
-  - `resnet_lstm_optuna_v2`: 24 runs × 100 trials
-  - `graphsage_lstm_optuna_v2`: 24 runs × 100 trials
+### Fase 5 — v2 (EN CURSO desde 2026-06-16) 🔄
+> Bugs críticos corregidos y pipeline relanzado. Ver sección "Debugging 2026-06-16" abajo.
+- [x] Lanzar runs v2 en tmux (`bash run_sequential.sh --launch` con `--force` tras cleanup)
+  - `resnet_lstm_optuna_v2`: 7 / 24 completos, EN CURSO ventanas [0][1]
+  - `graphsage_lstm_optuna_v2`: 0 / 24 — EN CURSO con dtype fix aplicado
 - [ ] Una vez completos: reemplazar v1 en tabla de resultados con mejores métricas v2
+- [ ] ⚠ Segundo pase gsage_v2 necesario (8 runs h1 fallaron antes del fix)
 - [ ] Actualizar figuras del artículo si v2 supera a v1
 
 ---
@@ -369,6 +376,58 @@ SARIMA peor que persistencia en todos los horizontes (skill_day < 0 en elpaso).
 
 ---
 
+## Debugging 2026-06-16 — Bugs encontrados y corregidos
+
+### Bug 1 (CRÍTICO): GraphSAGE v2 — dtype mismatch en AMP
+
+**Síntoma:** Todos los runs de `gsage_optuna_v2` fallaban con:
+```
+RuntimeError: index_add_(): self (Half) and source (Float) must have the same scalar type
+```
+
+**Causa:** En `GraphSAGELayer.forward()`, dentro de `torch.cuda.amp.autocast()`,
+el tensor `x` (y por tanto `x[src] * w`) son promovidos a `float16`. Pero
+`edge_weight` es un buffer registrado con `dtype=float32` que `_batch_edge_weight`
+reproducía sin cambiar el dtype. El resultado: `index_add_` intentaba acumular
+un tensor `Half` con source `Float`.
+
+**Fix** en [src/solar_uq/models/graphsage_lstm.py](src/solar_uq/models/graphsage_lstm.py) línea 164:
+```python
+# Antes (buggy):
+w = edge_weight.to(x.device).view(-1, 1)
+# Después (fix):
+w = edge_weight.to(x.device, dtype=x.dtype).view(-1, 1)
+```
+
+**Impacto:** Afecta también a `FusionGraphSAGE_LSTM` (comparte `GraphSAGELayer`).
+Los 8 runs h1 de gsage_v2 (elpaso+uniandes × 4 seeds) fallaron antes del fix —
+necesitan segundo pase.
+
+### Bug 2: MLP Optuna — falta `--runs_root` en CLI
+
+**Síntoma:** `06_mlp_optuna.py: error: unrecognized arguments: --runs_root runs/smoke`
+
+**Causa:** El argumento `--runs_root` (presente en los scripts de ResNet y GraphSAGE)
+no estaba implementado en `06_mlp_optuna.py`.
+
+**Fix** en [scripts/06_mlp_optuna.py](scripts/06_mlp_optuna.py):
+```python
+# En parse_args():
+p.add_argument("--runs_root", default=None,
+               help="Directorio raíz donde guardar los runs")
+# En main():
+RUNS_ROOT = Path(args.runs_root) if args.runs_root else PROJECT_ROOT / "runs" / "mlp_optuna"
+```
+
+### Cambios en run_sequential.sh (2026-06-16)
+
+- Consolidado `launch_experiments.sh` dentro de `run_sequential.sh` (script eliminado)
+- Pipeline corregido: v2 → MLP → fusion (resnet windows); v2 → fusion (gsage windows)
+- Añadido `--force`: mata procesos, limpia incompletos, relanza tmux
+- Añadido `already_done()` con check por `summary.json` (site+hours+seed)
+
+---
+
 ## Cambios recientes en scripts (2026-06-07)
 
 ### SARIMA reescrito para usar GHI cruda en vez de índice de cielo despejado
@@ -408,16 +467,3 @@ Fix: detectar `isinstance(fc.index, pd.DatetimeIndex)` y reconstruir el índice 
 Los cuatro scripts baseline/optuna guardan `"arch_hparams"` en el meta del checkpoint `.pt`
 para permitir reconstrucción exacta del modelo en `07_conformal_explore.py`.
 Los 72 runs anteriores al 2026-04-26 no tienen este campo → usar defaults CLI o re-entrenar.
-
-
-
-
-
-  nohup bash run_sequential.sh resnet_optuna_v2 elpaso   > logs/run_resnet_v2_elpaso.out
-  2>&1 &
-  nohup bash run_sequential.sh resnet_optuna_v2 uniandes > logs/run_resnet_v2_uniandes.out
-  2>&1 &
-  nohup bash run_sequential.sh gsage_optuna_v2  elpaso   > logs/run_gsage_v2_elpaso.out
-  2>&1 &
-  nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_uniandes.out
-  2>&1 &
