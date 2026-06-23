@@ -104,7 +104,7 @@ def make_objective(
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
         batch_size    = trial.suggest_categorical("batch_size", [8, 16, 32])
 
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=2, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)
@@ -269,7 +269,7 @@ def main() -> None:
         make_objective(train_ds, val_ds, normalizer, args.patch, DEVICE, args.seed, args.day_threshold, USE_AMP,
                        fusion=args.fusion, d_tab=D_TAB),
         n_trials=args.n_trials,
-        n_jobs=2,
+        n_jobs=1,
         show_progress_bar=True,
         catch=(AssertionError,),
     )
