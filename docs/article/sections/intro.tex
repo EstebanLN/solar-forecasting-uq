@@ -52,39 +52,51 @@ This paper makes the following contributions:
 
 \begin{enumerate}
   \item We propose \textbf{GraphSAGE-LSTM}, a model that treats a GOES-16 satellite
-        patch as a $k$-nearest-neighbour weighted pixel graph, applies GraphSAGE
-        neighbourhood aggregation \cite{hamilton2017} with inverse-distance edge
-        weights, and passes the resulting sequence of graph embeddings through an
-        LSTM to produce a point forecast of GHI at horizons of 1, 3, and 6~hours.
+        patch as a pixel graph, applies GraphSAGE neighbourhood aggregation
+        \cite{hamilton2017} over it, and passes the resulting sequence of graph
+        embeddings through an LSTM to produce a point forecast of GHI at horizons
+        of 1, 3, and 6~hours. We compare a fixed unweighted nearest-neighbour
+        graph against a learned, distance-weighted $k$-nearest-neighbour variant
+        with a tunable neighbourhood size, isolating the contribution of
+        \emph{learned spatial connectivity} to forecasting skill.
 
   \item We conduct a \textbf{rigorous empirical comparison} across two climatologically
-        distinct Colombian sites, three forecast horizons, and four random seeds,
+        distinct Colombian sites, three forecast horizons, and multiple random seeds,
         including Bayesian hyperparameter optimisation via Optuna \cite{akiba2019}
-        for GraphSAGE-LSTM, ResNet-LSTM, and a flat MLP spatial-ablation baseline.
+        for GraphSAGE-LSTM, ResNet-LSTM, and a flat MLP spatial-ablation baseline,
+        together with the graph-construction ablation described above.
 
-  \item We show that GraphSAGE-LSTM \textbf{achieves the best skill among the
-        deep-learning models} at the 6-hour horizon at both sites
-        (El~Paso: $\skillday = 0.636$ vs.\ $0.614$ for ResNet-LSTM; Uniandes:
-        $0.417$ vs.\ $0.368$), with consistently lower seed-to-seed variance,
-        while the absolute skill of both models is markedly lower at the
-        climatologically harder high-altitude site --- evidence that
-        site-specific cloud dynamics, not just model architecture, govern
-        attainable forecasting skill.
+  \item Preliminary single-seed results indicate that GraphSAGE-LSTM is
+        \textbf{competitive with or superior to ResNet-LSTM} among the
+        deep-learning models at multi-hour horizons at both sites, while the
+        absolute skill of both models is markedly lower at the climatologically
+        harder high-altitude site --- evidence that site-specific cloud
+        dynamics, not just model architecture, govern attainable forecasting
+        skill. The full multi-seed comparison, including the graph-construction
+        ablation, is in progress (Section~\ref{sec:results}).
 
-  \item We implement \textbf{Split Conformal Prediction} \cite{vovk2005,angelopoulos2023}
-        as a post-hoc UQ layer applicable to any trained backbone.
-        The calibration procedure produces marginal-coverage-valid prediction
-        intervals without distributional assumptions, supporting risk-aware
-        operational decisions for solar-integrated power systems. This
-        constitutes Stage~1 of a staged UQ roadmap: Split~CP (this work)
-        $\to$ Conformalized Quantile Regression \cite{romano2019} for
-        adaptive-width intervals $\to$ Bayesian uncertainty decomposition
-        \cite{kendall2017} for aleatoric/epistemic separation.
+  \item We introduce a \textbf{disentangled uncertainty-quantification layer}
+        that separately estimates the two sources of forecast uncertainty:
+        an \emph{aleatoric} component, captured by a Gaussian
+        negative-log-likelihood variance head that models irreducible cloud
+        stochasticity, and an \emph{epistemic} component, captured by an
+        ensemble of posterior weight samples obtained via Stochastic Gradient
+        Langevin Dynamics (SGLD) \cite{welling2011}, which quantifies
+        uncertainty due to limited data and model capacity
+        \cite{kendall2017}. Unlike a single symmetric prediction interval,
+        this decomposition tells an operator \emph{why} a forecast is
+        uncertain, supporting differentiated, risk-stratified responses
+        (e.g.\ wider reserve margins for high-epistemic-uncertainty regimes
+        such as under-sampled cloud types, versus accepting irreducible
+        variance during genuinely volatile but well-characterised convective
+        afternoons).
 
   \item We establish a \textbf{reproducible GOES-16 benchmark for tropical
         Andean sites}, including data manifests, patch extraction, model code,
-        Optuna studies, and evaluation scripts, addressing the scarcity of
-        published satellite-based GHI forecasting benchmarks for Latin American
+        Optuna studies, the graph-construction ablation, the SGLD/variance-head
+        uncertainty-decomposition pipeline, and evaluation scripts, addressing
+        the scarcity of published satellite-based GHI forecasting benchmarks
+        --- with disentangled uncertainty quantification --- for Latin American
         and equatorial tropical contexts.
 \end{enumerate}
 

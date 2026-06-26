@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--hours_ahead",   type=int, default=6, choices=[1, 3, 6])
     p.add_argument("--seed",          type=int, default=42)
     p.add_argument("--patch",         type=int, default=16)
-    p.add_argument("--n_trials",      type=int, default=100)
+    p.add_argument("--n_trials",      type=int, default=75)
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int, default=4)
     p.add_argument("--day_threshold", type=float, default=20.0)

@@ -70,11 +70,56 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
     \bottomrule
   \end{tabular}}
   \par\smallskip
-  \textit{\footnotesize FlatMLP (Optuna) results are pending completion of the
-  four-seed sweep (Section~\ref{sec:discussion}, Limitations) and will be
+  \textit{\footnotesize GraphSAGE-LSTM rows use the \textbf{fixed unweighted
+  graph} variant (Section~\ref{ssec:gsage}); results for the learned weighted
+  $k$-NN variant are in progress and reported separately in
+  Table~\ref{tab:ablation}. FlatMLP (Optuna) results are pending completion of
+  the four-seed sweep (Section~\ref{sec:discussion}, Limitations) and will be
   populated prior to submission; this row quantifies what fraction of
   deep-learning skill arises from spatial encoding versus temporal dynamics
   alone.}
+\end{table*}
+
+\subsection{Graph-construction ablation: fixed vs.\ learned spatial connectivity}
+\label{ssec:ablation}
+
+Table~\ref{tab:ablation} isolates the contribution of \emph{learned spatial
+connectivity} by comparing the fixed unweighted 8-neighbour graph (used for
+the GraphSAGE-LSTM rows of Table~\ref{tab:main}) against the learned,
+distance-weighted $k$-nearest-neighbour graph with Optuna-tuned neighbourhood
+size $k$ (Section~\ref{ssec:gsage}), holding the rest of the architecture,
+training protocol, and data pipeline fixed. The weighted-graph variant uses a
+reduced two-seed protocol (Section~\ref{ssec:optuna}); we report it alongside
+the four-seed fixed-graph baseline with this caveat rather than withholding
+it pending a full four-seed re-run.
+
+\begin{table*}[t]
+  \centering
+  \caption{Graph-construction ablation for GraphSAGE-LSTM. $\skillday$ relative
+           to persistence (higher is better). Fixed graph: mean~$\pm$~std over
+           4 seeds. Weighted $k$-NN graph: mean~$\pm$~std over 2 seeds
+           $\{42,1\}$ (Section~\ref{ssec:optuna}). \textit{[Weighted $k$-NN
+           ablation in progress; values to be populated as runs complete.]}}
+  \label{tab:ablation}
+  \setlength{\tabcolsep}{5pt}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llcccccc}
+    \toprule
+    & & \multicolumn{3}{c}{\textbf{El Paso (César)}} &
+         \multicolumn{3}{c}{\textbf{Uniandes (Bogotá)}} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-8}
+    \textbf{Graph variant} & \textbf{Metric} & \textbf{1h} & \textbf{3h} & \textbf{6h}
+                                              & \textbf{1h} & \textbf{3h} & \textbf{6h} \\
+    \midrule
+    Fixed unweighted, $k=8$ (4 seeds)
+      & $\skillday$ & $-0.197 \pm 0.040$ & $+0.419 \pm 0.039$ & $+0.636 \pm 0.013$
+                    & $+0.147 \pm 0.017$ & $+0.376 \pm 0.004$ & $+0.417 \pm 0.008$ \\
+    \midrule
+    \multirow{2}{*}{Weighted $k$-NN, tuned (2 seeds)}
+      & $\skillday$ & --- & --- & --- & --- & --- & --- \\
+      & best $k$ & --- & --- & --- & --- & --- & --- \\
+    \bottomrule
+  \end{tabular}}
 \end{table*}
 
 \begin{figure*}[t]
@@ -162,49 +207,52 @@ The most unstable model is ResNet-LSTM at El~Paso 3h ($\pm 0.090$), which may
 reflect the interaction between the high-irradiance regime and the CNN's sensitivity
 to specific initialisation-driven features.
 
-\subsection{Conformal prediction intervals}
-\label{ssec:cp_results}
+\subsection{Uncertainty decomposition: aleatoric vs.\ epistemic}
+\label{ssec:uq_results}
 
-Table~\ref{tab:conformal} will report the Split~CP calibration results for the
-best-performing model at each site-horizon combination, evaluated at nominal
-coverage levels 80\%, 90\%, and 95\%.  The conformal quantile $\hat{q}$ (W/m²)
-sets the half-width of the symmetric prediction interval; daytime empirical
-coverage $\hat{\text{cov}}_\text{day}$ should meet or exceed the nominal level
-to satisfy the marginal coverage guarantee of Eq.~\eqref{eq:qhat}.
+Table~\ref{tab:decomposition} will report the aleatoric/epistemic
+decomposition (Eq.~\ref{eq:decomposition}) for the best-performing backbone
+at each site-horizon combination, together with the combined predictive
+interval's empirical coverage at nominal levels 80\%, 90\%, and 95\%.
+$\sigma_\text{ale}$ (W/m²) is the heteroscedastic-head estimate of irreducible
+cloud-stochasticity noise, averaged over the $T$ SGLD posterior samples;
+$\sigma_\text{epi}$ (W/m²) is the spread of the $T$ posterior point
+predictions and shrinks as more representative training data is available;
+their ratio $\sigma_\text{epi}/\sigma_\text{total}$ indicates what fraction of
+total predictive uncertainty is, in principle, reducible by further training.
 
-The backbone for El~Paso is GraphSAGE-LSTM (best overall model at 3h and 6h);
-for Uniandes the best deep-learning backbone per horizon is used
-(ResNet-LSTM at 1h, GraphSAGE-LSTM at 3h and 6h), consistent with
-Table~\ref{tab:main}.
+The backbone for El~Paso is GraphSAGE-LSTM (best overall model at 3h and 6h
+in the fixed-graph baseline, Table~\ref{tab:main}); for Uniandes the best
+deep-learning backbone per horizon is used (ResNet-LSTM at 1h, GraphSAGE-LSTM
+at 3h and 6h). The backbone selection will be revisited once the
+graph-construction ablation (Table~\ref{tab:ablation}) completes, in case the
+weighted $k$-NN variant supersedes the fixed-graph baseline used here.
 
 \begin{table*}[t]
   \centering
-  \caption{Split Conformal Prediction results. $\hat{q}$: calibrated half-width (W/m²);
-           $\hat{\text{cov}}_\text{day}$: empirical daytime coverage on the test set.
-           Three nominal levels $1-\alpha \in \{80\%, 90\%, 95\%\}$ are reported per
-           site-horizon combination. Backbone: GraphSAGE-LSTM for El~Paso;
-           best-per-horizon deep-learning backbone for Uniandes (ResNet-LSTM at
-           1h, GraphSAGE-LSTM at 3h and 6h).
-           \textit{[Conformal calibration in progress; values to be populated prior to
-           submission.]}}
-  \label{tab:conformal}
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}{llccccccc}
+  \caption{Aleatoric/epistemic uncertainty decomposition. $\sigma_\text{ale}$,
+           $\sigma_\text{epi}$, $\sigma_\text{total}$ in W/m² (Eq.~\ref{eq:decomposition});
+           $\hat{\text{cov}}_\text{day}$: empirical daytime coverage of the combined
+           interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{total}$ on the test set.
+           Backbone: GraphSAGE-LSTM for El~Paso; best-per-horizon deep-learning
+           backbone for Uniandes (ResNet-LSTM at 1h, GraphSAGE-LSTM at 3h and 6h).
+           \textit{[SGLD sampling and variance-head training in progress; values
+           to be populated as runs complete.]}}
+  \label{tab:decomposition}
+  \setlength{\tabcolsep}{4pt}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llccccc}
     \toprule
-    & & \multicolumn{3}{c}{\textbf{El Paso}} & & \multicolumn{3}{c}{\textbf{Uniandes}} \\
-    \cmidrule(lr){3-5}\cmidrule(lr){7-9}
-    \textbf{Level} & \textbf{H} &
-    $\hat{q}$ & $\hat{\text{cov}}_\text{day}$ & Width &&
-    $\hat{q}$ & $\hat{\text{cov}}_\text{day}$ & Width \\
+    \textbf{Site} & \textbf{H} &
+    $\sigma_\text{ale}$ & $\sigma_\text{epi}$ & $\sigma_\text{total}$ &
+    $\sigma_\text{epi}/\sigma_\text{total}$ & $\hat{\text{cov}}_\text{day}$ (90\%) \\
     \midrule
-    80\% & 3h & --- & --- & --- && --- & --- & --- \\
-    80\% & 6h & --- & --- & --- && --- & --- & --- \\
+    El Paso  & 3h & --- & --- & --- & --- & --- \\
+    El Paso  & 6h & --- & --- & --- & --- & --- \\
     \midrule
-    90\% & 3h & --- & --- & --- && --- & --- & --- \\
-    90\% & 6h & --- & --- & --- && --- & --- & --- \\
-    \midrule
-    95\% & 3h & --- & --- & --- && --- & --- & --- \\
-    95\% & 6h & --- & --- & --- && --- & --- & --- \\
+    Uniandes & 1h & --- & --- & --- & --- & --- \\
+    Uniandes & 3h & --- & --- & --- & --- & --- \\
+    Uniandes & 6h & --- & --- & --- & --- & --- \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}}
 \end{table*}

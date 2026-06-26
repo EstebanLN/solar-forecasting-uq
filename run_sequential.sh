@@ -172,15 +172,15 @@ run_optuna_gsage() {
 }
 
 run_optuna_resnet_v2() {
-    echo ""; echo "=== ResNet Optuna v2 — 100 trials [site=${SITE_FILTER}] ==="
+    echo ""; echo "=== ResNet Optuna v2 — 75 trials, 2 seeds [site=${SITE_FILTER}] ==="
     for site in uniandes elpaso; do
         [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
-            for seed in 42 1 7 13; do
+            for seed in 42 1; do
                 run_one "optuna_resnet_v2" "runs/resnet_lstm_optuna_v2" \
                     "scripts/06_resnet_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
-                    --n_trials 100 \
+                    --n_trials 75 \
                     --runs_root runs/resnet_lstm_optuna_v2
             done
         done
@@ -188,15 +188,15 @@ run_optuna_resnet_v2() {
 }
 
 run_optuna_gsage_v2() {
-    echo ""; echo "=== GraphSAGE Optuna v2 — 100 trials [site=${SITE_FILTER}] ==="
+    echo ""; echo "=== GraphSAGE Optuna v2 — 75 trials, 2 seeds [site=${SITE_FILTER}] ==="
     for site in uniandes elpaso; do
         [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
-            for seed in 42 1 7 13; do
+            for seed in 42 1; do
                 run_one "optuna_gsage_v2" "runs/graphsage_lstm_optuna_v2" \
                     "scripts/06_graphsage_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
-                    --n_trials 100 \
+                    --n_trials 75 \
                     --runs_root runs/graphsage_lstm_optuna_v2
             done
         done
@@ -219,11 +219,11 @@ run_optuna_mlp() {
 }
 
 run_fusion_resnet() {
-    echo ""; echo "=== FusionResNetLSTM Optuna — 100 trials [site=${SITE_FILTER}] ==="
+    echo ""; echo "=== FusionResNetLSTM Optuna — 75 trials, 2 seeds [site=${SITE_FILTER}] ==="
     for site in uniandes elpaso; do
         [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
-            for seed in 42 1 7 13; do
+            for seed in 42 1; do
                 run_one "fusion_resnet" "runs/fusion_resnet_lstm" \
                     "scripts/06_resnet_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
@@ -234,11 +234,11 @@ run_fusion_resnet() {
 }
 
 run_fusion_gsage() {
-    echo ""; echo "=== FusionGraphSAGE_LSTM Optuna — 100 trials [site=${SITE_FILTER}] ==="
+    echo ""; echo "=== FusionGraphSAGE_LSTM Optuna — 75 trials, 2 seeds [site=${SITE_FILTER}] ==="
     for site in uniandes elpaso; do
         [[ "$SITE_FILTER" != "all" && "$SITE_FILTER" != "$site" ]] && continue
         for hours in 1 3 6; do
-            for seed in 42 1 7 13; do
+            for seed in 42 1; do
                 run_one "fusion_gsage" "runs/fusion_graphsage_lstm" \
                     "scripts/06_graphsage_lstm_optuna.py" \
                     "$site" "$hours" "$seed" \
@@ -332,11 +332,11 @@ runs/resnet_lstm:30
 runs/graphsage_lstm:30
 runs/resnet_lstm_optuna:24
 runs/graphsage_lstm_optuna:24
-runs/resnet_lstm_optuna_v2:24
-runs/graphsage_lstm_optuna_v2:24
+runs/resnet_lstm_optuna_v2:12
+runs/graphsage_lstm_optuna_v2:12
 runs/mlp_optuna:24
-runs/fusion_resnet_lstm:24
-runs/fusion_graphsage_lstm:24
+runs/fusion_resnet_lstm:12
+runs/fusion_graphsage_lstm:12
 runs/resnet_lstm_sgld:24
 runs/graphsage_lstm_sgld:24
 runs/mlp_sgld:24
