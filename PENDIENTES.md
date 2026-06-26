@@ -1,5 +1,5 @@
 # Pendientes y estado del proyecto
-_Actualizado: 2026-06-16_
+_Actualizado: 2026-06-25_
 
 ---
 
@@ -19,20 +19,26 @@ _Actualizado: 2026-06-16_
 
 ---
 
-## Estado actual de runs (2026-06-16)
+## Estado actual de runs (2026-06-25)
 
-| Modelo                   | Completos | Estado                                                                     |
-|--------------------------|-----------|----------------------------------------------------------------------------|
-| resnet_lstm              | 30 / 30   | ✓ COMPLETO                                                                 |
-| graphsage_lstm           | 30 / 30   | ✓ COMPLETO                                                                 |
-| resnet_lstm_optuna       | 24 / 24   | ✓ COMPLETO (v1)                                                            |
-| graphsage_lstm_optuna    | 24 / 24   | ✓ COMPLETO (v1)                                                            |
-| sarima                   |  0 /  2   | ⚠ OBSOLETO — ver sección SARIMA abajo                                     |
-| mlp_optuna               | 16 / 24   | 🔄 EN CURSO — ventana tmux [mlp] reanudada 2026-06-16                     |
-| resnet_lstm_optuna_v2    |  7 / 24   | 🔄 EN CURSO — ventanas tmux [0][1], smoke test OK ✓                       |
-| graphsage_lstm_optuna_v2 |  0 / 24   | 🔄 EN CURSO — ventanas tmux [2][3], bug dtype corregido 2026-06-16 ✓      |
-| fusion_resnet_lstm       |  0 / 24   | ⏳ EN COLA — arranca auto tras resnet_v2 + mlp (ventanas [0][1])          |
-| fusion_graphsage_lstm    |  0 / 24   | ⏳ EN COLA — arranca auto tras gsage_v2 (ventanas [2][3])                 |
+> ⚠ **Protocolo cambiado el 2026-06-25**: `resnet_lstm_optuna_v2`, `graphsage_lstm_optuna_v2`
+> y sus `fusion_*` correspondientes pasaron de **4 seeds × 100 trials** (24 runs/arch) a
+> **2 seeds (42, 1) × 75 trials** (12 runs/arch). Motivo: gsage_v2 a 100 trials/4 seeds se
+> proyectaba en **~3 meses** de cómputo (ver "Debugging 2026-06-23/25" abajo) — inviable
+> para el cronograma del paper. `mlp_optuna` NO cambió (sigue en 4 seeds, ya casi completo).
+
+| Modelo                   | Completos | Meta nueva | Estado                                                                     |
+|--------------------------|-----------|------------|----------------------------------------------------------------------------|
+| resnet_lstm              | 30 / 30   | —          | ✓ COMPLETO                                                                 |
+| graphsage_lstm           | 30 / 30   | —          | ✓ COMPLETO                                                                 |
+| resnet_lstm_optuna       | 24 / 24   | —          | ✓ COMPLETO (v1)                                                            |
+| graphsage_lstm_optuna    | 24 / 24   | —          | ✓ COMPLETO (v1)                                                            |
+| sarima                   |  2 /  2   | —          | ⚠ OBSOLETO (metodología vieja) — re-derivando orden, ver sección SARIMA   |
+| mlp_optuna               | 16 / 24   | 24         | 🔄 EN CURSO — congelado hasta que termine resnet_v2 por sitio (encadenado) |
+| resnet_lstm_optuna_v2    |  9 / 24   | **12**     | 🔄 EN CURSO — 2 combos en curso a 100 trials (meta vieja, se dejan terminar) |
+| graphsage_lstm_optuna_v2 |  0 / 24   | **12**     | 🔄 EN CURSO — 2 combos en curso (elpaso/uniandes h1 seed42), ~25/100 trials |
+| fusion_resnet_lstm       |  0 / 24   | **12**     | ⏳ EN COLA — arranca tras resnet_v2 + mlp por sitio                        |
+| fusion_graphsage_lstm    |  0 / 24   | **12**     | ⏳ EN COLA — arranca tras gsage_v2 por sitio                               |
 
 ### Pipeline tmux activo (`tmux attach -t solar_runs`)
 ```
@@ -43,15 +49,68 @@ _Actualizado: 2026-06-16_
 ```
 Gestión: `bash run_sequential.sh --status` / `--force` / `--launch` / `<grupo> [site]`
 
-### ⚠ Nota gsage_v2 — segundo pase necesario
-Los runs de `gsage_optuna_v2` que corrieron antes del fix (h1 y parte de h3) fallaron sin
-generar `summary.json`. El script los marcó como FAIL y continuó. Al terminar el pase
-actual, quedará `gsage_v2 < 24/24`. Relanzar:
-```bash
-bash run_sequential.sh gsage_optuna_v2 elpaso
-bash run_sequential.sh gsage_optuna_v2 uniandes
-```
-`already_done` saltará los que sí completaron.
+### Nota: combos ya corridos con seeds 7/13 (resnet_v2)
+`resnet_lstm_optuna_v2` completó antes del cambio de protocolo: `elpaso_H6` y `uniandes_H6`
+con las 4 seeds (42,1,7,13). Esos datos NO se borran — quedan como extra/supplementary,
+pero ya no son obligatorios para la tabla principal (que ahora solo requiere 42,1).
+
+### Ritmo observado (ver detalle completo en "Debugging 2026-06-23/25")
+- **resnet_v2** (`n_jobs=2`): ~1-1.5 trials/hora → ~3 días por combo → **12 combos: ~2-3 semanas**
+- **gsage_v2** (`n_jobs=1`, reducido por OOM): ~0.55 trials/hora → con 75 trials (antes 100)
+  y solo 12 combos (antes 24): **estimado ~3-4 semanas** (antes: ~3 meses)
+
+---
+
+## Pivote del paper (2026-06-25): de Conformal Prediction a desentrelazamiento aleatoric/epistemic
+
+> El enfoque central del paper cambió. Ya no se reporta Conformal Prediction (CP)
+> como método propio — pasa a mencionarse solo como contraste en related work/discusión
+> (sigue citado: `vovk2005`, `angelopoulos2023`). El nuevo enfoque central es
+> **desentrelazamiento de incertidumbre aleatoric/epistemic** vía cabeza de varianza
+> Gaussiana (NLL) + muestreo posterior con SGLD, para **forecast robusto**: el objetivo
+> no es solo dar un intervalo, sino decirle al operador *por qué* el forecast es incierto
+> (nube genuinamente impredecible = aleatoric, vs. modelo con pocos datos similares =
+> epistemic), porque la respuesta operativa es distinta en cada caso.
+
+### Hallazgo que motivó parte del cambio
+Al revisar el checkpoint real de un run v1 de GraphSAGE (`runs/graphsage_lstm_optuna/`),
+sus `best_params` **no incluyen `k_neighbors` ni `l1_reg`** — confirmado: v1 usó el grafo
+**fijo sin pesos** (8 vecinos), NO el grafo k-NN ponderado que la metodología del paper
+describía en detalle (Ec. de `w_vu = 1/d(v,u)`, búsqueda de `k∈{4,8,12,16}`). El paper
+describía una arquitectura distinta a la que generó sus propios números.
+
+**Decisión (con el usuario):** en vez de ocultar esto, se convirtió en una **ablación real**:
+"grafo fijo sin pesos" (v1, 4 seeds, completo) vs. "grafo k-NN ponderado y tuneado" (v2,
+2 seeds, en curso) — Tabla `tab:ablation` en `results.tex`. La comparación arquitectónica
+se mantiene como sección base/insumo; el desentrelazamiento de incertidumbre (SGLD +
+variance head) sobre el mejor backbone es la contribución principal nueva.
+
+### Archivos de `docs/article/` editados (todos, 2026-06-25)
+| Archivo | Cambio |
+|---|---|
+| `main.tex` | Título, abstract y keywords reescritos — ya no mencionan CP; foco en disentangled UQ |
+| `sections/intro.tex` | Contribución #4 (antes CP) reemplazada por la capa de UQ desentrelazada; contribución #1 ahora menciona la ablación de grafo |
+| `sections/related.tex` | Párrafo de CP reemplazado por nueva subsección "Uncertainty quantification in deep learning for forecasting" (Kendall & Gal 2017, SGLD/Welling & Teh 2011) |
+| `sections/methodology.tex` | `ssec:gsage`: agregada la variante de grafo fijo (ablación) junto a la ponderada. `ssec:uq`: reescrita por completo — Ec. NLL (`eq:nll`), Ec. SGLD (`eq:sgld`), Ec. de descomposición aleatoric+epistemic (`eq:decomposition`). `ssec:optuna`: aclarado 4 seeds (baseline fijo) vs 2 seeds (ablación ponderada, 75 trials) |
+| `sections/results.tex` | Quitada tabla `tab:conformal`. Agregada `tab:ablation` (grafo fijo vs ponderado, placeholder) y `tab:decomposition` (σ_ale/σ_epi/σ_total, placeholder). Nota en `tab:main` aclarando que GraphSAGE = variante fija |
+| `sections/discussion.tex` | `ssec:uq_discussion` reescrita: por qué un intervalo simétrico no basta, qué señala cada componente. "Calibrated prediction intervals" → "Disentangled intervals for risk-stratified dispatch". Limitations: nota sobre 2 seeds en ablación y que la decomposición aún no se valida empíricamente |
+| `sections/conclusion.tex` | Contribuciones y future work reescritos sin el roadmap CP→CQR→Bayesian; SGLD+variance head es ahora el método actual (implementado, falta evaluar), no "future work" |
+| `references.bib` | Eliminada entrada huérfana `romano2019` (CQR, ya no se cita). `vovk2005`/`angelopoulos2023` siguen citadas (contraste) |
+
+### Verificación hecha
+- Llaves balanceadas y entornos `\begin`/`\end` cerrados en los 7 archivos editados (chequeo manual, ver bash)
+- Todo `\ref`/`\eqref` tiene su `\label` correspondiente (32 labels, 25 refs únicas, sin huérfanos)
+- Citas .tex ↔ .bib consistentes (sin huérfanas tras quitar `romano2019`)
+- **Pendiente:** compilar con `pdflatex` real — falta el paquete `texlive-publishers`
+  (`elsarticle.cls` no instalado). Instalar con `sudo apt install texlive-publishers` y
+  compilar con `pdflatex main.tex && bibtex main && pdflatex main.tex && pdflatex main.tex`
+
+### Pendiente para que las tablas placeholder tengan datos reales
+- `tab:ablation` (grafo fijo vs ponderado): esperar `graphsage_lstm_optuna_v2` (0/12 actualmente)
+- `tab:decomposition` (σ_ale/σ_epi/σ_total): requiere (1) agregar cabeza de varianza NLL a
+  los modelos (no implementado todavía — `train_sgld.py` actual no tiene cabeza de varianza,
+  solo el optimizer SGLD), y (2) correr SGLD sobre el mejor backbone por sitio/horizonte
+  (actualmente 1/24 runs de `resnet_lstm_sgld` hechos, sin variance head)
 
 ---
 
@@ -87,13 +146,13 @@ bash run_sequential.sh gsage_optuna_v2 uniandes
   - Protocolo Optuna: 4 seeds, 2 sitios, 3 horizontes → `runs/mlp_optuna/`
 - [ ] Esperar a 24/24 runs completos (actualmente 16/24) → actualizar tabla de resultados y sección MLP del artículo
 
-### Fase 5 — v2 (EN CURSO desde 2026-06-16) 🔄
-> Bugs críticos corregidos y pipeline relanzado. Ver sección "Debugging 2026-06-16" abajo.
+### Fase 5 — v2 (EN CURSO desde 2026-06-16, protocolo reducido 2026-06-25) 🔄
+> Bugs críticos corregidos y pipeline relanzado. Ver sección "Debugging" abajo.
 - [x] Lanzar runs v2 en tmux (`bash run_sequential.sh --launch` con `--force` tras cleanup)
-  - `resnet_lstm_optuna_v2`: 7 / 24 completos, EN CURSO ventanas [0][1]
-  - `graphsage_lstm_optuna_v2`: 0 / 24 — EN CURSO con dtype fix aplicado
+  - `resnet_lstm_optuna_v2`: 9 / 12 (meta nueva), EN CURSO ventanas [0][1]
+  - `graphsage_lstm_optuna_v2`: 0 / 12 (meta nueva) — EN CURSO con dtype fix + n_jobs=1
+- [x] Protocolo reducido 2026-06-25: 100→75 trials, 4→2 seeds (42,1) — ver justificación arriba
 - [ ] Una vez completos: reemplazar v1 en tabla de resultados con mejores métricas v2
-- [ ] ⚠ Segundo pase gsage_v2 necesario (8 runs h1 fallaron antes del fix)
 - [ ] Actualizar figuras del artículo si v2 supera a v1
 
 ---
@@ -175,18 +234,23 @@ bash run_sequential.sh gsage_optuna_v2 uniandes
 
 - Resultado en `runs/resnet_lstm_optuna_v2/`
 
-### Cómo lanzar los v2 (24 runs × 100 trials cada arquitectura)
+### Cómo lanzar los v2 (12 runs × 75 trials cada arquitectura, protocolo desde 2026-06-25)
 
 ```bash
-# 4 procesos en paralelo: 2 sitios × 2 arquitecturas
+# Vía tmux (recomendado, ya encadenado con mlp/fusion):
+bash run_sequential.sh --launch
+
+# Manual, 4 procesos en paralelo: 2 sitios × 2 arquitecturas
 nohup bash run_sequential.sh resnet_optuna_v2 elpaso   > logs/run_resnet_v2_elpaso.out   2>&1 &
 nohup bash run_sequential.sh resnet_optuna_v2 uniandes > logs/run_resnet_v2_uniandes.out 2>&1 &
 nohup bash run_sequential.sh gsage_optuna_v2  elpaso   > logs/run_gsage_v2_elpaso.out    2>&1 &
 nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_uniandes.out  2>&1 &
 ```
 
-> Estimado: ~4-5 días con GPU disponible (100 trials × 20 épocas × 24 combos).
-> Los runs v1 no se tocan — `already_done()` distingue por directorio.
+> Seeds 42,1 y `--n_trials 75` (default de los scripts, también hardcoded en `run_sequential.sh`).
+> Estimado: resnet_v2 ~2-3 semanas, gsage_v2 ~3-4 semanas (gsage es ~5x más lento por trial:
+> `n_jobs=1` por OOM en `n_jobs=2`, ver "Debugging" abajo). Los runs v1 no se tocan —
+> `already_done()` distingue por directorio.
 
 ---
 
@@ -371,8 +435,83 @@ SARIMA peor que persistencia en todos los horizontes (skill_day < 0 en elpaso).
 - **Split:** train 2022-2023 | val 2024-H1 | test 2024-H2→2025
 - **Métrica primaria:** rmse_day (RMSE muestras diurnas, GHI ≥ 20 W/m²)
 - **Baseline:** persistencia — ŷ(t+H) = GHI(t)
-- **Frecuencia:** 10 min | Historia L=24 pasos (4h) | Seeds Optuna: 42, 1, 7, 13
+- **Frecuencia:** 10 min | Historia L=24 pasos (4h)
+- **Seeds Optuna v1 / baseline / mlp_optuna:** 42, 1, 7, 13
+- **Seeds Optuna v2 / fusion (desde 2026-06-25):** 42, 1 — ver "Debugging 2026-06-23/25"
 - **Datos en el servidor, nunca en git** (ver .gitignore)
+
+---
+
+## Debugging 2026-06-23/25 — Crash de memoria, fixes y cambio de protocolo
+
+### Causa raíz del "crash" del 2026-06-23
+No fue un apagado del sistema. Fue **CUDA OOM + RAM/swap agotada** por correr 4 pipelines
+en paralelo (resnet×2 sitios + gsage×2 sitios) compartiendo una sola GPU de 11.5GB. Un solo
+trial de gsage h6 (con `n_jobs=2`, `hidden_g=256`, `k_neighbors=16`) llegaba a usar 5.5GB.
+
+**Daño descubierto:** los 24 runs de `graphsage_lstm_optuna_v2` lanzados antes de esto nunca
+se guardaron (0/24) — todos fallaron por OOM/crash de `DataLoader` worker. El pipeline avanzó
+igual a `fusion_gsage` por un bug de encadenamiento (`&&` en bash no valida que TODOS los
+combos internos de un grupo hayan tenido éxito, solo que el script `run_one` haya retornado
+exit 0 al final del loop, incluso si individualmente reportó `[FAIL]`).
+
+**Fix aplicado:**
+- `scripts/06_graphsage_lstm_optuna.py`: `n_jobs` 2→1, `num_workers` (en el loop de Optuna) 4→2
+- Kernel de Jupyter colgado (4GB, 5 días corriendo) — terminado
+- `tmux kill-session` + `pkill` + cleanup de incompletos + relanzado limpio (`--force`)
+
+### Bug GraphSAGE v2 dtype (ya documentado abajo, sección 2026-06-16) — recordatorio
+Sigue siendo la causa de que los runs de antes del 2026-06-16 fallaran; el fix de
+`edge_weight.to(x.device, dtype=x.dtype)` ya estaba aplicado para este ciclo de runs.
+
+### Notebook `05b_sarima_order_selection.ipynb` — bug de índice (recurrente)
+**Bug:** `P_best, Q_best = grid_df.iloc[0]["seasonal"][:2]` extraía `(P, D)` en vez de
+`(P, Q)` (`seasonal` es la tupla `(P,D,Q,m)`; índice 1 es D, no Q) → `ValueError: Index
+contains duplicate entries, cannot reshape` en el heatmap.
+**Fix:** `P_best = seasonal[0]`, `Q_best = seasonal[2]`, y el filtro usa `s[2] == Q_best`.
+**Nota:** este fix se revirtió una vez porque el kernel viejo (ver abajo) autosaveó la
+versión con el bug encima. Si vuelve a aparecer el `ValueError`, revisar que el kernel activo
+no esté pisando el archivo.
+
+### SARIMA — proceso de notebook consumía 10GB+ de RAM (riesgo de OOM recurrente)
+El kernel de Jupyter de esta notebook llevaba **5 días corriendo** en segundo plano (desde
+antes de esta sesión) ejecutando el grid search de 144 modelos SARIMAX, y su RSS creció a
+10.4GB (retención de memoria del allocator de glibc en loops largos de `statsmodels`, no es
+un memory leak real pero el efecto práctico es el mismo). Solo había avanzado 15/144 modelos
+en 5 días por contención de CPU con los pipelines de GPU.
+
+**Fix — `scripts/sarima_grid_search_standalone.py`** (nuevo, reemplaza correr el grid search
+dentro del notebook):
+- `low_memory=True` en `SARIMAX.fit()` — clave: sin esto, un solo fit con componente
+  estacional fuerte (P=2,Q=2) llega a pedir **14GB de VSZ / 9GB de RSS** (las matrices del
+  Kalman filter se guardan completas por defecto, tamaño ∝ state_dim² × n_obs). Con
+  `low_memory=True` el mismo fit usa ~200-500MB.
+- `gc.collect()` + `ctypes.CDLL("libc.so.6").malloc_trim(0)` después de cada fit
+- Guardado incremental a CSV (crash-safe)
+- Se corre con `nice -n 19 ionice -c3` (prioridad mínima, no compite con GPU) y
+  `ulimit -v 6291456` (tope duro de 6GB de memoria virtual — si algo se descontrola, el
+  proceso muere solo en vez de arrastrar el sistema)
+- Comando: `nohup bash -c 'ulimit -v 6291456; exec nice -n 19 ionice -c3 .venv/bin/python scripts/sarima_grid_search_standalone.py elpaso' > /tmp/sarima_grid_standalone.log 2>&1 &`
+
+**Hallazgo adicional — grid demasiado caro:** los modelos con `P=2` o `Q=2` en la parte
+estacional tardan **3-7.6 horas cada uno** (vs segundos para P,Q≤1) y solo mejoran el AIC en
+~0.2% sobre las alternativas simples. Grid acotado a `P_RANGE=[0,1]`, `Q_RANGE=[0,1]`
+(135→60 modelos) — termina en minutos en vez de semanas. Resultado completo del grid de
+P,Q≤2 parcial (17/135) respaldado en `results/sarima_grid_search_elpaso_full_partial.csv`
+por si se quiere revisar el mejor modelo con componente estacional fuerte como referencia.
+
+### Cambio de protocolo Optuna v2: 100→75 trials, 4→2 seeds (2026-06-25)
+**Motivo:** con el ritmo observado (gsage_v2 a ~0.55 trials/h con `n_jobs=1`), completar
+24 combos × 100 trials se proyectaba en **~3 meses** — inviable para el cronograma del paper.
+**Decisión:** `resnet_lstm_optuna_v2`, `graphsage_lstm_optuna_v2`, `fusion_resnet_lstm`,
+`fusion_graphsage_lstm` → seeds `[42, 1]` (en vez de `[42,1,7,13]`), `--n_trials 75` (en vez
+de 100). Aplicado en los defaults de `06_resnet_lstm_optuna.py`/`06_graphsage_lstm_optuna.py`
+y en los loops de `run_sequential.sh`. `mlp_optuna` no cambió (ya casi completo con 4 seeds).
+Los combos ya en curso al momento del cambio (2 de resnet, 2 de gsage) se dejaron terminar
+con su meta original de 100 trials para no perder el progreso ya hecho.
+**Espacio de búsqueda de hiperparámetros sin cambios** — se decidió no acotar `hidden_g`/
+`k_neighbors` ni subir `n_jobs` de gsage de vuelta a 2, para no comprometer la cobertura del
+HPO ni reabrir el riesgo de OOM.
 
 ---
 

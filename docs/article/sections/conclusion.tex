@@ -5,22 +5,29 @@
 
 We presented a graph neural network framework for satellite-based solar
 irradiance forecasting that addresses the situational-awareness needs of
-solar-integrated power system operators in tropical climates. The key
-contributions are: (i) a weighted $k$-NN GraphSAGE-LSTM architecture that
-explicitly models spatial cloud structure from GOES-16 patches; (ii) a
-rigorous comparative evaluation against a ResNet-LSTM baseline, a flat-MLP
-spatial-ablation baseline, and persistence at two Colombian sites with
-contrasting climatic regimes; and (iii) Split Conformal Prediction as a
-distribution-free post-hoc UQ layer that transforms point forecasts into
-coverage-guaranteed prediction intervals usable in risk-aware operational
-decisions.
+solar-integrated power system operators in tropical climates, with a focus on
+\emph{robust, uncertainty-aware} forecasting rather than point accuracy
+alone. The key contributions are: (i) a GraphSAGE-LSTM architecture that
+explicitly models spatial cloud structure from GOES-16 patches, together with
+an ablation isolating the value of learned, distance-weighted spatial
+connectivity over a fixed local graph; (ii) a rigorous comparative evaluation
+against a ResNet-LSTM baseline, a flat-MLP spatial-ablation baseline, and
+persistence at two Colombian sites with contrasting climatic regimes; and
+(iii) a disentangled aleatoric/epistemic uncertainty-quantification layer ---
+combining a heteroscedastic Gaussian variance head with Stochastic Gradient
+Langevin Dynamics (SGLD) posterior sampling --- that tells an operator not
+just how uncertain a forecast is, but \emph{why}, supporting risk-stratified
+operational responses that a single undifferentiated interval cannot.
 
-\textbf{GraphSAGE-LSTM} achieves the best skill among the deep-learning models
-at the 6-hour horizon at \emph{both} sites (El~Paso: $\skillday = 0.636$ vs.\
-$0.614$ for ResNet-LSTM; Uniandes: $0.417$ vs.\ $0.368$), with lower seed
-variance throughout, confirming that distance-weighted neighbourhood
-aggregation on the pixel graph provides a more stable and expressive spatial
-representation than fixed convolutional filters.
+\textbf{GraphSAGE-LSTM} (fixed-graph variant) achieves the best skill among
+the deep-learning models at the 6-hour horizon at \emph{both} sites (El~Paso:
+$\skillday = 0.636$ vs.\ $0.614$ for ResNet-LSTM; Uniandes: $0.417$ vs.\
+$0.368$), with lower seed variance throughout, confirming that
+graph-structured neighbourhood aggregation on the pixel graph provides a
+more stable and expressive spatial representation than fixed convolutional
+filters even without learned edge weighting. Whether the learned,
+distance-weighted $k$-NN graph variant improves further on this result is the
+subject of an ongoing ablation (Table~\ref{tab:ablation}).
 
 At the \textbf{tropical mountain site} (Uniandes), however, the absolute skill
 of every model is markedly lower than at El~Paso even at the most favourable
@@ -37,19 +44,21 @@ consistent with the low persistence error ($204.4$~W/m²) in a predominantly
 clear-sky regime. Modest positive skill ($\approx 0.15$) is achieved at Uniandes,
 where frequent cloud passages create exploitable structure.
 
-\textbf{Future work} follows a staged uncertainty-quantification roadmap
-toward fully probabilistic, operationally-deployable solar forecasts.
-Split Conformal Prediction has been implemented as Stage~1;
-Conformalized Quantile Regression \cite{romano2019} will yield adaptive-width
-intervals that contract during predictable clear-sky conditions and expand
-during uncertain cloud events (Stage~2), enabling tighter reserve scheduling.
-Stage~3 will achieve full Bayesian decomposition of forecast uncertainty:
-Gaussian variance heads will capture aleatoric uncertainty (irreducible cloud
-stochasticity), while Stochastic Gradient Langevin Dynamics (SGLD,
-\cite{welling2011}) will sample the posterior weight distribution to provide
-epistemic uncertainty estimates \cite{kendall2017}, completing the transition
-from point forecasts to risk-stratified probabilistic outputs for
-solar-integrated power system operation.
-Additional planned work includes the FlatMLP spatial-ablation analysis,
-multi-step joint-horizon outputs, and extension to further Latin American sites
-to build a broader tropical solar forecasting benchmark.
+\textbf{Toward robust, disentangled forecasting.} The Gaussian
+negative-log-likelihood variance head and SGLD posterior sampling pipeline
+(Section~\ref{ssec:uq}) are implemented; remaining work is to complete
+sampling across all site-horizon backbones and empirically evaluate the
+resulting decomposition (Table~\ref{tab:decomposition}) against the
+hypotheses motivating its design (Section~\ref{ssec:uq_discussion}): that
+$\sigma_\text{ale}$ tracks cloud-regime volatility and $\sigma_\text{epi}$
+tracks data scarcity. A natural extension is to use $\sigma_\text{epi}$ as an
+active-learning signal --- prioritising under-represented conditions for
+future data collection --- closing the loop between uncertainty
+quantification and dataset improvement.
+
+\textbf{Additional planned work} includes completing the FlatMLP
+spatial-ablation sweep and the weighted $k$-NN graph-construction ablation
+(Table~\ref{tab:ablation}) across the full seed budget, multi-step
+joint-horizon outputs, and extension to further Latin American sites to
+build a broader tropical solar forecasting benchmark with disentangled,
+operationally actionable uncertainty quantification.

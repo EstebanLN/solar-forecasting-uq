@@ -177,22 +177,34 @@ basic spatial unit.
 \texttt{GraphSeqDataset}, Section~\ref{sssec:manifest}) into $N = P^2 = 256$
 nodes, one per pixel, each carrying its native $C = 16$-channel spectral
 vector as a node feature --- no convolution or pooling is applied beforehand.
-A single $k$-nearest-neighbour graph $G = (V, E, \mathbf{w})$ is built once
-over the $16\times16$ pixel grid (by Euclidean distance in 2-D pixel
-coordinates) and reused for every frame and every sample: each node connects
-to its $k$ closest pixels ($k \in \{4,8,12,16\}$, tuned per
-site/horizon, Section~\ref{ssec:optuna}), and every edge is assigned an
-inverse-distance weight $w_{vu} = 1/d(v,u)$ (Eq.~\ref{eq:edge_weight} below).
-Larger $k$ values progressively
-add diagonal, two-step, and knight-move neighbours, so $k$ effectively
-controls the spatial receptive field of a single graph layer. Unlike a fixed
-8-connected grid or a convolutional filter, this $k$-NN topology lets the
-model learn \emph{different} aggregation weights for differently-located
-pixels (e.g.\ patch centre vs.\ periphery), rather than sliding one shared
-template across the image. The edge index and weights are precomputed once,
-registered as model buffers, and replicated across the batch dimension, so
-the same mini-batch \texttt{DataLoader} and training loop used for
-ResNet-LSTM apply unchanged.
+A graph $G = (V, E, \mathbf{w})$ is built once over the $16\times16$ pixel
+grid and reused for every frame and every sample; the edge index and weights
+are precomputed once, registered as model buffers, and replicated across the
+batch dimension, so the same mini-batch \texttt{DataLoader} and training loop
+used for ResNet-LSTM apply unchanged. We compare two graph-construction
+variants, isolating the contribution of \emph{learned spatial connectivity}
+to forecasting skill (ablation reported in Section~\ref{sec:results}):
+
+\begin{itemize}
+  \item \textbf{Fixed unweighted graph (baseline).} Each node connects to its
+        8 immediate grid neighbours (cardinal and diagonal) with unit edge
+        weight, the standard local-connectivity topology used in early graph
+        convolutional networks applied to image-like data.
+  \item \textbf{Learned weighted $k$-NN graph (proposed).} Each node connects
+        to its $k$ closest pixels by Euclidean distance in 2-D pixel
+        coordinates ($k \in \{4,8,12,16\}$, tuned per site/horizon,
+        Section~\ref{ssec:optuna}), and every edge is assigned an
+        inverse-distance weight $w_{vu} = 1/d(v,u)$
+        (Eq.~\ref{eq:edge_weight} below). Larger $k$ values progressively add
+        diagonal, two-step, and knight-move neighbours, so $k$ effectively
+        controls the spatial receptive field of a single graph layer. Unlike
+        the fixed baseline or a convolutional filter, this topology lets the
+        model learn \emph{different} aggregation weights for
+        differently-located pixels (e.g.\ patch centre vs.\ periphery), rather
+        than sliding one shared template across the image, and lets Optuna
+        select the neighbourhood size that best matches each site's cloud
+        spatial scale.
+\end{itemize}
 
 \begin{equation}
   w_{vu} = \frac{1}{d(v,u)}, \quad (v, u) \in E.
@@ -212,8 +224,13 @@ weighted-neighbour summary before a shared linear projection and ReLU:
   \right)
   \label{eq:sage}
 \end{equation}
-where $\mathcal{N}(v)$ denotes the $k$-NN neighbours of $v$, $\Vert$ is
-concatenation, and $\sigma$ is ReLU. The same layer (with shared weights
+where $\mathcal{N}(v)$ denotes the neighbours of $v$ under whichever graph
+variant is in use, $\Vert$ is concatenation, and $\sigma$ is ReLU. For the
+fixed unweighted baseline, $w_{vu} = 1$ for all $(v,u) \in E$, reducing
+Eq.~\ref{eq:sage} to the standard unweighted SAGE neighbourhood mean; the two
+graph variants therefore share the same aggregation layer and differ only in
+$E$ and $\mathbf{w}$, isolating the effect of graph construction from the
+rest of the architecture. The same layer (with shared weights
 $\mathbf{W}^{(k)}$, output width \texttt{hidden\_g}) is applied to all 256
 nodes simultaneously and stacked $K \in \{2,3,4\}$ times
 (\texttt{n\_sage\_layers}); each additional layer extends a node's effective
@@ -263,9 +280,17 @@ simple per-frame statistics processed over time.
 
 For the three deep-learning models (ResNet-LSTM, GraphSAGE-LSTM, and FlatMLP)
 we use Optuna \cite{akiba2019} with the TPE sampler and Median pruner.
-The study budget is 50 trials per configuration
-(site $\times$ horizon $\times$ seed) with $n_\text{jobs}=2$; an extended
-run with 100 trials is being evaluated to confirm convergence.
+The fixed-graph GraphSAGE-LSTM baseline, the corresponding ResNet-LSTM
+configuration, and FlatMLP use a budget of 50 trials per configuration
+(site $\times$ horizon $\times$ seed) across four random seeds
+$\{42,1,7,13\}$. The extended search space used for the weighted $k$-NN
+ablation (Table~\ref{tab:hpspace}) increases per-trial cost substantially ---
+larger embeddings, optionally deeper LSTMs, and a tunable graph rebuilt per
+trial --- so this variant uses a reduced budget of 75 trials across two
+random seeds $\{42,1\}$, prioritising coverage of the most consequential
+hyperparameters (graph connectivity, model capacity) over seed count; results
+are reported with this caveat wherever the two protocols are compared
+(Section~\ref{sec:results}).
 
 The ResNet-LSTM and GraphSAGE-LSTM search spaces (Table~\ref{tab:hpspace})
 include \texttt{n\_lstm\_layers}~$\in\{1,2\}$ to allow stacked recurrent
@@ -278,7 +303,10 @@ to 256 to increase capacity.
 For \textbf{GraphSAGE-LSTM}, the number of nearest neighbours
 ($k \in \{4, 8, 12, 16\}$) used to build the weighted pixel graph is
 additionally tunable, allowing the study to determine the optimal spatial
-connectivity for each site-horizon combination.
+connectivity for each site-horizon combination. The fixed-graph baseline
+(Section~\ref{ssec:gsage}) is tuned with the same search space, excluding
+\texttt{k\_neighbors} since its topology is fixed a priori, and serves as the
+ablation reference for the value of learned spatial connectivity.
 For \textbf{FlatMLP}, the study searches over MLP depth, hidden dimension,
 dropout, learning rate, and weight decay (50 trials).
 
@@ -319,63 +347,87 @@ loss on normalised targets ($y_\text{norm} = (y - \bar{y}) / s_y$, with $\bar{y}
 and $s_y$ estimated from the training set). Training uses early stopping with
 patience~6 (trials) or~8 (final retraining). Automatic Mixed Precision (AMP) is
 enabled when a GPU is available. Each experiment is replicated with four seeds
-$\{42, 1, 7, 13\}$ to report mean~$\pm$~std statistics.
+$\{42, 1, 7, 13\}$ to report mean~$\pm$~std statistics, except the weighted
+$k$-NN ablation, which uses two seeds $\{42, 1\}$ as noted in
+Section~\ref{ssec:optuna}.
 
-\subsection{Uncertainty quantification: Split Conformal Prediction}
+\subsection{Uncertainty quantification: disentangling aleatoric and epistemic uncertainty}
 \label{ssec:uq}
 
-All point-forecast models are used as the backbone for a three-stage uncertainty
-quantification (UQ) pipeline whose long-term goal is to decompose total forecast
-uncertainty into its \emph{aleatoric} component (irreducible cloud stochasticity)
-and its \emph{epistemic} component (uncertainty due to limited data and model
-capacity).
+The best-performing backbone identified in Sections~\ref{ssec:resnet}--\ref{ssec:mlp}
+is extended into a probabilistic model that separately estimates the two
+sources of forecast uncertainty \cite{kendall2017}: \emph{aleatoric}
+uncertainty, the irreducible stochasticity of cloud formation that would
+remain even with infinite training data, and \emph{epistemic} uncertainty,
+the reducible uncertainty due to limited training data and finite model
+capacity. Reporting a single undifferentiated interval cannot distinguish a
+forecast that is uncertain because the cloud field is genuinely
+unpredictable from one that is uncertain because the model has not seen
+similar conditions before; the two call for different
+operational responses (Section~\ref{sec:intro}).
 
-\textbf{Stage~1 --- Split Conformal Prediction (implemented, \cite{vovk2005,angelopoulos2023}).}
-We apply Inductive Conformal Prediction as a distribution-free, finite-sample
-calibration method.  A non-conformity score is computed over the validation set:
+\textbf{Aleatoric uncertainty: heteroscedastic Gaussian head.}
+The deterministic scalar output head (Sections~\ref{ssec:resnet}--\ref{ssec:mlp})
+is replaced with a two-head output $(\mu_\theta(x), \log\sigma_\theta^2(x))$
+predicting, respectively, the conditional mean and log-variance of $y \mid x$,
+trained by minimising the Gaussian negative log-likelihood
 \begin{equation}
-  s_i = |y_i - \hat{y}_i| \quad [\text{W/m}^2].
-  \label{eq:score}
+  \mathcal{L}_\text{NLL}(\theta) =
+  \frac{1}{2\sigma_\theta^2(x)} \bigl(y - \mu_\theta(x)\bigr)^2
+  + \frac{1}{2}\log\sigma_\theta^2(x),
+  \label{eq:nll}
 \end{equation}
-The calibrated conformal quantile at miscoverage level $\alpha$ is
-\begin{equation}
-  \hat{q} = \mathrm{Quantile}\!\left(\{s_i\}_{i=1}^{n_\text{cal}},\;
-    \frac{\lceil(n_\text{cal}+1)(1-\alpha)\rceil}{n_\text{cal}}\right),
-  \label{eq:qhat}
-\end{equation}
-and the prediction interval for a new test point is
-\begin{equation}
-  \mathcal{C}_{1-\alpha}(x) = \bigl[\hat{y}(t+H)-\hat{q},\;\hat{y}(t+H)+\hat{q}\bigr].
-  \label{eq:interval}
-\end{equation}
-Under exchangeability, this guarantees marginal coverage
-$\mathbb{P}(Y \in \mathcal{C}_{1-\alpha}) \geq 1-\alpha$ exactly in finite samples
-\cite{angelopoulos2023}.  Because $\hat{q}$ is a global constant, the interval
-has fixed width $2\hat{q}$ and does not adapt to local prediction difficulty.
-We evaluate empirical coverage at $\alpha \in \{0.05, 0.10, 0.20\}$ (intervals
-of 95\%, 90\%, and 80\%) reporting both overall and daytime-only metrics.
+which lets the model assign larger predicted variance to inputs it judges
+intrinsically noisier (e.g.\ rapidly evolving convective afternoons),
+penalised by the log-variance term against trivially inflating $\sigma^2$
+everywhere.
 
-\textbf{Stage~2 --- Conformalized Quantile Regression (planned, \cite{romano2019}).}
-To obtain intervals whose width adapts to local uncertainty, we will train
-quantile-regression heads on the DL encoders and apply the CQR correction.
-This is expected to reduce unnecessary interval width during low-variability
-periods (clear-sky mornings) without sacrificing coverage.
+\textbf{Epistemic uncertainty: SGLD posterior sampling.}
+Standard SGD/Adam training returns a single point estimate $\hat\theta$ of
+the network weights. To approximate the posterior distribution
+$p(\theta \mid \mathcal{D})$ instead, we use Stochastic Gradient Langevin
+Dynamics (SGLD, \cite{welling2011}), which injects calibrated Gaussian noise
+into each gradient step:
+\begin{equation}
+  \theta_{t+1} = \theta_t - \epsilon_t \nabla_\theta \mathcal{L}(\theta_t)
+  + \sqrt{2\epsilon_t}\,\eta_t, \qquad \eta_t \sim \mathcal{N}(0, I),
+  \label{eq:sgld}
+\end{equation}
+where $\epsilon_t$ is the (decaying) step size. Under suitable conditions on
+$\epsilon_t$, the resulting Markov chain asymptotically samples from
+$p(\theta \mid \mathcal{D})$ without the computational overhead of full MCMC.
+Following a burn-in period of $T_\text{burn-in}$ epochs (discarded, while the
+chain moves away from the SGD initialisation), we collect $T$ weight
+snapshots $\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval
+$\Delta$ (epochs), yielding an inexpensive approximate ensemble.
 
-\textbf{Stage~3 --- Bayesian uncertainty decomposition (planned,
-\cite{kendall2017,welling2011}).}
-Gaussian variance heads (NLL loss) will model aleatoric uncertainty, while
-Stochastic Gradient Langevin Dynamics (SGLD, \cite{welling2011}) will sample
-the posterior weight distribution to quantify epistemic uncertainty.
-SGLD injects calibrated Langevin noise into gradient updates, enabling
-approximate Bayesian inference without the computational overhead of full
-MCMC: running the chain for $T$ epochs and collecting snapshots every
-$\Delta$ epochs yields $T/\Delta$ approximate posterior samples, whose
-ensemble mean serves as the point forecast and whose standard deviation
-quantifies model-knowledge uncertainty.
-Together, the aleatoric head and SGLD ensemble will decompose total forecast
-uncertainty into its irreducible (cloud stochasticity) and reducible
-(model-knowledge) components \cite{kendall2017}, supporting risk-stratified
-dispatch decisions for solar-integrated power systems.
+\textbf{Combining both into a total-uncertainty decomposition.}
+For a test input $x$, each posterior sample $\theta_t$ produces a pair
+$(\mu_t(x), \sigma_t^2(x))$ via the NLL head. The ensemble mean
+$\bar\mu(x) = \frac{1}{T}\sum_{t=1}^T \mu_t(x)$ is the point forecast, and the
+total predictive variance decomposes, by the law of total variance, into an
+aleatoric and an epistemic term \cite{kendall2017}:
+\begin{equation}
+  \underbrace{\textstyle\frac{1}{T}\sum_{t=1}^{T}\bigl(\mu_t(x)-\bar\mu(x)\bigr)^2}
+    _{\text{epistemic } \sigma^2_\text{epi}(x)}
+  \;+\;
+  \underbrace{\textstyle\frac{1}{T}\sum_{t=1}^{T} \sigma_t^2(x)}
+    _{\text{aleatoric } \sigma^2_\text{ale}(x)}
+  \;=\;
+  \sigma^2_\text{total}(x).
+  \label{eq:decomposition}
+\end{equation}
+$\sigma^2_\text{epi}(x)$ is large where the $T$ posterior samples disagree on
+$\mu_t(x)$ --- i.e.\ where training data was scarce or atypical --- and
+shrinks as more representative training data becomes available, even without
+retraining the variance head. $\sigma^2_\text{ale}(x)$ instead reflects the
+model's learned, input-dependent estimate of irreducible noise and would not
+shrink with more data. We report both components separately, alongside the
+combined predictive interval $\bar\mu(x) \pm z_{1-\alpha/2}\,\sigma_\text{total}(x)$,
+and evaluate empirical coverage at the same nominal levels used in prior
+versions of this pipeline ($1-\alpha \in \{80\%, 90\%, 95\%\}$) for
+comparability, in addition to reporting the aleatoric/epistemic split itself
+as the primary object of interest.
 
 \subsection{Evaluation metrics}
 

@@ -77,20 +77,43 @@ renewable integration specifically, accurate forecasting reduces the need for
 spinning reserves and allows pre-emptive load balancing, directly limiting the
 impact of generation uncertainty on grid stability.
 
-Beyond point forecasts, uncertainty quantification (UQ) methods that
-accompany predictions with calibrated confidence intervals enable operators to
-make risk-aware dispatch decisions: when forecasts carry explicit
-probabilistic guarantees, reserve scheduling can be optimised to a desired
-risk level rather than relying on conservative worst-case margins.
-Distribution-free approaches such as conformal prediction
-\cite{vovk2005,angelopoulos2023} are particularly attractive for operational
-deployment because they provide finite-sample coverage guarantees without
-assumptions on the residual distribution --- a property that is valuable in
-tropical climates, where forecast errors are heavy-tailed due to abrupt cloud
-passages.
+Beyond point forecasts, operators benefit from knowing \emph{why} a forecast
+is uncertain. A forecast can be uncertain because the underlying cloud field
+is intrinsically stochastic and would remain so even with infinite training
+data (\emph{aleatoric} uncertainty), or because the model has seen too little
+data resembling the current conditions and would become more confident with
+more observations (\emph{epistemic} uncertainty) \cite{kendall2017}. The two
+sources call for different operational responses --- accepting irreducible
+variance during well-characterised but volatile conditions versus
+provisioning extra reserve margin under genuinely novel, under-sampled
+regimes --- a distinction that a single symmetric or distribution-free
+interval cannot make on its own.
+
+\subsection{Uncertainty quantification in deep learning for forecasting}
+
+Bayesian deep learning provides a principled route to decomposing predictive
+uncertainty. \cite{kendall2017} formalise the aleatoric/epistemic split for
+deep regression and segmentation, combining a heteroscedastic Gaussian
+negative-log-likelihood (NLL) head for aleatoric noise with Monte Carlo
+sampling over model weights for epistemic uncertainty. Approximate posterior
+sampling over weights can be obtained at training-time cost via Stochastic
+Gradient Langevin Dynamics (SGLD, \cite{welling2011}), which injects
+calibrated Gaussian noise into stochastic gradient updates so that, under a
+decaying step size, the resulting trajectory asymptotically samples the true
+posterior $p(\theta \mid \mathcal{D})$; collecting weight snapshots along a
+single SGLD chain yields an inexpensive approximate ensemble whose spread
+quantifies epistemic uncertainty, distinct from --- and complementary to ---
+the aleatoric component captured by a heteroscedastic variance head. These
+ideas have seen limited application
+to satellite-based solar forecasting, where the dominant uncertainty driver
+--- stochastic convective cloud formation --- is a textbook aleatoric source
+that is rarely modelled explicitly alongside the model's own epistemic
+limitations.
 
 This work contributes to this literature by (i) developing spatially-aware
 deep learning for solar forecasting at tropical Andean sites that remain
-underrepresented in existing benchmarks, and (ii) coupling point forecasters
-with distribution-free conformal prediction intervals suitable for
-integration into operational, risk-aware dispatch pipelines.
+underrepresented in existing benchmarks, and (ii) applying an aleatoric/epistemic
+uncertainty decomposition --- via a variance head and an SGLD posterior
+ensemble --- to satellite-based GHI forecasting, supporting risk-stratified,
+robust operational decisions that a single point forecast or symmetric
+interval cannot provide.

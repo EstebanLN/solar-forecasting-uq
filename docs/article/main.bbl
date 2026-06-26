@@ -1,0 +1,294 @@
+\begin{thebibliography}{32}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\href}[2]{#2}
+\providecommand{\path}[1]{#1}
+\providecommand{\DOIprefix}{doi:}
+\providecommand{\ArXivprefix}{arXiv:}
+\providecommand{\URLprefix}{URL: }
+\providecommand{\Pubmedprefix}{pmid:}
+\providecommand{\doi}[1]{\href{http://dx.doi.org/#1}{\path{#1}}}
+\providecommand{\Pubmed}[1]{\href{pmid:#1}{\path{#1}}}
+\providecommand{\bibinfo}[2]{#2}
+\ifx\xfnm\relax \def\xfnm[#1]{\unskip,\space#1}\fi
+%Type = Inproceedings
+\bibitem[{Ac{\i}kg{\"o}z(2022)}]{acikgoz2022}
+\bibinfo{author}{Ac{\i}kg{\"o}z, H.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{A novel approach based on integration of
+  convolutional neural networks and deep feature selection for short-term solar
+  radiation forecasting}, in: \bibinfo{booktitle}{Applied Energy}, p.
+  \bibinfo{pages}{117912}.
+%Type = Inproceedings
+\bibitem[{Akiba et~al.(2019)Akiba, Sano, Yanase, Ohta and Koyama}]{akiba2019}
+\bibinfo{author}{Akiba, T.}, \bibinfo{author}{Sano, S.},
+  \bibinfo{author}{Yanase, T.}, \bibinfo{author}{Ohta, T.},
+  \bibinfo{author}{Koyama, M.}, \bibinfo{year}{2019}.
+\newblock \bibinfo{title}{{Optuna}: {A} next-generation hyperparameter
+  optimization framework}, in: \bibinfo{booktitle}{Proceedings of the 25th ACM
+  SIGKDD International Conference on Knowledge Discovery and Data Mining}, pp.
+  \bibinfo{pages}{2623--2631}.
+%Type = Article
+\bibitem[{Alessandrini et~al.(2015)Alessandrini, Monache, Sperati and
+  Cervone}]{alessandrini2015}
+\bibinfo{author}{Alessandrini, S.}, \bibinfo{author}{Monache, L.D.},
+  \bibinfo{author}{Sperati, S.}, \bibinfo{author}{Cervone, G.},
+  \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{An analog ensemble for short-term probabilistic solar
+  power forecast}.
+\newblock \bibinfo{journal}{Applied Energy} \bibinfo{volume}{157},
+  \bibinfo{pages}{95--110}.
+%Type = Article
+\bibitem[{Bacher et~al.(2009)Bacher, Madsen and Nielsen}]{bacher2009}
+\bibinfo{author}{Bacher, P.}, \bibinfo{author}{Madsen, H.},
+  \bibinfo{author}{Nielsen, H.A.}, \bibinfo{year}{2009}.
+\newblock \bibinfo{title}{Online short-term solar power forecasting}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{83},
+  \bibinfo{pages}{1772--1783}.
+%Type = Article
+\bibitem[{Chow et~al.(2011)Chow, Urquhart, Lave, Dominguez, Kleissl, Shields
+  and Washom}]{chow2011}
+\bibinfo{author}{Chow, C.W.}, \bibinfo{author}{Urquhart, B.},
+  \bibinfo{author}{Lave, M.}, \bibinfo{author}{Dominguez, A.},
+  \bibinfo{author}{Kleissl, J.}, \bibinfo{author}{Shields, J.},
+  \bibinfo{author}{Washom, B.}, \bibinfo{year}{2011}.
+\newblock \bibinfo{title}{Intra-hour forecasting with a total sky imager at the
+  {UC San Diego} solar energy testbed}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{85},
+  \bibinfo{pages}{2881--2893}.
+%Type = Article
+\bibitem[{Coimbra et~al.(2013)Coimbra, Kleissl and Marquez}]{coimbra2013}
+\bibinfo{author}{Coimbra, C.F.}, \bibinfo{author}{Kleissl, J.},
+  \bibinfo{author}{Marquez, R.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Overview of solar forecasting methods and a metric
+  for accuracy evaluation}.
+\newblock \bibinfo{journal}{Solar Energy Forecasting and Resource Assessment} ,
+  \bibinfo{pages}{171--194}.
+%Type = Article
+\bibitem[{Diagne et~al.(2013)Diagne, David, Lauret, Boland and
+  Schmutz}]{diagne2013}
+\bibinfo{author}{Diagne, M.}, \bibinfo{author}{David, M.},
+  \bibinfo{author}{Lauret, P.}, \bibinfo{author}{Boland, J.},
+  \bibinfo{author}{Schmutz, N.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Review of solar irradiance forecasting methods and a
+  proposition for small-scale insular grids}.
+\newblock \bibinfo{journal}{Renewable and Sustainable Energy Reviews}
+  \bibinfo{volume}{27}, \bibinfo{pages}{65--76}.
+%Type = Article
+\bibitem[{Feng et~al.(2022)Feng, Yang, Su, Qin, Yi, Zheng and Zhen}]{feng2022}
+\bibinfo{author}{Feng, C.}, \bibinfo{author}{Yang, D.}, \bibinfo{author}{Su,
+  M.}, \bibinfo{author}{Qin, J.}, \bibinfo{author}{Yi, Z.},
+  \bibinfo{author}{Zheng, W.}, \bibinfo{author}{Zhen, X.},
+  \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{Convolutional neural networks for intra-hour solar
+  forecasting based on sky image sequences}.
+\newblock \bibinfo{journal}{Applied Energy} \bibinfo{volume}{310},
+  \bibinfo{pages}{118438}.
+%Type = Article
+\bibitem[{Feng et~al.(2021)Feng, Zhang, Sun and Hodge}]{energyrev2021}
+\bibinfo{author}{Feng, C.}, \bibinfo{author}{Zhang, J.}, \bibinfo{author}{Sun,
+  W.}, \bibinfo{author}{Hodge, B.M.}, \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Reinforcement learning for real-time pricing and
+  scheduling control in {EV} charging stations}.
+\newblock \bibinfo{journal}{IEEE Transactions on Industrial Informatics}
+  \bibinfo{volume}{17}, \bibinfo{pages}{849--859}.
+%Type = Inproceedings
+\bibitem[{Hamilton et~al.(2017)Hamilton, Ying and Leskovec}]{hamilton2017}
+\bibinfo{author}{Hamilton, W.L.}, \bibinfo{author}{Ying, R.},
+  \bibinfo{author}{Leskovec, J.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{Inductive representation learning on large graphs},
+  in: \bibinfo{booktitle}{Advances in Neural Information Processing Systems},
+  \bibinfo{publisher}{Curran Associates, Inc.}. pp.
+  \bibinfo{pages}{1024--1034}.
+%Type = Inproceedings
+\bibitem[{He et~al.(2016)He, Zhang, Ren and Sun}]{he2016}
+\bibinfo{author}{He, K.}, \bibinfo{author}{Zhang, X.}, \bibinfo{author}{Ren,
+  S.}, \bibinfo{author}{Sun, J.}, \bibinfo{year}{2016}.
+\newblock \bibinfo{title}{Deep residual learning for image recognition}, in:
+  \bibinfo{booktitle}{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pp. \bibinfo{pages}{770--778}.
+%Type = Article
+\bibitem[{Hochreiter and Schmidhuber(1997)}]{hochreiter1997}
+\bibinfo{author}{Hochreiter, S.}, \bibinfo{author}{Schmidhuber, J.},
+  \bibinfo{year}{1997}.
+\newblock \bibinfo{title}{Long short-term memory}.
+\newblock \bibinfo{journal}{Neural Computation} \bibinfo{volume}{9},
+  \bibinfo{pages}{1735--1780}.
+%Type = Article
+\bibitem[{Huertas-Tato et~al.(2017)Huertas-Tato, Rodr{\'i}guez-Ben{\'i}tez,
+  Arbizu-Barrena, Aler-Mur, Galv{\'a}n-Le{\'o}n and
+  Pozo-V{\'a}zquez}]{huertas2018}
+\bibinfo{author}{Huertas-Tato, J.C.},
+  \bibinfo{author}{Rodr{\'i}guez-Ben{\'i}tez, F.J.},
+  \bibinfo{author}{Arbizu-Barrena, C.}, \bibinfo{author}{Aler-Mur, R.},
+  \bibinfo{author}{Galv{\'a}n-Le{\'o}n, I.}, \bibinfo{author}{Pozo-V{\'a}zquez,
+  D.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{Automatic cloud-type classification based on the
+  combined use of a sky camera and a ceilometer}.
+\newblock \bibinfo{journal}{Journal of Geophysical Research: Atmospheres}
+  \bibinfo{volume}{122}, \bibinfo{pages}{11045--11061}.
+%Type = Article
+\bibitem[{Ji et~al.(2022)Ji, Zhu, Li and Zhou}]{ji2022}
+\bibinfo{author}{Ji, G.}, \bibinfo{author}{Zhu, W.}, \bibinfo{author}{Li, F.},
+  \bibinfo{author}{Zhou, B.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{A multi-step ahead short-term solar irradiance
+  forecasting method based on graph convolutional neural network}.
+\newblock \bibinfo{journal}{Journal of Cleaner Production}
+  \bibinfo{volume}{375}, \bibinfo{pages}{134082}.
+%Type = Article
+\bibitem[{Kazem et~al.(2021)Kazem, Chaichan, Al-Waeli and Sopian}]{kazem2021}
+\bibinfo{author}{Kazem, H.A.}, \bibinfo{author}{Chaichan, M.T.},
+  \bibinfo{author}{Al-Waeli, A.H.}, \bibinfo{author}{Sopian, K.},
+  \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{A review of solar photovoltaic forecasting methods
+  for reliable operational planning}.
+\newblock \bibinfo{journal}{Renewable Energy} \bibinfo{volume}{176},
+  \bibinfo{pages}{138--156}.
+%Type = Inproceedings
+\bibitem[{Kendall and Gal(2017)}]{kendall2017}
+\bibinfo{author}{Kendall, A.}, \bibinfo{author}{Gal, Y.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{What uncertainties do we need in {Bayesian} deep
+  learning for computer vision?}, in: \bibinfo{booktitle}{Advances in Neural
+  Information Processing Systems}, pp. \bibinfo{pages}{5574--5584}.
+%Type = Article
+\bibitem[{Li et~al.(2018)Li, Yu, Shahabi and Liu}]{li2018}
+\bibinfo{author}{Li, Y.}, \bibinfo{author}{Yu, R.}, \bibinfo{author}{Shahabi,
+  C.}, \bibinfo{author}{Liu, Y.}, \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{Diffusion convolutional recurrent neural network:
+  Data-driven traffic forecasting}.
+\newblock \bibinfo{journal}{International Conference on Learning
+  Representations} .
+%Type = Article
+\bibitem[{Liu et~al.(2023)Liu, Yang, Wang and Wang}]{liu2023}
+\bibinfo{author}{Liu, J.}, \bibinfo{author}{Yang, W.}, \bibinfo{author}{Wang,
+  Y.}, \bibinfo{author}{Wang, Y.}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Short-term solar irradiance forecasting via a novel
+  temporal fusion transformer}.
+\newblock \bibinfo{journal}{Renewable Energy} \bibinfo{volume}{211},
+  \bibinfo{pages}{1024--1036}.
+%Type = Article
+\bibitem[{Lonij et~al.(2013)Lonij, Brooks, Cronin, Leuthold and
+  Koch}]{lonij2013}
+\bibinfo{author}{Lonij, V.P.}, \bibinfo{author}{Brooks, A.E.},
+  \bibinfo{author}{Cronin, A.D.}, \bibinfo{author}{Leuthold, M.},
+  \bibinfo{author}{Koch, K.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Intra-hour forecasts of solar power production using
+  measurements from a network of irradiance sensors}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{97},
+  \bibinfo{pages}{58--66}.
+%Type = Article
+\bibitem[{Paletta et~al.(2021)Paletta, Arbod and Lasenby}]{paletta2021}
+\bibinfo{author}{Paletta, Q.}, \bibinfo{author}{Arbod, A.},
+  \bibinfo{author}{Lasenby, J.}, \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Benchmarking of deep learning irradiance forecasting
+  models from sky images --- an analysis based on forecast error
+  characteristics}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{224},
+  \bibinfo{pages}{855--867}.
+%Type = Article
+\bibitem[{Paletta et~al.(2022)Paletta, Arbod and Lasenby}]{paletta2022}
+\bibinfo{author}{Paletta, Q.}, \bibinfo{author}{Arbod, G.},
+  \bibinfo{author}{Lasenby, J.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{{ECLIPSE}: Envisioning cloud longwave impacts on
+  solar energy}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{232},
+  \bibinfo{pages}{1--12}.
+%Type = Article
+\bibitem[{Pedro and Coimbra(2012)}]{pedro2012}
+\bibinfo{author}{Pedro, H.T.}, \bibinfo{author}{Coimbra, C.F.},
+  \bibinfo{year}{2012}.
+\newblock \bibinfo{title}{Assessment of forecasting techniques for solar power
+  production with no exogenous inputs}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{86},
+  \bibinfo{pages}{2017--2028}.
+%Type = Article
+\bibitem[{Perez et~al.(2010)Perez, Kivalov, Schlemmer, Hemker, Renn{\'e} and
+  Hoff}]{perez2013}
+\bibinfo{author}{Perez, R.}, \bibinfo{author}{Kivalov, S.},
+  \bibinfo{author}{Schlemmer, J.}, \bibinfo{author}{Hemker, K.},
+  \bibinfo{author}{Renn{\'e}, D.}, \bibinfo{author}{Hoff, T.E.},
+  \bibinfo{year}{2010}.
+\newblock \bibinfo{title}{Validation of short and medium term operational solar
+  radiation forecasts in the {US}}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{84},
+  \bibinfo{pages}{2161--2172}.
+%Type = Article
+\bibitem[{Poveda et~al.(2014)Poveda, Jaramillo and Vallejo}]{poveda2004}
+\bibinfo{author}{Poveda, G.}, \bibinfo{author}{Jaramillo, L.F.},
+  \bibinfo{author}{Vallejo, L.L.}, \bibinfo{year}{2014}.
+\newblock \bibinfo{title}{Seasonal precipitation patterns along pathways of
+  {South American} low-level jets and aerial rivers}.
+\newblock \bibinfo{journal}{Water Resources Research} \bibinfo{volume}{50},
+  \bibinfo{pages}{98--118}.
+%Type = Article
+\bibitem[{Reikard(2009)}]{reikard2009}
+\bibinfo{author}{Reikard, G.}, \bibinfo{year}{2009}.
+\newblock \bibinfo{title}{Predicting solar radiation at high resolutions: {A}
+  comparison of time series forecasts}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{83},
+  \bibinfo{pages}{342--349}.
+%Type = Article
+\bibitem[{Reno and Hansen(2016)}]{reno2016}
+\bibinfo{author}{Reno, M.J.}, \bibinfo{author}{Hansen, C.W.},
+  \bibinfo{year}{2016}.
+\newblock \bibinfo{title}{Identification of periods of clear sky irradiance in
+  time series of {GHI} measurements}.
+\newblock \bibinfo{journal}{Renewable Energy} \bibinfo{volume}{90},
+  \bibinfo{pages}{520--531}.
+%Type = Techreport
+\bibitem[{{Unidad de Planeaci{\'o}n Minero Energ{\'e}tica
+  (UPME)}(2023)}]{upme2023}
+\bibinfo{author}{{Unidad de Planeaci{\'o}n Minero Energ{\'e}tica (UPME)}},
+  \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Plan Energético Nacional 2020--2050: La
+  Transformación Energética que Habilita el Desarrollo Sostenible}.
+\newblock \bibinfo{type}{Technical Report}. UPME. \bibinfo{address}{Bogot{\'a},
+  Colombia}.
+%Type = Article
+\bibitem[{Voyant et~al.(2017)Voyant, Notton, Kalogirou, Nivet, Paoli, Motte and
+  Fouilloy}]{voyant2017}
+\bibinfo{author}{Voyant, C.}, \bibinfo{author}{Notton, G.},
+  \bibinfo{author}{Kalogirou, S.}, \bibinfo{author}{Nivet, M.L.},
+  \bibinfo{author}{Paoli, C.}, \bibinfo{author}{Motte, F.},
+  \bibinfo{author}{Fouilloy, A.}, \bibinfo{year}{2017}.
+\newblock \bibinfo{title}{Machine learning methods for solar radiation
+  forecasting: {A} review}.
+\newblock \bibinfo{journal}{Renewable Energy} \bibinfo{volume}{105},
+  \bibinfo{pages}{569--582}.
+%Type = Article
+\bibitem[{Wang et~al.(2019)Wang, Mi, Li and Zhao}]{wang2019}
+\bibinfo{author}{Wang, F.}, \bibinfo{author}{Mi, Z.}, \bibinfo{author}{Li, S.},
+  \bibinfo{author}{Zhao, H.}, \bibinfo{year}{2019}.
+\newblock \bibinfo{title}{A day-ahead {PV} power forecasting method based on
+  deep learning and numerical weather prediction}.
+\newblock \bibinfo{journal}{Energies} \bibinfo{volume}{12},
+  \bibinfo{pages}{2938}.
+%Type = Inproceedings
+\bibitem[{Welling and Teh(2011)}]{welling2011}
+\bibinfo{author}{Welling, M.}, \bibinfo{author}{Teh, Y.W.},
+  \bibinfo{year}{2011}.
+\newblock \bibinfo{title}{Bayesian learning via stochastic gradient {Langevin}
+  dynamics}, in: \bibinfo{booktitle}{Proceedings of the 28th International
+  Conference on Machine Learning (ICML)}, pp. \bibinfo{pages}{681--688}.
+%Type = Article
+\bibitem[{Yang et~al.(2018)Yang, Kleissl, Gueymard, Pedro and
+  Coimbra}]{benchmarks2023}
+\bibinfo{author}{Yang, D.}, \bibinfo{author}{Kleissl, J.},
+  \bibinfo{author}{Gueymard, C.A.}, \bibinfo{author}{Pedro, H.T.},
+  \bibinfo{author}{Coimbra, C.F.}, \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{History and trends in solar irradiance and {PV} power
+  forecasting: {A} preliminary assessment and review using text mining}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{168},
+  \bibinfo{pages}{60--101}.
+%Type = Article
+\bibitem[{Zhang et~al.(2015)Zhang, Florita, Hodge, Lu, Hamann, Banunarayanan
+  and Brockway}]{zhang2015}
+\bibinfo{author}{Zhang, J.}, \bibinfo{author}{Florita, A.},
+  \bibinfo{author}{Hodge, B.M.}, \bibinfo{author}{Lu, S.},
+  \bibinfo{author}{Hamann, H.F.}, \bibinfo{author}{Banunarayanan, V.},
+  \bibinfo{author}{Brockway, A.M.}, \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{A suite of metrics for assessing the performance of
+  solar power forecasting}.
+\newblock \bibinfo{journal}{Solar Energy} \bibinfo{volume}{111},
+  \bibinfo{pages}{157--175}.
+
+\end{thebibliography}
