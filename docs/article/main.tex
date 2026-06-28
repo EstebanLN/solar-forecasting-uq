@@ -30,6 +30,9 @@
 % =========================
 \begin{document}
 
+\shorttitle{Disentangled Uncertainty Quantification for GHI Forecasting in Tropical Andean Climates}
+\shortauthors{Ladino Nieto}
+
 \title[mode=title]{Short-Term Solar Irradiance Forecasting in Tropical Andean Climates: A Graph Neural Network Approach with Disentangled Uncertainty Quantification}
 
 \author[1]{Esteban Ladino Nieto}
@@ -145,5 +148,10 @@ Stewardship System (CLASS).
 % =========================
 \bibliographystyle{cas-model2-names}
 \bibliography{references}
+
+% cas-sc snapshots \thepage for the "Page X of <lastpage>" footer inside
+% \AtEndDocument, before \end{document}'s own implicit final \clearpage —
+% forcing the flush here first avoids the footer's total under-counting by one.
+\clearpage
 
 \end{document}

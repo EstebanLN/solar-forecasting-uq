@@ -119,14 +119,16 @@ appropriate response differs --- accept the irreducible variance in the
 first case; flag the forecast as low-confidence and prefer a conservative
 fallback (e.g.\ persistence, or a wider manually-set margin) in the second.
 
-\textbf{Aleatoric uncertainty as a proxy for cloud-regime volatility.} The
-heteroscedastic variance head (Eq.~\ref{eq:nll}) is expected to assign larger
-$\sigma_\text{ale}$ to inputs preceding rapid convective transitions ---
-precisely the conditions identified in Section~\ref{sec:results} as driving
-the largest forecast errors at both sites --- and smaller $\sigma_\text{ale}$
-during stable clear-sky mornings, providing a continuously-varying,
-input-dependent signal of intrinsic forecast difficulty that a constant
-$\hat q$ cannot express.
+\textbf{Aleatoric uncertainty as a proxy for cloud-regime volatility.} We
+hypothesise that the heteroscedastic variance head (Eq.~\ref{eq:nll}) will
+assign larger $\sigma_\text{ale}$ to inputs preceding rapid convective
+transitions --- the regime that, on general grounds, is hardest to forecast
+deterministically at both sites --- and smaller $\sigma_\text{ale}$ during
+stable clear-sky mornings, providing a continuously-varying, input-dependent
+signal of intrinsic forecast difficulty that a constant $\hat q$ cannot
+express. This is a design hypothesis, not yet an empirical finding
+(Section~\ref{sec:discussion}, Limitations); Section~\ref{sec:results} does
+not currently attribute forecast errors to specific cloud regimes.
 
 \textbf{Epistemic uncertainty as a data-quality and deployment-readiness
 signal.} Because $\sigma_\text{epi}$ (Eq.~\ref{eq:decomposition}) reflects
@@ -183,10 +185,10 @@ two tropical climate sub-types. Generalisation to other tropical or subtropical
 regions requires additional validation.
 
 \textbf{Flat MLP ablation in progress.} The FlatMLP experiments are currently
-completing their Optuna runs (16/24 of 24 site-horizon-seed configurations
-evaluated at the time of writing). Final results will be incorporated to
-quantify what fraction of deep-learning skill arises from spatial encoding
-versus temporal dynamics alone.
+completing their Optuna runs (16 of the 24 site $\times$ horizon $\times$ seed
+configurations evaluated at the time of writing). Final results will be
+incorporated to quantify what fraction of deep-learning skill arises from
+spatial encoding versus temporal dynamics alone.
 
 \textbf{Graph-construction ablation uses fewer seeds.} The weighted $k$-NN
 GraphSAGE-LSTM variant (Table~\ref{tab:ablation}) is evaluated with two
