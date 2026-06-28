@@ -34,23 +34,30 @@ FIGURES_DIR = PROJECT_ROOT / "results" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Colour palette (colour-blind friendly) ──────────────────────────────────
+# NOTE: "ResNet+LSTM"/"GraphSAGE+LSTM" (no suffix) in results/summary.csv are
+# legacy single-seed, hand-chosen-hyperparameter runs from scripts/05_*_baseline.py
+# that predate the Optuna protocol and are not described anywhere in the paper
+# text. They are intentionally excluded here (and renamed below) so that the
+# bars in this figure correspond 1:1 with the rows of Table tab:main, which
+# report the Optuna-tuned, four-seed models under the plain names
+# "ResNet-LSTM" / "GraphSAGE-LSTM".
+RENAME_MAP = {
+    "ResNet+LSTM (Optuna)":    "ResNet-LSTM",
+    "GraphSAGE+LSTM (Optuna)": "GraphSAGE-LSTM",
+}
+
 PALETTE = {
-    "Persistence":              "#999999",
-    "SARIMA":                   "#E69F00",
-    "ResNet+LSTM":              "#56B4E9",
-    "GraphSAGE+LSTM":           "#009E73",
-    "ResNet+LSTM (Optuna)":     "#0072B2",
-    "GraphSAGE+LSTM (Optuna)": "#D55E00",
-    "MLP (Optuna)":             "#CC79A7",
+    "Persistence":     "#999999",
+    "SARIMA":          "#E69F00",
+    "ResNet-LSTM":     "#0072B2",
+    "GraphSAGE-LSTM":  "#D55E00",
 }
 
 MODEL_ORDER = [
     "Persistence",
     "SARIMA",
-    "ResNet+LSTM",
-    "GraphSAGE+LSTM",
-    "ResNet+LSTM (Optuna)",
-    "GraphSAGE+LSTM (Optuna)",
+    "ResNet-LSTM",
+    "GraphSAGE-LSTM",
 ]
 
 HORIZON_LABELS = {1.0: "1 h", 3.0: "3 h", 6.0: "6 h"}
@@ -76,7 +83,10 @@ plt.rcParams.update({
 def _load_summary() -> pd.DataFrame:
     path = PROJECT_ROOT / "results" / "summary.csv"
     df = pd.read_csv(path)
-    # Filter to Optuna models only (4-seed runs) and keep Persistence/SARIMA
+    df["model"] = df["model"].replace(RENAME_MAP)
+    # Keep only the models that appear in Table tab:main (Persistence, SARIMA,
+    # ResNet-LSTM, GraphSAGE-LSTM); excludes the legacy un-tuned baseline runs
+    # and the still-incomplete FlatMLP sweep (see RENAME_MAP note above).
     keep_models = [m for m in MODEL_ORDER if m in df["model"].unique()]
     df = df[df["model"].isin(keep_models)].copy()
     df["model_cat"] = pd.Categorical(df["model"], categories=keep_models, ordered=True)
@@ -113,7 +123,13 @@ def fig_skill_day(df: pd.DataFrame) -> None:
             errs = [msub.loc[h, "skill_day_std"]  if h in msub.index else np.nan for h in horizons]
             xs   = positions[:, mi]
             color = PALETTE.get(model, "#888888")
+            # SARIMA is evaluated on a coarser on-the-hour subset of the test
+            # set with its own recomputed persistence reference (Methodology,
+            # SARIMA paragraph) and is hatched to flag it is not directly
+            # comparable to the other bars' skill_day values.
+            hatch = "///" if model == "SARIMA" else None
             ax.bar(xs, vals, width=bar_w * 0.9, color=color, alpha=0.88, zorder=3,
+                   hatch=hatch, edgecolor="white" if hatch else None, linewidth=0.4 if hatch else 0,
                    label=model if site == sites[0] else None)
             for x, v, e in zip(xs, vals, errs):
                 if not np.isnan(v) and not np.isnan(e) and e > 0:
@@ -162,7 +178,9 @@ def fig_rmse_day(df: pd.DataFrame) -> None:
             errs = [msub.loc[h, "rmse_day_std"]  if h in msub.index else np.nan for h in horizons]
             xs   = positions[:, mi]
             color = PALETTE.get(model, "#888888")
+            hatch = "///" if model == "SARIMA" else None
             ax.bar(xs, vals, width=bar_w * 0.9, color=color, alpha=0.88, zorder=3,
+                   hatch=hatch, edgecolor="white" if hatch else None, linewidth=0.4 if hatch else 0,
                    label=model if site == sites[0] else None)
             for x, v, e in zip(xs, vals, errs):
                 if not np.isnan(v) and not np.isnan(e) and e > 0:
@@ -286,7 +304,7 @@ def fig_timeseries() -> None:
     ax.plot(ts_w, yt_w,   color="#333333", linewidth=1.0, label="Observed GHI", zorder=4)
     ax.plot(ts_w, ypers_w, color=PALETTE["Persistence"], linewidth=0.9,
             linestyle="--", alpha=0.75, label="Persistence (6 h)", zorder=3)
-    ax.plot(ts_w, yp_w,   color=PALETTE["GraphSAGE+LSTM (Optuna)"], linewidth=1.2,
+    ax.plot(ts_w, yp_w,   color=PALETTE["GraphSAGE-LSTM"], linewidth=1.2,
             label="GraphSAGE-LSTM (6 h)", zorder=5)
 
     ax.set_xlabel("Date (America/Bogota)")

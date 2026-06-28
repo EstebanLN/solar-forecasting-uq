@@ -128,6 +128,26 @@ The persistence model assumes irradiance is unchanged over the forecast horizon:
 $\hat{y}(t+H) = \text{GHI}(t)$. It is optimal under no-change dynamics and
 serves as the standard benchmark for short-term solar forecasting.
 
+\subsubsection{SARIMA: classical statistical baseline}
+\label{ssec:sarima}
+
+As a non-deep-learning reference, we fit a seasonal ARIMA model,
+SARIMAX$(2,1,2)(1,1,1)_{24}$, directly on the raw hourly GHI series at each
+site (order selected by grid search on validation AIC; no clear-sky
+normalisation is applied, so the model targets the same physical quantity,
+GHI in W/m$^2$, as every other model). Because a seasonal period of $m=144$
+(10-minute native resolution) is computationally intractable over the
+multi-year training window, the satellite-resolution series is first
+resampled to hourly cadence ($m=24$), and SARIMA is therefore evaluated only
+on the subset of test timestamps that fall on an exact hour, with the
+persistence reference \emph{recomputed on that same coarser subset} so that
+SARIMA's own skill score is internally consistent. \textbf{This makes
+SARIMA's $\rmseday$ and $\skillday$ not directly comparable to the
+full 10-minute-resolution metrics reported for persistence and the
+deep-learning models elsewhere in this paper}; it is included in
+Figs.~\ref{fig:skill}--\ref{fig:rmse} as a classical-statistical reference
+point, visually flagged (hatched bars), rather than in Table~\ref{tab:main}.
+
 \subsubsection{ResNet-LSTM: convolutional spatial encoder}
 \label{ssec:resnet}
 
