@@ -27,6 +27,7 @@ Uniandes (293.9~W/m²), reflecting El~Paso's more stable clear-sky regime where
 short-horizon irradiance changes are small. At 6~hours, both sites have comparable
 absolute difficulty (565.3 vs.\ 470.9~W/m²).
 
+\FloatBarrier
 \subsection{Main results}
 
 Table~\ref{tab:main} reports $\rmseday$ and $\skillday$ for all models on the
@@ -64,7 +65,7 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
       & $\skillday$ & $-0.197 \pm 0.040$ & $\mathbf{+0.419} \pm 0.039$ & $\mathbf{+0.636} \pm 0.013$
                     & $+0.147 \pm 0.017$ & $\mathbf{+0.376} \pm 0.004$ & $\mathbf{+0.417} \pm 0.008$ \\
     \midrule
-    \multirow{2}{*}{FlatMLP (Optuna)}
+    \multirow{2}{*}{FlatMLP}
       & $\rmseday$ & --- & --- & --- & --- & --- & --- \\
       & $\skillday$ & --- & --- & --- & --- & --- & --- \\
     \bottomrule
@@ -73,13 +74,14 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
   \textit{\footnotesize GraphSAGE-LSTM rows use the \textbf{fixed unweighted
   graph} variant (Section~\ref{ssec:gsage}); results for the learned weighted
   $k$-NN variant are in progress and reported separately in
-  Table~\ref{tab:ablation}. FlatMLP (Optuna) results are pending completion of
+  Table~\ref{tab:ablation}. FlatMLP results are pending completion of
   the four-seed sweep (Section~\ref{sec:discussion}, Limitations) and will be
   populated prior to submission; this row quantifies what fraction of
   deep-learning skill arises from spatial encoding versus temporal dynamics
   alone.}
 \end{table*}
 
+\FloatBarrier
 \subsection{Graph-construction ablation: fixed vs.\ learned spatial connectivity}
 \label{ssec:ablation}
 
@@ -201,7 +203,7 @@ the gap we analyse in Section~\ref{sec:discussion}.
   \centering
   \includegraphics[width=\columnwidth]{figures/fig3_timeseries}
   \caption{Five-day excerpt of the 6-hour GHI forecast from the best model
-           (GraphSAGE-LSTM Optuna, seed~42) at El~Paso in January 2024.
+           (GraphSAGE-LSTM, fixed-graph, seed~42) at El~Paso in January 2024.
            Persistence (dashed) simply repeats the GHI observed 6~hours prior,
            while GraphSAGE-LSTM anticipates the diurnal rise and cloud events.
            Timestamps in local time (America/Bogotá, UTC$-5$).}
