@@ -88,6 +88,10 @@ tensorboard/
 *.grb
 *.hdf
 
+# Exception: small aggregated result tables (not raw data) are part of the
+# public deliverable and referenced directly in README.md
+!results/*.csv
+
 # Compressed archives
 *.zip
 *.tar
@@ -133,3 +137,34 @@ Thumbs.db
 *.crt
 *.p12
 secrets/
+
+# =====================
+# LaTeX build artifacts
+# =====================
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.spl
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+docs/article/Build/
+docs/article/main.pdf
+docs/article/main.abs
+
+# =====================
+# Internal / personal (not for public repo)
+# =====================
+PENDIENTES.md
+docs/background/
+notebooks/archive/
