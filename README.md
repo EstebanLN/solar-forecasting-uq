@@ -1,10 +1,14 @@
-# Solar GHI Forecasting with Deep Learning and Uncertainty Quantification
+# Solar GHI Forecasting with Disentangled Uncertainty Quantification
 
 Short-term Global Horizontal Irradiance (GHI) forecasting at horizons of 1, 3, and 6 hours,
 driven by GOES-16 satellite imagery and ground-station measurements.
 The project evaluates two spatial-temporal deep learning architectures (ResNet+LSTM,
-GraphSAGE+LSTM) and a flat MLP baseline against SARIMA and persistence, and layers
-conformal prediction and SGLD posterior sampling for calibrated uncertainty intervals.
+GraphSAGE+LSTM, including a fixed-vs-learned graph-construction ablation for GraphSAGE)
+and a flat MLP baseline against SARIMA and persistence, then layers a disentangled
+aleatoric/epistemic uncertainty-quantification pipeline (Gaussian NLL variance head +
+SGLD posterior sampling) on top of the best backbone, so forecasts carry not just an
+interval but a diagnosis of *why* they are uncertain. Split Conformal Prediction is also
+implemented in code as an alternative post-hoc UQ method.
 Benchmarked on two Colombian stations with contrasting tropical climates: El Paso (semi-arid,
 Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 
@@ -37,7 +41,7 @@ Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 │
 ├── docs/
 │   ├── article/                         # LaTeX manuscript (main.tex, sections/, figures/)
-│   └── avances.tex                      # Progress notes
+│   └── avances.tex                      # Progress notes (advisor-facing, Spanish)
 │
 ├── notebooks/
 │   ├── 01_ground_eda.ipynb              # Ground data EDA and UTC alignment → data/ground_aligned/
@@ -45,29 +49,27 @@ Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 │   ├── 03_satellite_georeferencing.ipynb     # GOES-16 pixel identification for each site
 │   ├── 04_manifest_build.ipynb          # Interactive manifest builder (see also scripts/04_*)
 │   ├── 05b_sarima_order_selection.ipynb # ACF/PACF / AIC grid-search for SARIMA order on raw GHI
-│   ├── Support_build_patch_store.ipynb  # Batch patch extraction from GOES-16 NetCDF files
-│   └── archive/                         # Superseded exploratory prototypes (not canonical)
+│   └── Support_build_patch_store.ipynb  # Batch patch extraction from GOES-16 NetCDF files
 │
 ├── results/
-│   ├── figures/                         # Publication figures (PNG)
-│   ├── summary.csv                      # Aggregated metrics by arch / site / horizon (4 seeds)
-│   ├── master.csv                       # Flat per-run metrics (one row per seed)
-│   └── summary.md                       # Markdown version of summary.csv
+│   ├── figures/                         # Publication figures (PDF)
+│   └── summary.md                       # Aggregated metrics by arch / site / horizon
 │
-├── runs/                                # Model checkpoints and run summaries — NOT in git
+├── runs/                                # Run summaries (summary.json); checkpoints/.csv NOT in git
 │
 ├── scripts/                             # Numbered entrypoints — run from project root
 │   ├── 04_build_manifests.py            # Build train/val/test manifests (CLI version of nb 04)
 │   ├── 05_resnet_lstm_baseline.py       # Train ResNet+LSTM with fixed hyperparameters
 │   ├── 05_graphsage_lstm_baseline.py    # Train GraphSAGE+LSTM with fixed hyperparameters
 │   ├── 05_sarima_baseline.py            # Fit SARIMAX on raw hourly GHI and evaluate
-│   ├── 06_resnet_lstm_optuna.py         # Optuna HPO for ResNet+LSTM (v1: 50 t; v2: 100 t)
-│   ├── 06_graphsage_lstm_optuna.py      # Optuna HPO for GraphSAGE+LSTM (v1 / v2 with k-NN)
-│   ├── 06_mlp_optuna.py                 # Optuna HPO for FlatMLP (50 trials)
+│   ├── 06_resnet_lstm_optuna.py         # Optuna HPO for ResNet+LSTM (v1: 50 trials/4 seeds; v2: 75/2)
+│   ├── 06_graphsage_lstm_optuna.py      # Optuna HPO for GraphSAGE+LSTM (v1 fixed graph / v2 weighted k-NN)
+│   ├── 06_mlp_optuna.py                 # Optuna HPO for FlatMLP (50 trials, 4 seeds)
 │   ├── 07_conformal_explore.py          # Split Conformal Prediction on any completed run
 │   ├── 08_sgld.py                       # SGLD posterior sampling (ResNet / GraphSAGE / MLP)
-│   ├── 09_results_table.py              # Aggregate runs/ → results/summary.csv and LaTeX table
+│   ├── 09_results_table.py              # Aggregate runs/ → results/summary.md and LaTeX table
 │   ├── 10_paper_figures.py              # Generate publication figures (skill_day, RMSE_day, ts)
+│   ├── compare_fusion_vs_satellite.py   # Compare satellite-only vs. fusion (satellite+surface) models
 │   └── gpu_check.py                     # Quick torch CUDA sanity check
 │
 ├── src/solar_uq/                        # Core Python package (pip install -e .)
@@ -77,17 +79,18 @@ Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 │   ├── conformal.py                     #   SplitCP calibration and coverage evaluation
 │   ├── metrics.py                       #   rmse_day, skill_day, eval_persistence
 │   ├── sgld.py                          #   SGLD optimizer (torch.optim.Optimizer subclass)
+│   ├── loaders/fusion_dataset.py        #   Joint satellite + ground-surface feature loader
 │   └── models/
 │       ├── resnet_lstm.py               #     SmallResNet spatial encoder + LSTM temporal decoder
 │       ├── graphsage_lstm.py            #     GraphSAGE encoder (pure PyTorch) + LSTM decoder
-│       └── mlp.py                       #     FlatMLP: spatial avg-pool + LayerNorm MLP
+│       ├── mlp.py                       #     FlatMLP: spatial avg-pool + LayerNorm MLP
+│       └── fusion/                      #     Fusion variants (satellite + ground-surface inputs)
 │
 ├── .gitignore
 ├── launch_experiments.sh                # tmux-based parallel launcher for GPU pipelines
 ├── run_sequential.sh                    # Sequential runner with skip-if-done logic
 ├── pyproject.toml                       # Package build config (pip install -e .)
 ├── requirements.txt                     # Full dependency freeze (CUDA 13 / PyTorch 2.11)
-├── PENDIENTES.md                        # Detailed run status and implementation backlog
 └── README.md
 ```
 
@@ -101,18 +104,21 @@ Caribbean lowlands) and Uniandes (equatorial Andean, Bogotá).
 | GraphSAGE+LSTM baseline | ✅ complete | 30/30 runs |
 | FlatMLP baseline | ✅ complete | architecture + Optuna script |
 | SARIMA baseline | 🚧 needs re-run | Rewritten for raw GHI (was clear-sky index). Run `05b_sarima_order_selection.ipynb` first to re-derive SARIMA order |
-| Optuna HPO — ResNet v1 | ✅ complete | 24/24 runs, 50 trials |
-| Optuna HPO — GraphSAGE v1 | ✅ complete | 24/24 runs, 50 trials |
-| Optuna HPO — MLP | 🚧 in progress | 16/24 runs, 50 trials |
-| Optuna HPO — ResNet v2 | 📋 blocked | 100 trials, `n_lstm_layers` search, `l1_reg` — awaiting GPU |
-| Optuna HPO — GraphSAGE v2 | 📋 blocked | 100 trials, k-NN graph, `l1_reg` — awaiting GPU |
+| Optuna HPO — ResNet v1 (fixed graph n/a) | ✅ complete | 24/24 runs, 50 trials × 4 seeds |
+| Optuna HPO — GraphSAGE v1 (fixed unweighted graph) | ✅ complete | 24/24 runs, 50 trials × 4 seeds — used as the GraphSAGE backbone in the paper's main results |
+| Optuna HPO — MLP | 🚧 in progress | 16/24 runs, 50 trials × 4 seeds |
+| Optuna HPO — ResNet v2 (expanded search space) | ✅ complete | 12/12 runs, 75 trials × 2 seeds {42,1} |
+| Optuna HPO — GraphSAGE v2 (learned weighted k-NN graph) | 🚧 in progress | 1/12 runs, 75 trials × 2 seeds {42,1} — graph-construction ablation vs. v1 |
 | Split Conformal Prediction | ✅ implemented | `07_conformal_explore.py`; supports ResNet / GraphSAGE / MLP; not yet run at scale |
-| SGLD posterior sampling | ✅ implemented | `08_sgld.py` + `src/solar_uq/train_sgld.py`; awaiting v2 runs |
-| Variance Networks (NLL) | 📋 planned | μ + σ² head, Gaussian NLL loss |
-| Results aggregation | ✅ complete | `09_results_table.py` → `results/summary.csv` |
+| SGLD posterior sampling | ✅ implemented | `08_sgld.py` + `src/solar_uq/train_sgld.py`; 1/24 ResNet runs, 0/24 GraphSAGE, 0 MLP |
+| Variance head (Gaussian NLL) | 📋 planned | μ + σ² head, not yet implemented — required for the aleatoric/epistemic decomposition |
+| Fusion architecture (satellite + ground-surface) | ✅ implemented | `src/solar_uq/models/fusion/`; 0 runs so far |
+| Results aggregation | ✅ complete | `09_results_table.py` → `results/summary.md` |
 | Publication figures | ✅ complete | `10_paper_figures.py` → `results/figures/` |
 
-**Split:** train 2022–2023 | val 2024-H1 | test 2024-H2→2025 · **Metric:** RMSE_day (GHI ≥ 20 W/m²) · **Seeds:** 42, 1, 7, 13
+**Split:** train 2022–2023 | val 2024-H1 | test 2024-H2→2025 · **Metric:** RMSE_day (GHI ≥ 20 W/m²)
+**Seeds:** v1/baselines use 4 seeds {42, 1, 7, 13}; the v2 expanded-search-space ablations
+(ResNet, GraphSAGE) use 2 seeds {42, 1} due to higher per-trial cost — see `docs/article/sections/methodology.tex`.
 
 ---
 
@@ -220,12 +226,12 @@ then:
 ### Step 3 — Hyperparameter optimisation (Optuna)
 
 ```bash
-bash run_sequential.sh optuna              # ResNet + GraphSAGE + MLP, both sites (72 runs)
-bash run_sequential.sh resnet_optuna       # ResNet only (v1, 50 trials)
-bash run_sequential.sh gsage_optuna        # GraphSAGE only (v1, 50 trials)
-bash run_sequential.sh mlp_optuna          # FlatMLP (50 trials)
-bash run_sequential.sh resnet_optuna_v2    # ResNet v2 (100 trials, expanded search space)
-bash run_sequential.sh gsage_optuna_v2     # GraphSAGE v2 (100 trials, k-NN graph)
+bash run_sequential.sh optuna              # ResNet + GraphSAGE + MLP, both sites (v1, 4 seeds)
+bash run_sequential.sh resnet_optuna       # ResNet only (v1, 50 trials × 4 seeds)
+bash run_sequential.sh gsage_optuna        # GraphSAGE only (v1, fixed graph, 50 trials × 4 seeds)
+bash run_sequential.sh mlp_optuna          # FlatMLP (50 trials × 4 seeds)
+bash run_sequential.sh resnet_optuna_v2    # ResNet v2 (expanded search space, 75 trials × 2 seeds)
+bash run_sequential.sh gsage_optuna_v2     # GraphSAGE v2 (learned weighted k-NN graph, 75 trials × 2 seeds)
 ```
 
 For long parallel runs (4 GPU windows via tmux):
@@ -257,7 +263,7 @@ bash run_sequential.sh sgld_mlp      # MLP only
 ```bash
 .venv/bin/python scripts/09_results_table.py         # → results/summary.csv, results/summary.md
 .venv/bin/python scripts/09_results_table.py --flat  # → results/master.csv (per-run flat table)
-.venv/bin/python scripts/10_paper_figures.py         # → results/figures/{fig1,fig2,fig3}.png
+.venv/bin/python scripts/10_paper_figures.py         # → results/figures/{fig1,fig2,fig3}.pdf
 ```
 
 ---
@@ -266,12 +272,14 @@ bash run_sequential.sh sgld_mlp      # MLP only
 
 | Arch | Site | Horizon | skill_day |
 |------|------|---------|-----------|
-| GraphSAGE+LSTM | El Paso | 6 h | **0.631** |
-| ResNet+LSTM | El Paso | 3 h | 0.479 |
-| GraphSAGE+LSTM | Uniandes | 6 h | 0.428 |
-| SARIMA | El Paso | all | < 0 (worse than persistence) |
+| GraphSAGE+LSTM (fixed graph) | El Paso | 6 h | **0.636 ± 0.013** |
+| ResNet+LSTM | El Paso | 6 h | 0.614 ± 0.023 |
+| GraphSAGE+LSTM (fixed graph) | Uniandes | 6 h | 0.417 ± 0.008 |
+| ResNet+LSTM | Uniandes | 1 h | 0.161 ± 0.014 |
 
-Full table: `results/summary.csv` / `results/summary.md`
+GraphSAGE+LSTM rows use the **fixed unweighted graph** variant (Section `ssec:gsage` of the
+paper); results for the learned, distance-weighted $k$-NN variant are in progress
+(`graphsage_lstm_optuna_v2`, see status table above). Full table: `results/summary.md`.
 
 ---
 
