@@ -32,6 +32,7 @@ from solar_uq.data import (
     TargetNormalizer,
     PatchSeqDataset,
     make_loader,
+    preload_patch_cache,
     read_history_steps_from_manifest,
 )
 from solar_uq.loaders import FusionPatchSeqDataset, n_tab_features, DEFAULT_FEATURE_COLS
@@ -118,6 +119,7 @@ def make_objective(
             day_threshold=day_threshold,
             device=device,
             fusion=fusion,
+            optuna_trial=trial,
         )
 
         vm = out["final_val"]
@@ -152,6 +154,7 @@ def main() -> None:
 
     PATCHES_ROOT = PROJECT_ROOT / "data" / "patches_v1" / args.site / f"P{args.patch}"
     assert PATCHES_ROOT.exists(), f"Missing patch store: {PATCHES_ROOT}"
+    preload_patch_cache(PATCHES_ROOT)
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     USE_AMP = (DEVICE == "cuda")
