@@ -135,10 +135,16 @@ def train_one_model(
     day_threshold: float = 20.0,
     device: str = "cpu",
     fusion: bool = False,
+    optuna_trial: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Train model with early stopping on val RMSE_day.
 
     Best weights are saved in-memory and reloaded before returning.
+
+    When optuna_trial is given, reports val_rmse_day to it after every epoch
+    and raises optuna.TrialPruned() if the trial should be pruned — lets a
+    configured pruner (e.g. MedianPruner) actually stop clearly-bad trials
+    early instead of always running the full early-stopping loop.
 
     Returns:
         model               : model with best weights loaded
@@ -229,6 +235,12 @@ def train_one_model(
             }
         else:
             bad_epochs += 1
+
+        if optuna_trial is not None:
+            import optuna
+            optuna_trial.report(val_rmse_day, epoch)
+            if optuna_trial.should_prune():
+                raise optuna.TrialPruned()
 
         print(
             f"Epoch {epoch:02d} | "

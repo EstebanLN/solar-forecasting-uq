@@ -63,8 +63,47 @@ def _load_patch_npz_maincache(path_str: str) -> np.ndarray:
     return _load_patch_npz_nocache(path_str)
 
 
+# Process-wide cache populated by preload_patch_cache().  Left empty unless a
+# caller opts in, so scripts that never call preload_patch_cache() keep the
+# exact old per-process/main-only lru_cache behavior below.
+_PATCH_CACHE: dict[str, np.ndarray] = {}
+
+
+def preload_patch_cache(patches_root: Path) -> None:
+    """Eagerly load every patch .npz file under *patches_root* into RAM.
+
+    A full patch store is <1GB per site (P16), so it fits comfortably next to
+    model/optimizer state. Call this once in the main process, before building
+    the DataLoader — num_workers>0 forks the process, so workers inherit the
+    populated cache via copy-on-write and every load_patch_npz() call becomes
+    a dict lookup instead of a disk read + npz decompression.
+
+    Why this matters: previously, caching was disabled inside worker processes
+    (to avoid an old OOM), but train_loader always runs with num_workers>0, so
+    in practice *no* caching ever applied — every patch was re-read from disk
+    on every access, every epoch.
+    """
+    patches_root = Path(patches_root)
+    n_loaded = 0
+    for p in sorted(patches_root.rglob("*_patch.npz")):
+        key = str(p)
+        if key not in _PATCH_CACHE:
+            with np.load(p) as d:
+                _PATCH_CACHE[key] = d["patch"]
+            n_loaded += 1
+    print(f"[data] Preloaded {n_loaded} patch files from {patches_root} "
+          f"({len(_PATCH_CACHE)} total cached).")
+
+
 def load_patch_npz(path_str: str) -> np.ndarray:
-    """Worker-safe loader: caches only in the main process to avoid RAM blowup."""
+    """Worker-safe loader.
+
+    Uses the process-wide cache from preload_patch_cache() when populated;
+    otherwise falls back to the legacy behavior (cached only in the main
+    process, to avoid RAM blowup from uncoordinated per-worker caches).
+    """
+    if path_str in _PATCH_CACHE:
+        return _PATCH_CACHE[path_str]
     if get_worker_info() is None:
         return _load_patch_npz_maincache(path_str)
     return _load_patch_npz_nocache(path_str)
@@ -79,13 +118,22 @@ def _parse_history_ts(raw) -> List[str]:
 
 
 def filter_missing_patches(manifest: pd.DataFrame, patches_root: Path) -> pd.DataFrame:
-    """Drop manifest rows where any history_ts patch file is absent on disk."""
+    """Drop manifest rows where any history_ts patch file is absent.
+
+    Checks the in-memory cache (if preload_patch_cache() was called for this
+    root) instead of hitting the filesystem per row/timestamp.
+    """
     patches_root = Path(patches_root)
+    use_cache = bool(_PATCH_CACHE)
 
     def _all_present(row) -> bool:
         for ts_str in _parse_history_ts(row["history_ts"]):
             t = pd.to_datetime(ts_str, utc=True)
-            if not patch_path_for_timestamp(t, patches_root).exists():
+            path = patch_path_for_timestamp(t, patches_root)
+            if use_cache:
+                if str(path) not in _PATCH_CACHE:
+                    return False
+            elif not path.exists():
                 return False
         return True
 

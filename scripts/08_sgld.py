@@ -42,6 +42,7 @@ from solar_uq.data import (
     PatchSeqDataset,
     TargetNormalizer,
     make_loader,
+    preload_patch_cache,
     read_history_steps_from_manifest,
 )
 from solar_uq.metrics import eval_persistence, skill_score
@@ -253,6 +254,7 @@ def main() -> None:
     SITE_DIR = DATASET_ROOT / args.site / f"h{args.hours_ahead}"
     assert SITE_DIR.exists(), f"Missing dataset dir: {SITE_DIR}"
     assert PATCHES_ROOT.exists(), f"Missing patch store: {PATCHES_ROOT}"
+    preload_patch_cache(PATCHES_ROOT)
 
     # ------------------------------------------------------------------
     # Optuna best_params
