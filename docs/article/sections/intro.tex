@@ -66,37 +66,33 @@ This paper makes the following contributions:
         for GraphSAGE-LSTM, ResNet-LSTM, and a flat MLP spatial-ablation baseline,
         together with the graph-construction ablation described above.
 
-  \item Preliminary single-seed results indicate that GraphSAGE-LSTM is
+  \item Four-seed results indicate that GraphSAGE-LSTM is
         \textbf{competitive with or superior to ResNet-LSTM} among the
         deep-learning models at multi-hour horizons at both sites, while the
         absolute skill of both models is markedly lower at the climatologically
         harder high-altitude site --- evidence that site-specific cloud
         dynamics, not just model architecture, govern attainable forecasting
-        skill. The full multi-seed comparison, including the graph-construction
-        ablation, is in progress (Section~\ref{sec:results}).
+        skill. The flat-MLP spatial ablation and the graph-construction
+        ablation isolating learned spatial connectivity are in progress
+        (Section~\ref{sec:results}).
 
-  \item We introduce a \textbf{disentangled uncertainty-quantification layer}
-        that separately estimates the two sources of forecast uncertainty:
-        an \emph{aleatoric} component, captured by a Gaussian
-        negative-log-likelihood variance head that models irreducible cloud
-        stochasticity, and an \emph{epistemic} component, captured by an
-        ensemble of posterior weight samples obtained via Stochastic Gradient
-        Langevin Dynamics (SGLD) \cite{welling2011}, which quantifies
-        uncertainty due to limited data and model capacity
-        \cite{kendall2017}. Unlike a single symmetric prediction interval,
-        this decomposition tells an operator \emph{why} a forecast is
-        uncertain, supporting differentiated, risk-stratified responses
-        (e.g.\ wider reserve margins for high-epistemic-uncertainty regimes
-        such as under-sampled cloud types, versus accepting irreducible
-        variance during genuinely volatile but well-characterised convective
-        afternoons).
+  \item We introduce an \textbf{epistemic uncertainty-quantification layer}
+        based on an ensemble of posterior weight samples obtained via
+        Stochastic Gradient Langevin Dynamics (SGLD) \cite{welling2011},
+        which quantifies uncertainty due to limited or atypical training
+        data and finite model capacity \cite{kendall2017}. Unlike a single
+        symmetric prediction interval, this signal tells an operator
+        \emph{when} a forecast was produced under conditions the model has
+        not adequately learned, supporting a conservative fallback or
+        flagging the forecast for prioritised retraining, rather than
+        uniformly widening intervals regardless of cause.
 
   \item We establish a \textbf{reproducible GOES-16 benchmark for tropical
         Andean sites}, including data manifests, patch extraction, model code,
-        Optuna studies, the graph-construction ablation, the SGLD/variance-head
-        uncertainty-decomposition pipeline, and evaluation scripts, addressing
+        Optuna studies, the graph-construction ablation, the SGLD
+        epistemic-uncertainty pipeline, and evaluation scripts, addressing
         the scarcity of published satellite-based GHI forecasting benchmarks
-        --- with disentangled uncertainty quantification --- for Latin American
+        --- with epistemic uncertainty quantification --- for Latin American
         and equatorial tropical contexts.
 \end{enumerate}
 

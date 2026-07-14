@@ -13,11 +13,11 @@ an ablation isolating the value of learned, distance-weighted spatial
 connectivity over a fixed local graph; (ii) a rigorous comparative evaluation
 against a ResNet-LSTM baseline, a flat-MLP spatial-ablation baseline, and
 persistence at two Colombian sites with contrasting climatic regimes; and
-(iii) a disentangled aleatoric/epistemic uncertainty-quantification layer ---
-combining a heteroscedastic Gaussian variance head with Stochastic Gradient
-Langevin Dynamics (SGLD) posterior sampling --- that tells an operator not
-just how uncertain a forecast is, but \emph{why}, supporting risk-stratified
-operational responses that a single undifferentiated interval cannot.
+(iii) an epistemic uncertainty-quantification layer --- based on Stochastic
+Gradient Langevin Dynamics (SGLD) posterior sampling --- that flags
+forecasts made under data-scarce or atypical conditions, supporting a
+conservative fallback or prioritised retraining that a point forecast alone
+cannot.
 
 \textbf{GraphSAGE-LSTM} (fixed-graph variant) achieves the best skill among
 the deep-learning models at the 6-hour horizon at \emph{both} sites (El~Paso:
@@ -44,21 +44,25 @@ consistent with the low persistence error ($204.4$~W/m²) in a predominantly
 clear-sky regime. Modest positive skill ($\approx 0.15$) is achieved at Uniandes,
 where frequent cloud passages create exploitable structure.
 
-\textbf{Toward robust, disentangled forecasting.} The Gaussian
-negative-log-likelihood variance head and SGLD posterior sampling pipeline
-(Section~\ref{ssec:uq}) are implemented; remaining work is to complete
-sampling across all site-horizon backbones and empirically evaluate the
-resulting decomposition (Table~\ref{tab:decomposition}) against the
-hypotheses motivating its design (Section~\ref{ssec:uq_discussion}): that
-$\sigma_\text{ale}$ tracks cloud-regime volatility and $\sigma_\text{epi}$
-tracks data scarcity. A natural extension is to use $\sigma_\text{epi}$ as an
+\textbf{Toward robust, uncertainty-aware forecasting.} The SGLD
+posterior-sampling pipeline (Section~\ref{ssec:uq}) is implemented; remaining
+work is to complete sampling across all site-horizon backbones and
+empirically evaluate the resulting epistemic-uncertainty estimates
+(Table~\ref{tab:decomposition}) against the hypothesis motivating its design
+(Section~\ref{ssec:uq_discussion}): that $\sigma_\text{epi}$ tracks data
+scarcity. A natural extension is to use $\sigma_\text{epi}$ as an
 active-learning signal --- prioritising under-represented conditions for
 future data collection --- closing the loop between uncertainty
-quantification and dataset improvement.
+quantification and dataset improvement. Complementing this epistemic
+estimate with an explicit aleatoric component --- e.g.\ a heteroscedastic
+Gaussian variance head trained jointly with the point-forecast backbone ---
+to obtain a full aleatoric/epistemic decomposition of predictive uncertainty
+is a natural and currently unimplemented direction for future work.
 
 \textbf{Additional planned work} includes completing the FlatMLP
 spatial-ablation sweep and the weighted $k$-NN graph-construction ablation
 (Table~\ref{tab:ablation}) across the full seed budget, multi-step
 joint-horizon outputs, and extension to further Latin American sites to
-build a broader tropical solar forecasting benchmark with disentangled,
-operationally actionable uncertainty quantification.
+build a broader tropical solar forecasting benchmark with epistemic ---
+and, eventually, fully disentangled aleatoric/epistemic --- operationally
+actionable uncertainty quantification.

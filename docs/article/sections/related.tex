@@ -102,18 +102,15 @@ calibrated Gaussian noise into stochastic gradient updates so that, under a
 decaying step size, the resulting trajectory asymptotically samples the true
 posterior $p(\theta \mid \mathcal{D})$; collecting weight snapshots along a
 single SGLD chain yields an inexpensive approximate ensemble whose spread
-quantifies epistemic uncertainty, distinct from --- and complementary to ---
-the aleatoric component captured by a heteroscedastic variance head. These
-ideas have seen limited application
-to satellite-based solar forecasting, where the dominant uncertainty driver
---- stochastic convective cloud formation --- is a textbook aleatoric source
-that is rarely modelled explicitly alongside the model's own epistemic
-limitations.
+quantifies epistemic uncertainty --- the reducible share of predictive
+uncertainty due to limited or atypical training data. This SGLD-based
+approach has seen limited application to satellite-based solar forecasting,
+where flagging forecasts made under atypical or under-sampled cloud regimes
+--- as opposed to well-represented ones --- remains largely unaddressed.
 
 This work contributes to this literature by (i) developing spatially-aware
 deep learning for solar forecasting at tropical Andean sites that remain
-underrepresented in existing benchmarks, and (ii) applying an aleatoric/epistemic
-uncertainty decomposition --- via a variance head and an SGLD posterior
-ensemble --- to satellite-based GHI forecasting, supporting risk-stratified,
-robust operational decisions that a single point forecast or symmetric
-interval cannot provide.
+underrepresented in existing benchmarks, and (ii) applying SGLD-based
+epistemic uncertainty quantification to satellite-based GHI forecasting,
+flagging forecasts made under data-scarce or atypical conditions to support
+robust operational decisions that a single point forecast cannot provide.
