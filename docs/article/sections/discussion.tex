@@ -79,9 +79,9 @@ cloud-event detection as a preprocessing step.
 \begin{itemize}
   \item For \textbf{El~Paso-type sites} (high irradiance, moderate variability),
         GraphSAGE-LSTM with Optuna-tuned hyperparameters is the recommended model
-        at 3h and 6h horizons, with a 60+\% reduction in RMSE over persistence.
-        At 1h, the system should fall back to persistence or a light-weight
-        nowcasting model.
+        at 3h and 6h horizons, reducing RMSE over persistence by approximately
+        42\% at 3h and over 60\% at 6h. At 1h, the system should fall back to
+        persistence or a light-weight nowcasting model.
 
   \item For \textbf{Uniandes-type sites} (tropical mountain, high convective
         variability), even the best models achieve markedly lower skill than at
@@ -92,54 +92,45 @@ cloud-event detection as a preprocessing step.
         persistence are smaller and more sensitive to careful hyperparameter
         tuning.
 
-  \item The high seed variance of ResNet-LSTM at El~Paso 3h ($\pm 0.090$) suggests
+  \item The high seed variance of ResNet-LSTM at El~Paso 3h ($\pm 0.104$) suggests
         that multiple retraining runs should be averaged for production deployment,
         or that GraphSAGE-LSTM should be preferred for its higher stability.
 \end{itemize}
 
-\subsection{Disentangling uncertainty: why aleatoric and epistemic matter separately}
+\subsection{Why epistemic uncertainty matters on its own}
 \label{ssec:uq_discussion}
 
 Grid operators require probabilistic outputs --- prediction intervals that
 are well-calibrated across conditions of varying cloud cover --- not just
 point estimates. Beyond calibration, however, the central premise of this
-work is that knowing the \emph{source} of forecast uncertainty is itself
-operationally valuable.
+work is that knowing \emph{whether the model itself is confident} in a
+forecast is operationally valuable, independent of the width of any
+interval.
 
-\textbf{Why a single symmetric interval is not enough.} A single,
-undifferentiated prediction interval --- however it is calibrated --- reports
-one half-width per forecast and does not distinguish \emph{why} a given
-forecast is uncertain. Two forecasts can carry the same
-nominal interval width for entirely different operational reasons: one
-because the site is entering a genuinely volatile but well-characterised
-convective afternoon (aleatoric), the other because the model has rarely
-seen the current satellite-imagery pattern during training (epistemic). An
-operator cannot tell these apart from the interval alone, yet the
-appropriate response differs --- accept the irreducible variance in the
-first case; flag the forecast as low-confidence and prefer a conservative
+\textbf{Why interval width alone is not enough.} A prediction interval's
+width alone does not tell an operator whether the underlying model was well
+supported by its training data when producing a given forecast. Two
+forecasts can look equally plausible on their face while differing in this
+respect: one produced under a satellite-imagery pattern the model has seen
+extensively, the other under a rare or under-represented pattern. An
+operator cannot tell these apart from a point forecast alone, yet the
+appropriate response differs --- trust the forecast under normal deployment
+in the first case; flag it as low-confidence and prefer a conservative
 fallback (e.g.\ persistence, or a wider manually-set margin) in the second.
-
-\textbf{Aleatoric uncertainty as a proxy for cloud-regime volatility.} We
-hypothesise that the heteroscedastic variance head (Eq.~\ref{eq:nll}) will
-assign larger $\sigma_\text{ale}$ to inputs preceding rapid convective
-transitions --- the regime that, on general grounds, is hardest to forecast
-deterministically at both sites --- and smaller $\sigma_\text{ale}$ during
-stable clear-sky mornings, providing a continuously-varying, input-dependent
-signal of intrinsic forecast difficulty that a constant $\hat q$ cannot
-express. This is a design hypothesis, not yet an empirical finding
-(Section~\ref{sec:discussion}, Limitations); Section~\ref{sec:results} does
-not currently attribute forecast errors to specific cloud regimes.
+We do not attempt to separately model the irreducible aleatoric
+stochasticity of cloud formation here (Section~\ref{sec:discussion},
+Limitations); the SGLD ensemble targets specifically the reducible,
+data-dependent share of uncertainty.
 
 \textbf{Epistemic uncertainty as a data-quality and deployment-readiness
-signal.} Because $\sigma_\text{epi}$ (Eq.~\ref{eq:decomposition}) reflects
+signal.} Because $\sigma_\text{epi}$ (Eq.~\ref{eq:epistemic}) reflects
 disagreement among SGLD posterior samples, it is expected to be larger for
 satellite-imagery patterns under-represented in the training period (e.g.\
 rare cloud morphologies, seasons with sparse data) and to shrink as the
-training set grows --- without requiring the variance head itself to change.
-This makes $\sigma_\text{epi}$ a natural diagnostic for \emph{when} a
-forecasting pipeline should be retrained or supplemented with additional
-data at a given site, complementing the purely architecture-level comparison
-of Sections~\ref{ssec:resnet}--\ref{ssec:mlp} and~\ref{ssec:ablation}.
+training set grows. This makes $\sigma_\text{epi}$ a natural diagnostic for
+\emph{when} a forecasting pipeline should be retrained or supplemented with
+additional data at a given site, complementing the purely architecture-level
+comparison of Sections~\ref{ssec:resnet}--\ref{ssec:mlp} and~\ref{ssec:ablation}.
 
 \subsection{Implications for solar-integrated power system operation}
 
@@ -154,17 +145,16 @@ uncertainty in PV-heavy grids. The 63.6\% RMSE reduction over persistence at
 6h for El~Paso translates to significantly tighter dispatch intervals and
 reduced reserve requirements.
 
-\textbf{Disentangled intervals for risk-stratified dispatch.}
-The aleatoric/epistemic decomposition (Section~\ref{ssec:uq}) converts any
-point forecast into both an interval and a diagnosis of \emph{why} it is
-wide. For a system operator, this supports two distinct, complementary
-actions tied to the same forecast: (i) sizing reserve margins to the
-combined predictive interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{total}$
-for routine risk management; and (ii) flagging forecasts with a high
-$\sigma_\text{epi}/\sigma_\text{total}$ ratio as candidates for a more
-conservative fallback strategy or for prioritised inclusion in future
-retraining data, a distinction unavailable from a single undifferentiated
-interval.
+\textbf{Epistemic-aware dispatch.}
+The SGLD-based epistemic estimate (Section~\ref{ssec:uq}) converts any point
+forecast into both an interval and a signal of how well-supported it is by
+the model's training data. For a system operator, this supports two
+distinct, complementary actions tied to the same forecast: (i) sizing
+reserve margins to the interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$
+for routine risk management; and (ii) flagging forecasts with high
+$\sigma_\text{epi}$ as candidates for a more conservative fallback strategy
+or for prioritised inclusion in future retraining data --- a distinction
+unavailable from a point forecast alone.
 
 \textbf{Climate- and horizon-adaptive model selection.}
 The marked difference in absolute skill between El~Paso (up to $\skillday =
@@ -185,7 +175,7 @@ two tropical climate sub-types. Generalisation to other tropical or subtropical
 regions requires additional validation.
 
 \textbf{Flat MLP ablation in progress.} The FlatMLP experiments are currently
-completing their Optuna runs (16 of the 24 site $\times$ horizon $\times$ seed
+completing their Optuna runs (17 of the 24 site $\times$ horizon $\times$ seed
 configurations evaluated at the time of writing). Final results will be
 incorporated to quantify what fraction of deep-learning skill arises from
 spatial encoding versus temporal dynamics alone.
@@ -197,14 +187,23 @@ Section~\ref{ssec:optuna}. This narrower seed budget should be kept in mind
 when comparing its mean skill against the four-seed fixed-graph baseline;
 the comparison should be treated as indicative pending a larger seed budget.
 
-\textbf{Uncertainty decomposition has not yet been empirically validated.}
-The SGLD sampling and variance-head training pipeline (Section~\ref{ssec:uq})
-is implemented but the resulting aleatoric/epistemic decomposition
-(Table~\ref{tab:decomposition}) has not yet been evaluated on the test set.
-In particular, the claim that $\sigma_\text{epi}$ tracks data scarcity and
-that $\sigma_\text{ale}$ tracks cloud-regime volatility (Section~\ref{ssec:uq_discussion})
-is currently a hypothesis motivating the design, not yet an empirical
-finding; both will be assessed quantitatively once results are available.
+\textbf{Epistemic uncertainty has not yet been empirically validated across
+all backbones.} The SGLD sampling pipeline (Section~\ref{ssec:uq}) is
+implemented but has not yet been run to completion across all site-horizon
+backbones (Table~\ref{tab:decomposition}). The claim that $\sigma_\text{epi}$
+tracks data scarcity (Section~\ref{ssec:uq_discussion}) is currently a
+hypothesis motivating the design, not yet an empirical finding; it will be
+assessed quantitatively once sampling completes.
+
+\textbf{No separate aleatoric uncertainty estimate.} This work quantifies
+only the epistemic (reducible, data-dependent) share of predictive
+uncertainty via the SGLD ensemble; it does not separately estimate the
+aleatoric (irreducible) uncertainty arising from genuine cloud stochasticity,
+e.g.\ via a heteroscedastic variance head. Consequently, the reported
+interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$ should be read as a
+lower bound on total predictive uncertainty rather than a fully calibrated
+interval; combining it with an explicit aleatoric component is a natural
+direction for future work (Section~\ref{sec:conclusion}).
 
 \textbf{Single-step output.} Current models produce a single-step forecast at
 horizon $H$. Simultaneous multi-step output (forecasts for all three horizons

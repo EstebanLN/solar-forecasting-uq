@@ -300,17 +300,18 @@ simple per-frame statistics processed over time.
 
 For the three deep-learning models (ResNet-LSTM, GraphSAGE-LSTM, and FlatMLP)
 we use Optuna \cite{akiba2019} with the TPE sampler and Median pruner.
-The fixed-graph GraphSAGE-LSTM baseline, the corresponding ResNet-LSTM
-configuration, and FlatMLP use a budget of 50 trials per configuration
-(site $\times$ horizon $\times$ seed) across four random seeds
-$\{42,1,7,13\}$. The extended search space used for the weighted $k$-NN
-ablation (Table~\ref{tab:hpspace}) increases per-trial cost substantially ---
-larger embeddings, optionally deeper LSTMs, and a tunable graph rebuilt per
-trial --- so this variant uses a reduced budget of 75 trials across two
-random seeds $\{42,1\}$, prioritising coverage of the most consequential
-hyperparameters (graph connectivity, model capacity) over seed count; results
-are reported with this caveat wherever the two protocols are compared
-(Section~\ref{sec:results}).
+The fixed-graph GraphSAGE-LSTM baseline and the corresponding ResNet-LSTM
+configuration use a budget of 20 trials per configuration (site $\times$
+horizon $\times$ seed) across four random seeds $\{42,1,7,13\}$; FlatMLP
+uses a larger budget of 50 trials given its lower per-trial cost. The
+extended search space used for the weighted $k$-NN ablation
+(Table~\ref{tab:hpspace}) increases per-trial cost substantially --- larger
+embeddings, optionally deeper LSTMs, and a tunable graph rebuilt per trial
+--- so this variant instead uses a larger per-seed budget of 75 trials
+across a reduced set of two random seeds $\{42,1\}$, trading seed count for
+per-seed search coverage of the most consequential hyperparameters (graph
+connectivity, model capacity); results are reported with this caveat
+wherever the two protocols are compared (Section~\ref{sec:results}).
 
 The ResNet-LSTM and GraphSAGE-LSTM search spaces (Table~\ref{tab:hpspace})
 include \texttt{n\_lstm\_layers}~$\in\{1,2\}$ to allow stacked recurrent
@@ -356,51 +357,37 @@ dropout, learning rate, and weight decay (50 trials).
   \end{tabular}
 \end{table*}
 
-The Optuna study identifies the best trial on validation $\rmseday$; the winning
-configuration is then retrained for up to 30~epochs with patience~8 and evaluated
-on the held-out test set.
+The Optuna study identifies the best trial on validation $\rmseday$; the
+winning configuration is then retrained with a longer epoch budget and
+increased patience (ResNet-LSTM and GraphSAGE-LSTM: 30~epochs, patience~8;
+FlatMLP: 35~epochs, patience~10) and evaluated on the held-out test set.
 
 \subsection{Training protocol}
 
 All deep-learning models are trained with the Adam optimiser minimising the MSE
 loss on normalised targets ($y_\text{norm} = (y - \bar{y}) / s_y$, with $\bar{y}$
 and $s_y$ estimated from the training set). Training uses early stopping with
-patience~6 (trials) or~8 (final retraining). Automatic Mixed Precision (AMP) is
-enabled when a GPU is available. Each experiment is replicated with four seeds
+patience~6 during Optuna trials for ResNet-LSTM and GraphSAGE-LSTM (patience~7
+for FlatMLP) and the higher final-retraining patience noted above. Automatic
+Mixed Precision (AMP) is enabled when a GPU is available. Each experiment is
+replicated with four seeds
 $\{42, 1, 7, 13\}$ to report mean~$\pm$~std statistics, except the weighted
 $k$-NN ablation, which uses two seeds $\{42, 1\}$ as noted in
 Section~\ref{ssec:optuna}.
 
-\subsection{Uncertainty quantification: disentangling aleatoric and epistemic uncertainty}
+\subsection{Uncertainty quantification: epistemic uncertainty via SGLD posterior sampling}
 \label{ssec:uq}
 
 The best-performing backbone identified in Sections~\ref{ssec:resnet}--\ref{ssec:mlp}
-is extended into a probabilistic model that separately estimates the two
-sources of forecast uncertainty \cite{kendall2017}: \emph{aleatoric}
-uncertainty, the irreducible stochasticity of cloud formation that would
-remain even with infinite training data, and \emph{epistemic} uncertainty,
-the reducible uncertainty due to limited training data and finite model
-capacity. Reporting a single undifferentiated interval cannot distinguish a
-forecast that is uncertain because the cloud field is genuinely
-unpredictable from one that is uncertain because the model has not seen
-similar conditions before; the two call for different
-operational responses (Section~\ref{sec:intro}).
-
-\textbf{Aleatoric uncertainty: heteroscedastic Gaussian head.}
-The deterministic scalar output head (Sections~\ref{ssec:resnet}--\ref{ssec:mlp})
-is replaced with a two-head output $(\mu_\theta(x), \log\sigma_\theta^2(x))$
-predicting, respectively, the conditional mean and log-variance of $y \mid x$,
-trained by minimising the Gaussian negative log-likelihood
-\begin{equation}
-  \mathcal{L}_\text{NLL}(\theta) =
-  \frac{1}{2\sigma_\theta^2(x)} \bigl(y - \mu_\theta(x)\bigr)^2
-  + \frac{1}{2}\log\sigma_\theta^2(x),
-  \label{eq:nll}
-\end{equation}
-which lets the model assign larger predicted variance to inputs it judges
-intrinsically noisier (e.g.\ rapidly evolving convective afternoons),
-penalised by the log-variance term against trivially inflating $\sigma^2$
-everywhere.
+is extended into a probabilistic model that quantifies \emph{epistemic}
+uncertainty \cite{kendall2017}: the reducible share of predictive uncertainty
+due to limited or atypical training data and finite model capacity, as
+opposed to the irreducible stochasticity of cloud formation itself
+(\emph{aleatoric} uncertainty, which we do not model separately here; see
+Section~\ref{sec:discussion}, Limitations). A point forecast alone cannot
+distinguish a well-supported prediction from one made under conditions the
+model has rarely seen during training; the latter case specifically signals
+when a forecast should be treated cautiously (Section~\ref{sec:intro}).
 
 \textbf{Epistemic uncertainty: SGLD posterior sampling.}
 Standard SGD/Adam training returns a single point estimate $\hat\theta$ of
@@ -421,33 +408,27 @@ chain moves away from the SGD initialisation), we collect $T$ weight
 snapshots $\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval
 $\Delta$ (epochs), yielding an inexpensive approximate ensemble.
 
-\textbf{Combining both into a total-uncertainty decomposition.}
-For a test input $x$, each posterior sample $\theta_t$ produces a pair
-$(\mu_t(x), \sigma_t^2(x))$ via the NLL head. The ensemble mean
-$\bar\mu(x) = \frac{1}{T}\sum_{t=1}^T \mu_t(x)$ is the point forecast, and the
-total predictive variance decomposes, by the law of total variance, into an
-aleatoric and an epistemic term \cite{kendall2017}:
+\textbf{Ensemble point forecast and epistemic variance.}
+For a test input $x$, each posterior sample $\theta_t$ produces a point
+prediction $\mu_t(x)$. The ensemble mean
+$\bar\mu(x) = \frac{1}{T}\sum_{t=1}^T \mu_t(x)$ is the reported point
+forecast, and the spread of the $T$ posterior predictions around it is the
+epistemic variance:
 \begin{equation}
-  \underbrace{\textstyle\frac{1}{T}\sum_{t=1}^{T}\bigl(\mu_t(x)-\bar\mu(x)\bigr)^2}
-    _{\text{epistemic } \sigma^2_\text{epi}(x)}
-  \;+\;
-  \underbrace{\textstyle\frac{1}{T}\sum_{t=1}^{T} \sigma_t^2(x)}
-    _{\text{aleatoric } \sigma^2_\text{ale}(x)}
-  \;=\;
-  \sigma^2_\text{total}(x).
-  \label{eq:decomposition}
+  \sigma^2_\text{epi}(x) =
+  \frac{1}{T}\sum_{t=1}^{T}\bigl(\mu_t(x)-\bar\mu(x)\bigr)^2.
+  \label{eq:epistemic}
 \end{equation}
 $\sigma^2_\text{epi}(x)$ is large where the $T$ posterior samples disagree on
 $\mu_t(x)$ --- i.e.\ where training data was scarce or atypical --- and
-shrinks as more representative training data becomes available, even without
-retraining the variance head. $\sigma^2_\text{ale}(x)$ instead reflects the
-model's learned, input-dependent estimate of irreducible noise and would not
-shrink with more data. We report both components separately, alongside the
-combined predictive interval $\bar\mu(x) \pm z_{1-\alpha/2}\,\sigma_\text{total}(x)$,
-and evaluate empirical coverage at the same nominal levels used in prior
-versions of this pipeline ($1-\alpha \in \{80\%, 90\%, 95\%\}$) for
-comparability, in addition to reporting the aleatoric/epistemic split itself
-as the primary object of interest.
+shrinks as more representative training data becomes available. We report
+$\sigma_\text{epi}$ alongside the predictive interval
+$\bar\mu(x) \pm z_{1-\alpha/2}\,\sigma_\text{epi}(x)$, evaluating empirical
+coverage at nominal levels $1-\alpha \in \{80\%, 90\%, 95\%\}$. Because no
+separate aleatoric term is estimated, this interval reflects only the
+model's epistemic (weight-posterior) disagreement and should not be
+interpreted as a full predictive interval capturing irreducible cloud
+stochasticity as well (Section~\ref{sec:discussion}, Limitations).
 
 \subsection{Evaluation metrics}
 

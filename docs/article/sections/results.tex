@@ -178,7 +178,7 @@ which create more structure for the models to exploit.
 Both deep-learning models outperform persistence at El~Paso by approximately
 42\% ($\skillday \approx 0.42$ for both architectures, with GraphSAGE-LSTM
 marginally ahead at $+0.419 \pm 0.039$). The large standard deviation for
-ResNet-LSTM ($\pm 0.090$) reflects seed-to-seed variability, with some seeds
+ResNet-LSTM ($\pm 0.104$) reflects seed-to-seed variability, with some seeds
 achieving near-GraphSAGE performance and others considerably below.
 
 At Uniandes, GraphSAGE-LSTM attains the best skill at this horizon
@@ -216,23 +216,22 @@ The standard deviation across seeds provides a measure of training stability.
 GraphSAGE-LSTM consistently shows lower seed-to-seed variability than ResNet-LSTM
 (e.g., El~Paso 6h: $\pm 0.013$ vs.\ $\pm 0.023$), suggesting that the graph
 structure regularises training and reduces sensitivity to weight initialisation.
-The most unstable model is ResNet-LSTM at El~Paso 3h ($\pm 0.090$), which may
+The most unstable model is ResNet-LSTM at El~Paso 3h ($\pm 0.104$), which may
 reflect the interaction between the high-irradiance regime and the CNN's sensitivity
 to specific initialisation-driven features.
 
-\subsection{Uncertainty decomposition: aleatoric vs.\ epistemic}
+\subsection{Epistemic uncertainty quantification}
 \label{ssec:uq_results}
 
-Table~\ref{tab:decomposition} will report the aleatoric/epistemic
-decomposition (Eq.~\ref{eq:decomposition}) for the best-performing backbone
-at each site-horizon combination, together with the combined predictive
-interval's empirical coverage at nominal levels 80\%, 90\%, and 95\%.
-$\sigma_\text{ale}$ (W/m²) is the heteroscedastic-head estimate of irreducible
-cloud-stochasticity noise, averaged over the $T$ SGLD posterior samples;
-$\sigma_\text{epi}$ (W/m²) is the spread of the $T$ posterior point
-predictions and shrinks as more representative training data is available;
-their ratio $\sigma_\text{epi}/\sigma_\text{total}$ indicates what fraction of
-total predictive uncertainty is, in principle, reducible by further training.
+Table~\ref{tab:decomposition} will report the SGLD-based epistemic
+uncertainty (Eq.~\ref{eq:epistemic}) for the best-performing backbone at
+each site-horizon combination, together with the predictive interval's
+empirical coverage at nominal levels 80\%, 90\%, and 95\%. $\sigma_\text{epi}$
+(W/m²) is the spread of the $T$ posterior point predictions and shrinks as
+more representative training data is available; it does not capture the
+irreducible aleatoric noise of cloud stochasticity, so the resulting
+interval should be read as a lower bound on total predictive uncertainty
+(Section~\ref{sec:discussion}, Limitations).
 
 The backbone for El~Paso is GraphSAGE-LSTM (best overall model at 3h and 6h
 in the fixed-graph baseline, Table~\ref{tab:main}); for Uniandes the best
@@ -243,29 +242,27 @@ weighted $k$-NN variant supersedes the fixed-graph baseline used here.
 
 \begin{table*}[t]
   \centering
-  \caption{Aleatoric/epistemic uncertainty decomposition. $\sigma_\text{ale}$,
-           $\sigma_\text{epi}$, $\sigma_\text{total}$ in W/m² (Eq.~\ref{eq:decomposition});
-           $\hat{\text{cov}}_\text{day}$: empirical daytime coverage of the combined
-           interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{total}$ on the test set.
-           Backbone: GraphSAGE-LSTM for El~Paso; best-per-horizon deep-learning
-           backbone for Uniandes (ResNet-LSTM at 1h, GraphSAGE-LSTM at 3h and 6h).
-           \textit{[SGLD sampling and variance-head training in progress; values
-           to be populated as runs complete.]}}
+  \caption{SGLD-based epistemic uncertainty. $\sigma_\text{epi}$ in W/m²
+           (Eq.~\ref{eq:epistemic}); $\hat{\text{cov}}_\text{day}$: empirical
+           daytime coverage of the interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$
+           on the test set. Backbone: GraphSAGE-LSTM for El~Paso; best-per-horizon
+           deep-learning backbone for Uniandes (ResNet-LSTM at 1h, GraphSAGE-LSTM
+           at 3h and 6h). \textit{[SGLD sampling in progress; values to be
+           populated as runs complete.]}}
   \label{tab:decomposition}
   \setlength{\tabcolsep}{4pt}
-  \resizebox{\textwidth}{!}{%
-  \begin{tabular}{llccccc}
+  \resizebox{0.6\textwidth}{!}{%
+  \begin{tabular}{llcc}
     \toprule
     \textbf{Site} & \textbf{H} &
-    $\sigma_\text{ale}$ & $\sigma_\text{epi}$ & $\sigma_\text{total}$ &
-    $\sigma_\text{epi}/\sigma_\text{total}$ & $\hat{\text{cov}}_\text{day}$ (90\%) \\
+    $\sigma_\text{epi}$ & $\hat{\text{cov}}_\text{day}$ (90\%) \\
     \midrule
-    El Paso  & 3h & --- & --- & --- & --- & --- \\
-    El Paso  & 6h & --- & --- & --- & --- & --- \\
+    El Paso  & 3h & --- & --- \\
+    El Paso  & 6h & --- & --- \\
     \midrule
-    Uniandes & 1h & --- & --- & --- & --- & --- \\
-    Uniandes & 3h & --- & --- & --- & --- & --- \\
-    Uniandes & 6h & --- & --- & --- & --- & --- \\
+    Uniandes & 1h & --- & --- \\
+    Uniandes & 3h & --- & --- \\
+    Uniandes & 6h & --- & --- \\
     \bottomrule
   \end{tabular}}
 \end{table*}
