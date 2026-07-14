@@ -24,12 +24,13 @@
 #   sgld_mlp          SGLD FlatMLP
 #   sgld              sgld_resnet + sgld_gsage + sgld_mlp
 #
-# Pipeline tmux (4 ventanas — v2 → mlp → fusion):
-#   [0] resnet_ep  : resnet_optuna_v2 elpaso   → mlp_optuna elpaso   → fusion_resnet elpaso
-#   [1] resnet_uni : resnet_optuna_v2 uniandes → mlp_optuna uniandes → fusion_resnet uniandes
-#   [2] gsage_ep   : gsage_optuna_v2 elpaso    → fusion_gsage elpaso
-#   [3] gsage_uni  : gsage_optuna_v2 uniandes  → fusion_gsage uniandes
-# MLP va en las ventanas de resnet porque es independiente de la arquitectura gsage.
+# Pipeline tmux (2 ventanas concurrentes — sitios en serie por familia):
+#   [0] resnet : resnet_v2 elpaso → mlp elpaso → fusion_resnet elpaso → resnet_v2 uniandes → mlp uniandes → fusion_resnet uniandes
+#   [1] gsage  : gsage_v2 elpaso  → fusion_gsage elpaso                → gsage_v2 uniandes  → fusion_gsage uniandes
+# MLP va en la ventana de resnet porque es independiente de la arquitectura gsage.
+# Solo 2 ventanas a la vez (antes 4): con 4 modelos compitiendo por una sola GPU
+# de 16GB, varios combos morían con CUDA OOM ("DataLoader worker exited
+# unexpectedly") y el wrapper los marcaba [FAIL] sin detenerse.
 # ================================================================
 set -uo pipefail   # sin -e para que un run fallido no mate el script
 
@@ -421,49 +422,40 @@ launch_tmux() {
         exit 1
     fi
 
-    echo "Creando sesión tmux '$SESSION'..."
+    echo "Creando sesión tmux '$SESSION' (2 ventanas concurrentes — sitios en serie por familia, para no saturar la GPU)..."
 
-    tmux new-session -d -s "$SESSION" -n "resnet_ep" -x 220 -y 50
+    tmux new-session -d -s "$SESSION" -n "resnet" -x 220 -y 50
     tmux send-keys -t "$SESSION:0" "
 cd '$PROJECT'
 bash '$SELF' resnet_optuna_v2 elpaso   &&
 bash '$SELF' mlp_optuna       elpaso   &&
-bash '$SELF' fusion_resnet    elpaso
-echo '=== [resnet_ep] COMPLETADO ===' " Enter
-
-    tmux new-window -t "$SESSION" -n "resnet_uni"
-    tmux send-keys -t "$SESSION:1" "
-cd '$PROJECT'
+bash '$SELF' fusion_resnet    elpaso   &&
 bash '$SELF' resnet_optuna_v2 uniandes &&
 bash '$SELF' mlp_optuna       uniandes &&
 bash '$SELF' fusion_resnet    uniandes
-echo '=== [resnet_uni] COMPLETADO ===' " Enter
+echo '=== [resnet] COMPLETADO ===' " Enter
 
-    tmux new-window -t "$SESSION" -n "gsage_ep"
-    tmux send-keys -t "$SESSION:2" "
+    tmux new-window -t "$SESSION" -n "gsage"
+    tmux send-keys -t "$SESSION:1" "
 cd '$PROJECT'
 bash '$SELF' gsage_optuna_v2 elpaso   &&
-bash '$SELF' fusion_gsage    elpaso
-echo '=== [gsage_ep] COMPLETADO ===' " Enter
-
-    tmux new-window -t "$SESSION" -n "gsage_uni"
-    tmux send-keys -t "$SESSION:3" "
-cd '$PROJECT'
+bash '$SELF' fusion_gsage    elpaso   &&
 bash '$SELF' gsage_optuna_v2 uniandes &&
 bash '$SELF' fusion_gsage    uniandes
-echo '=== [gsage_uni] COMPLETADO ===' " Enter
+echo '=== [gsage] COMPLETADO ===' " Enter
 
     tmux select-window -t "$SESSION:0"
 
     echo ""
-    echo "  [0] resnet_ep  : resnet_optuna_v2 elpaso   → mlp_optuna elpaso   → fusion_resnet elpaso"
-    echo "  [1] resnet_uni : resnet_optuna_v2 uniandes → mlp_optuna uniandes → fusion_resnet uniandes"
-    echo "  [2] gsage_ep   : gsage_optuna_v2 elpaso    → fusion_gsage elpaso"
-    echo "  [3] gsage_uni  : gsage_optuna_v2 uniandes  → fusion_gsage uniandes"
+    echo "  [0] resnet : resnet_v2 elpaso   → mlp elpaso   → fusion_resnet elpaso   → resnet_v2 uniandes → mlp uniandes → fusion_resnet uniandes"
+    echo "  [1] gsage  : gsage_v2 elpaso    → fusion_gsage elpaso                  → gsage_v2 uniandes  → fusion_gsage uniandes"
+    echo ""
+    echo "  Solo 2 ventanas concurrentes (antes 4) — la causa de los OOM en cascada"
+    echo "  era demasiados modelos compitiendo por una sola GPU de 16GB a la vez."
     echo ""
     echo "  tmux attach -t $SESSION     → conectarse / ver logs en vivo"
     echo "  Ctrl+B, d                   → desconectarse (runs siguen)"
-    echo "  Ctrl+B, n/p  o  0-4        → navegar ventanas"
+    echo "  Ctrl+B, n/p  o  0-1        → navegar ventanas"
     echo "  bash $SELF --status         → ver estado sin conectarse"
 }
 
