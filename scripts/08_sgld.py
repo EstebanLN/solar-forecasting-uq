@@ -100,6 +100,21 @@ def parse_args() -> argparse.Namespace:
     # SGLD hyperparameters
     p.add_argument("--sgld_lr",         type=float, default=1e-5,
                    help="SGLD step size ε. Rule of thumb: optuna_lr * 0.01")
+    p.add_argument("--sgld_prior_precision", type=float, default=100.0,
+                   help="Gaussian prior precision for the SGLD confining term "
+                        "(NOT the Optuna-tuned Adam weight_decay). The chain's "
+                        "relaxation timescale to its confined equilibrium is "
+                        "~1/(sgld_lr * precision) steps, so precision must "
+                        "satisfy sgld_lr * precision * total_epochs >> 1 to "
+                        "actually confine the chain within the sampling "
+                        "budget -- reusing Optuna's Adam weight_decay "
+                        "(~1e-6) or an under-scaled precision like 1e-2 "
+                        "leaves an effectively unconfined random walk that "
+                        "diverges over 1000+ epochs (empirically verified: "
+                        "1e-2 -> val_rmse_day explodes into the "
+                        "thousands/tens-of-thousands by epoch ~150; "
+                        "100-1000 -> stays within ~20% of the persistence "
+                        "baseline over 150 epochs)")
     p.add_argument("--burn_in",         type=int, default=500,
                    help="Epochs to discard before collecting samples")
     p.add_argument("--sample_every",    type=int, default=100,
@@ -263,9 +278,13 @@ def main() -> None:
     best_params = find_optuna_best_params(
         OPTUNA_ROOT, args.site, horizon_hours, args.seed
     )
-    l1_reg       = float(best_params.get("l1_reg", 0.0))
-    weight_decay = float(best_params.get("weight_decay", 1e-4))
-    batch_size   = int(best_params.get("batch_size", 32))
+    l1_reg           = float(best_params.get("l1_reg", 0.0))
+    adam_weight_decay = float(best_params.get("weight_decay", 1e-4))
+    batch_size       = int(best_params.get("batch_size", 32))
+    # SGLD's confining prior is a separate hyperparameter from Optuna's
+    # Adam-tuned weight_decay (see --sgld_prior_precision help text) --
+    # reusing adam_weight_decay directly leaves long chains unconfined.
+    sgld_weight_decay = args.sgld_prior_precision
 
     # ------------------------------------------------------------------
     # Dataset & loaders
@@ -343,7 +362,7 @@ def main() -> None:
         normalizer=normalizer,
         run_dir=RUN_DIR,
         sgld_lr=args.sgld_lr,
-        weight_decay=weight_decay,
+        weight_decay=sgld_weight_decay,
         l1_reg=l1_reg,
         burn_in=args.burn_in,
         sample_every=args.sample_every,
@@ -418,7 +437,9 @@ def main() -> None:
             "persistence_test":  baseline_test,
         },
         "sgld": {
-            "sgld_lr":         args.sgld_lr,
+            "sgld_lr":            args.sgld_lr,
+            "sgld_weight_decay":  sgld_weight_decay,
+            "adam_weight_decay":  adam_weight_decay,
             "burn_in":         args.burn_in,
             "sample_every":    args.sample_every,
             "n_samples":       args.n_samples,
