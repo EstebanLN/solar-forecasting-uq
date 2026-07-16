@@ -1,6 +1,8 @@
 % =============================================================
 % fig_arch_fusion.tex
-% Architecture diagram: Hybrid residual fusion (planned / future work)
+% Architecture diagram: Hybrid residual fusion (satellite + tabular surface
+% features). Implemented in src/solar_uq/models/fusion/ and actively running
+% (fusion_resnet_lstm, fusion_graphsage_lstm) — NOT future work.
 % Compile standalone:  pdflatex fig_arch_fusion.tex
 % =============================================================
 \documentclass[tikz, border=8pt]{standalone}
@@ -23,7 +25,6 @@
     minimum height=1.05cm, inner sep=3pt},
   inputblock/.style={block, fill=cInput!15, draw=cInput!75!black, text width=2.2cm},
   spatialblock/.style={block, fill=cSpatial!15, draw=cSpatial!75!black},
-  graphblock/.style={block, fill=cGraph!22, draw=cGraph!80!black},
   neutralblock/.style={block, fill=black!4, draw=black!55},
   temporalblock/.style={block, fill=cTemporal!15, draw=cTemporal!75!black},
   headblock/.style={block, fill=black!4, draw=black!55, text width=2.4cm},
@@ -35,48 +36,48 @@
   dimlabel/.style={font=\scriptsize\itshape, text=black!60, align=center},
   grouplabel/.style={font=\bfseries\scriptsize, text=black!70, align=center},
   branchlabel/.style={font=\bfseries\scriptsize\itshape, align=center},
-  groupbox/.style={draw=black!35, dash pattern=on 3pt off 2pt, rounded corners=4pt, inner sep=7pt},
-  futurebox/.style={draw=black!50, dash pattern=on 5pt off 3pt, rounded corners=6pt,
-    line width=1.1pt, inner sep=10mm},
+  groupbox/.style={draw=black!35, dash pattern=on 3pt off 2pt, rounded corners=4pt, inner sep=8mm},
 }
 
 \begin{document}
 \begin{tikzpicture}[node distance=8mm]
 
   % ==================================================================
-  % Branch 1 (top): spatial / satellite encoder  (GraphSAGE or ResNet)
+  % Branch 1 (top): spatial / satellite encoder (GraphSAGE or ResNet).
+  % The encoder already ends in its own internal linear projection to
+  % emb_dim (see the standalone ResNet-LSTM / GraphSAGE-LSTM figures) —
+  % no separate projection block here.
   % ==================================================================
   \node[inputblock] (input1)
     {Satellite patch\\ sequence\\ \footnotesize $(C,P,P)=(16,16,16){\times}L$};
 
-  \node[spatialblock, right=10mm of input1, text width=2.6cm] (spatialenc)
-    {Spatial encoder\\ \footnotesize (GraphSAGE or ResNet, Figs.~B/C)};
-
-  \node[neutralblock, right=10mm of spatialenc, text width=1.9cm] (proj1)
-    {Linear proj.\\ $\to \mathbb{R}^{d}$};
+  \node[spatialblock, right=10mm of input1, text width=3.0cm] (spatialenc)
+    {Spatial encoder\\ \footnotesize (GraphSAGE or ResNet)\\ $\to e_\ell \in \mathbb{R}^{d}$};
 
   \node[branchlabel, above=3mm of spatialenc] {Branch 1: spatial / satellite};
 
   % ==================================================================
-  % Branch 2 (bottom): tabular encoder (surface met + solar geometry + lags)
+  % Branch 2 (bottom): TabularProjector — a single small MLP
+  % (Linear -> LayerNorm -> ReLU -> Linear), not a separate encoder +
+  % projection. src/solar_uq/models/fusion/tabular_projector.py
   % ==================================================================
-  \node[inputblock, below=20mm of input1, text width=2.3cm] (input2)
-    {Tabular sequence\\ \footnotesize surface met.\ vars,\\ solar geometry, lags};
+  \node[inputblock, below=20mm of input1, text width=2.6cm] (input2)
+    {Tabular sequence\\ \footnotesize $D_\text{tab}{=}9$ surface features};
 
-  \node[temporalblock, right=10mm of input2, text width=2.6cm] (tabenc)
-    {Tabular encoder\\ \footnotesize light MLP / LSTM};
+  \node[temporalblock, right=10mm of input2, text width=3.2cm] (tabproj)
+    {TabularProjector\\ \footnotesize Linear$\to$LayerNorm\\ $\to$ReLU$\to$Linear
+     $\to p_\ell \in \mathbb{R}^{d}$};
 
-  \node[neutralblock, right=10mm of tabenc, text width=1.9cm] (proj2)
-    {Linear proj.\\ $\to \mathbb{R}^{d}$};
-
-  \node[branchlabel, below=3mm of tabenc] {Branch 2: tabular / surface};
+  \node[branchlabel, below=3mm of tabproj] {Branch 2: tabular / surface};
 
   % ==================================================================
-  % Residual sum, shared LSTM, MLP head, output
+  % Residual sum -> LayerNorm -> shared LSTM -> MLP head -> output
   % ==================================================================
-  \node[sumnode] (sum) at ($(proj1.east)+(13mm,-10mm)$) {$+$};
+  \node[sumnode] (sum) at ($(spatialenc.east)+(13mm,-10mm)$) {$+$};
 
-  \node[temporalblock, right=11mm of sum, text width=2.0cm] (lstm)
+  \node[neutralblock, right=9mm of sum, text width=1.6cm] (ln) {LayerNorm};
+
+  \node[temporalblock, right=9mm of ln, text width=2.0cm] (lstm)
     {Shared LSTM\\ \footnotesize 1--2 layers};
 
   \node[headblock, right=10mm of lstm] (mlphead)
@@ -88,30 +89,29 @@
   % Arrows
   % ----------------------------------------------------------------
   \draw[flow] (input1) -- (spatialenc);
-  \draw[flow] (spatialenc) -- (proj1);
-  \draw[flow] (input2) -- (tabenc);
-  \draw[flow] (tabenc) -- (proj2);
+  \draw[flow] (input2) -- (tabproj);
 
-  \draw[flow] (proj1.east) -| ($(proj1.east)+(6mm,0)$) |- (sum.north west)
-    node[dimlabel, pos=0.85, above, xshift=2mm] {$\mathbb{R}^{d}$};
-  \draw[flow] (proj2.east) -| ($(proj2.east)+(6mm,0)$) |- (sum.south west)
-    node[dimlabel, pos=0.85, below, xshift=2mm] {$\mathbb{R}^{d}$};
+  \draw[flow] (spatialenc.east) -| ($(spatialenc.east)+(6mm,0)$) |- (sum.north west)
+    node[dimlabel, pos=0.85, above, xshift=2mm] {$e_\ell$};
+  \draw[flow] (tabproj.east) -| ($(tabproj.east)+(6mm,0)$) |- (sum.south west)
+    node[dimlabel, pos=0.85, below, xshift=2mm] {$p_\ell$};
 
-  \draw[flow] (sum) -- (lstm);
+  \draw[flow] (sum) -- (ln);
+  \draw[flow] (ln) -- (lstm);
   \draw[flow] (lstm) -- (mlphead);
   \draw[flow] (mlphead) -- (out);
 
-  \node[dimlabel, above=1mm of sum] {residual sum,\\ same embedding space};
+  \node[dimlabel, above=6mm of sum] {residual sum,\\ same embedding space};
 
   % ----------------------------------------------------------------
-  % Group box around the whole figure + "future work" badge
+  % Group box around the whole figure
   % ----------------------------------------------------------------
-  \node[futurebox, fit=(input1)(input2)(spatialenc)(tabenc)(proj1)(proj2)(sum)(lstm)(mlphead)(out)]
+  \node[groupbox, fit=(input1)(input2)(spatialenc)(tabproj)(sum)(ln)(lstm)(mlphead)(out)]
     (fbox) {};
 
   \node[font=\bfseries\normalsize, fill=white, inner sep=2pt,
         above=2mm of fbox.north, xshift=-10mm] (title)
-    {Hybrid residual fusion --- \textit{planned architecture (future work)}};
+    {Hybrid residual fusion --- satellite + surface tabular features};
 
 \end{tikzpicture}
 \end{document}
