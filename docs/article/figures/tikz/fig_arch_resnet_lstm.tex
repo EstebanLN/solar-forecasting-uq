@@ -39,15 +39,12 @@
 \begin{tikzpicture}[node distance=7mm]
 
   % ----------------------------------------------------------------
-  % Input
+  % Row 1 (top): per-frame CNN encoder (shared weights across L=24 frames)
   % ----------------------------------------------------------------
   \node[inputblock] (input)
     {Input sequence\\ $L{=}24$ frames\\ \footnotesize $(C,P,P)=(16,16,16)$};
 
-  % ----------------------------------------------------------------
-  % Per-frame CNN encoder (shared weights across the L=24 frames)
-  % ----------------------------------------------------------------
-  \node[spatialblock, right=14mm of input] (stem) {Stem\\ Conv $3\times3$};
+  \node[spatialblock, right=9mm of input] (stem) {Stem\\ Conv $3\times3$};
   \node[spatialblock, right=7mm of stem]   (res1) {ResBlock\\ grid $16{\times}16$};
   \node[spatialblock, right=7mm of res1]   (res2) {ResBlock,\\ stride 2\\ grid $8{\times}8$};
   \node[spatialblock, right=7mm of res2]   (res3) {ResBlock,\\ stride 2\\ grid $4{\times}4$};
@@ -58,9 +55,11 @@
   \node[grouplabel, above=2mm of encbox.north] {Per-frame spatial encoder (shared weights $\times L$)};
 
   % ----------------------------------------------------------------
-  % Temporal path: LayerNorm -> sequence -> LSTM -> h_L -> MLP head -> y
+  % Row 2 (bottom): LayerNorm -> sequence -> LSTM -> h_L -> MLP head -> y
+  % Pushed down enough that the group labels below it don't collide
+  % with the dashed encoder box above.
   % ----------------------------------------------------------------
-  \node[neutralblock, right=14mm of lin, text width=1.6cm] (ln) {Layer-\\Norm};
+  \node[neutralblock, below=24mm of input, text width=1.6cm] (ln) {Layer-\\Norm};
 
   \node[seqdot, right=9mm of ln]                  (s1) {};
   \node[seqdot, right=3mm of s1]                  (s2) {};
@@ -78,6 +77,9 @@
 
   \node[outputblock, right=12mm of mlphead] (out) {$\hat{y}$};
 
+  \node[grouplabel, below=3mm of lstm] {Temporal encoder};
+  \node[grouplabel, below=3mm of mlphead] {MLP head};
+
   % ----------------------------------------------------------------
   % Arrows
   % ----------------------------------------------------------------
@@ -87,20 +89,17 @@
   \draw[flow] (res2) -- (res3);
   \draw[flow] (res3) -- (gap);
   \draw[flow] (gap)  -- (lin);
-  \draw[flow] (lin.east) -| ++(6mm,0) |- (ln.west);
+  \draw[flow] (lin.south) |- ($(encbox.south)+(0,-6mm)$) -| (ln.north);
   \draw[flow] (ln) -- (s1);
   \draw[flow] (sL) -- (lstm);
   \draw[flow] (lstm) -- (hL);
   \draw[flow] (hL) -- (mlphead);
   \draw[flow] (mlphead) -- (out);
 
-  \node[grouplabel, above=4mm of lstm] {Temporal encoder};
-  \node[grouplabel, above=4mm of mlphead] {MLP head};
-
   % ----------------------------------------------------------------
   % Title
   % ----------------------------------------------------------------
-  \node[font=\bfseries\normalsize, above=16mm of res2] (title)
+  \node[font=\bfseries\normalsize, above=10mm of encbox.north] (title)
     {ResNet-LSTM --- convolutional spatial encoder};
 
 \end{tikzpicture}

@@ -61,7 +61,7 @@
   % (Linear -> LayerNorm -> ReLU -> Linear), not a separate encoder +
   % projection. src/solar_uq/models/fusion/tabular_projector.py
   % ==================================================================
-  \node[inputblock, below=20mm of input1, text width=2.6cm] (input2)
+  \node[inputblock, below=26mm of input1, text width=2.6cm] (input2)
     {Tabular sequence\\ \footnotesize $D_\text{tab}{=}9$ surface features};
 
   \node[temporalblock, right=10mm of input2, text width=3.2cm] (tabproj)
@@ -73,7 +73,7 @@
   % ==================================================================
   % Residual sum -> LayerNorm -> shared LSTM -> MLP head -> output
   % ==================================================================
-  \node[sumnode] (sum) at ($(spatialenc.east)+(13mm,-10mm)$) {$+$};
+  \node[sumnode] (sum) at ($(spatialenc.east)+(13mm,-13mm)$) {$+$};
 
   \node[neutralblock, right=9mm of sum, text width=1.6cm] (ln) {LayerNorm};
 
@@ -101,7 +101,7 @@
   \draw[flow] (lstm) -- (mlphead);
   \draw[flow] (mlphead) -- (out);
 
-  \node[dimlabel, above=6mm of sum] {residual sum,\\ same embedding space};
+  \node[dimlabel, below=4mm of sum] {residual sum,\\ same embedding space};
 
   % ----------------------------------------------------------------
   % Group box around the whole figure
