@@ -163,59 +163,52 @@ la cuarta es un modelo estadístico que opera únicamente sobre la serie GHI.
 $\hat{y}(t+H) = \text{GHI}(t)$. Referencia estándar en la literatura.
 
 % ------------------------------------------------------------
-\subsection{SARIMA sobre el índice de cielo claro}
+\subsection{SARIMA sobre la serie de GHI cruda}
 \label{sec:sarima}
 % ------------------------------------------------------------
 
-\subsubsection{Motivación y decisión de preprocesamiento}
+\textbf{Corrección importante (julio):} la primera versión de este
+benchmark trabajaba sobre el \emph{índice de cielo claro}
+$k_t = \text{GHI}_t / \text{GHI}_{\text{cs},t}$ (con $\text{GHI}_\text{cs}$
+del modelo de Ineichen en \texttt{pvlib}). El asesor señaló que esto es
+incorrecto para este benchmark: SARIMA debe pronosticar \textbf{la misma
+cantidad física que los demás modelos} (GHI en W/m², sin normalización por
+cielo claro), para que la comparación sea justa. El código
+(\texttt{scripts/05\_sarima\_baseline.py}) se corrigió el 7 de junio para
+ajustar SARIMAX directamente sobre la serie de GHI horaria cruda, sin
+ningún paso de \texttt{pvlib}/Ineichen. \textbf{Sin embargo, los
+experimentos nunca se volvieron a correr tras el fix} hasta esta revisión
+(16 de julio): los dos runs de SARIMA que existían (abril y mayo) eran
+reliquias de la versión con índice de cielo claro, y sus números
+--- que hasta ahora seguían citados tanto aquí como en el artículo --- eran
+inválidos. Se re-corrieron ambos sitios con el código actual y se
+actualizaron la Tabla~\ref{tab:resultados} y las Figuras~1--2 del artículo
+en consecuencia.
 
-La GHI en bruto no es estacionaria debido a la envolvente determinista del
-cielo claro. Se trabaja sobre el \textbf{índice de cielo claro}:
-\begin{equation}
-  k_t = \frac{\text{GHI}_t}{\text{GHI}_{\text{cs},t}}, \quad
-  k_t = 0 \;\text{si}\; \text{GHI}_{\text{cs},t} < 10\,\text{W/m}^2
-\end{equation}
-donde $\text{GHI}_\text{cs}$ se calcula con el modelo de Ineichen implementado
-en \texttt{pvlib}. El índice $k_t \in [0, 1.5]$ es más estacionario y permite
-modelado estadístico estándar.
+\subsubsection{Metodología actual}
 
-\textbf{Decisión de resolución:} la resolución de 10~min implica $m = 144$
-para la estacionalidad diaria, computacionalmente inviable.
-Se remuestrea $k_t$ a resolución \textbf{horaria} ($m = 24$), que es el
-estándar en la literatura de predicción solar estadística.
+SARIMAX se ajusta directamente sobre la serie de GHI horaria
+($\text{GHI}_t$, W/m², sin transformar), remuestreada de 10~min a horaria
+($m=24$; a resolución nativa $m=144$ sería computacionalmente inviable).
+El diagnóstico (\texttt{notebooks/05b\_sarima\_order\_selection.ipynb},
+corrido el 23 de junio sobre la GHI cruda de El Paso) mostró:
 
-\subsubsection{Selección de órdenes — diagnóstico estadístico}
-
-El modelo ajustado es $\text{SARIMAX}(p,d,q)(P,D,Q)_{24}$.
-Los parámetros se determinaron mediante:
-
-\begin{itemize}[leftmargin=1.5em]
-  \item Prueba ADF/KPSS sobre $k_t$ y diferencias sucesivas.
-  \item ACF y PACF de la serie $\nabla \Delta_{24} k_t$.
-  \item Búsqueda exhaustiva en rejilla de AIC para $(p,q) \in \{0,1,2\}^2$
-        y $(P,Q) \in \{0,1\}^2$.
+\begin{itemize}[leftmargin=1.5em, noitemsep]
+  \item ADF/KPSS: la serie GHI cruda ya es estacionaria en niveles
+        (ADF $p<0.0001$), y lo sigue siendo tras $d=1$ y $D=1$.
+  \item Búsqueda en rejilla de AIC/BIC sobre 144~combinaciones
+        $(p,q)\in\{0,..,3\}^2$, $(P,Q)\in\{0,1,2\}^2$, con $d=D=1$.
 \end{itemize}
 
-Resultado:
+Resultado adoptado (cercano al óptimo de AIC, con mejor estabilidad de
+convergencia que el estrictamente óptimo):
 \begin{equation}
-  \boxed{\text{SARIMAX}(2,1,2)(1,1,1)_{24}}
+  \boxed{\text{SARIMAX}(2,1,2)(1,1,1)_{24} \text{ sobre GHI}_t \text{ (W/m², sin normalizar)}}
 \end{equation}
 
-Justificación de cada orden:
-\begin{itemize}[leftmargin=1.5em]
-  \item $d=1$: la prueba ADF no rechaza raíz unitaria en $k_t$; la rechaza
-        en $\nabla k_t$.
-  \item $D=1$: el ACF de $\nabla k_t$ muestra decaimiento lento en múltiplos
-        de 24~lags; $\Delta_{24}\nabla k_t$ es claramente estacionario.
-  \item $p=2, q=2$: el PACF de $\nabla\Delta_{24}k_t$ tiene cortes
-        significativos en los lags 1 y 2; el ACF decae tras el lag 2.
-        Órdenes $> 2$ no reducen el AIC.
-  \item $P=1, Q=1$: términos estacionales mínimos; capturan la autocorrelación
-        residual al lag 24 sin sobreparametrizar.
-\end{itemize}
-
-La predicción de $\hat{k}(t+H)$ se convierte de regreso a GHI:
-$\hat{\text{GHI}}(t+H) = \hat{k}(t+H)\cdot\text{GHI}_\text{cs}(t+H)$.
+La predicción $\hat{\text{GHI}}(t+H)$ se recorta en 0 (la GHI no puede ser
+negativa) y se evalúa directamente contra la GHI observada, con las mismas
+métricas que el resto de los modelos.
 
 % ------------------------------------------------------------
 \subsection{ResNet-LSTM}
@@ -748,9 +741,9 @@ Los modelos DL reportan media $\pm$ desviación estándar sobre 4~semillas.
     Persistencia      & 3h & 411.0 & 0.000 && 405.0 & 0.000 \\
     Persistencia      & 6h & 565.3 & 0.000 && 470.9 & 0.000 \\
     \midrule
-    SARIMA            & 1h & 447.9 & $-1.205$ && 269.3 & $+0.081$ \\
-    SARIMA            & 3h & 450.4 & $-0.093$ && 265.1 & $+0.353$ \\
-    SARIMA            & 6h & 445.8 & $+0.210$ && 265.6 & $\mathbf{+0.435}$ \\
+    SARIMA (GHI cruda) & 1h & 551.3 & $-1.714$ && 262.6 & $+0.104$ \\
+    SARIMA (GHI cruda) & 3h & 551.1 & $-0.337$ && 260.8 & $+0.364$ \\
+    SARIMA (GHI cruda) & 6h & 550.0 & $+0.025$ && 261.1 & $\mathbf{+0.444}$ \\
     \midrule
     ResNet+LSTM (Opt.)    & 1h & $238.6\pm22.4$ & $-0.167\pm0.110$
                                 && $246.7\pm4.1$  & $+0.161\pm0.014$ \\
@@ -788,18 +781,21 @@ captura mejor los gradientes de borde de nube que entran al parche desde el
 margen, un fenómeno que el CNN modela con el mismo filtro traslación-equivariante
 en todas las posiciones.
 
-\paragraph{SARIMA nominalmente supera a los modelos DL en Uniandes 6h
---- con una salvedad metodológica importante.}
-$\text{Skill} = 0.435$ (SARIMA) vs.\ $0.417 \pm 0.008$ (GraphSAGE). Pero
-\textbf{estos dos números no son directamente comparables}: SARIMA se evalúa
-sobre un subconjunto horario (cada hora exacta, $m=24$) con su propia
-persistencia recalculada sobre ese mismo subconjunto más grueso, mientras
-que persistencia/ResNet/GraphSAGE usan los datos a 10~min completos. La
-comparación cualitativa (SARIMA es competitivo en Uniandes 6h) sigue siendo
-razonable, pero no debe leerse como ``SARIMA le gana a GraphSAGE por
-0.018 de skill''. El clima ecuatorial de Bogotá tiene un patrón diurno muy
-regular (nubosidad convectiva vespertina), lo que favorece los términos
-AR/MA estacionales del SARIMA en horizontes largos de todas formas.
+\paragraph{SARIMA nominalmente supera a los modelos DL en Uniandes 6h,
+pero colapsa en El Paso --- con una salvedad metodológica importante.}
+Con la metodología corregida (GHI cruda, Sección~\ref{sec:sarima}):
+$\text{Skill} = 0.444$ (SARIMA) vs.\ $0.417 \pm 0.008$ (GraphSAGE) en
+Uniandes 6h --- similar al resultado con la metodología anterior (0.435).
+Pero en El Paso, SARIMA sobre GHI cruda es mucho más débil de lo que
+parecía con el índice de cielo claro: $\text{skill}=-1.714$ a 1h (antes
+$-1.205$) y apenas $+0.025$ a 6h (antes $+0.210$) --- perder la
+normalización por cielo claro le quita a SARIMA la señal más importante
+para modelar el ciclo diurno de un sitio de alta irradiancia como El Paso.
+\textbf{Estos números no son directamente comparables} entre SARIMA y los
+demás modelos de todas formas: SARIMA se evalúa sobre un subconjunto
+horario (cada hora exacta, $m=24$) con su propia persistencia recalculada
+sobre ese mismo subconjunto más grueso, mientras que
+persistencia/ResNet/GraphSAGE usan los datos a 10~min completos.
 
 \paragraph{Horizonte de 1h: ningún modelo supera consistentemente la persistencia en El Paso.}
 El RMSE de persistencia en El Paso 1h es bajo (204.4~W/m²) porque la irradiancia
@@ -954,6 +950,18 @@ En paralelo a los experimentos, se hizo una revisión completa del artículo
         promete un ``reproducible GOES-16 benchmark'' sin ningún enlace que
         lo respalde. Ambas secciones se agregaron con el mismo estilo que
         usa el resto del documento.
+  \item \textbf{Datos de SARIMA regenerados (16 de julio):} el texto de
+        metodología del artículo ya describía correctamente SARIMA sobre
+        GHI cruda (corrección del asesor, aplicada al código el 7 de junio),
+        pero \textbf{las Figuras~1--2 seguían usando los dos runs de SARIMA
+        de abril/mayo, generados con el índice de cielo claro (versión
+        incorrecta)} — un desajuste entre texto y datos que había pasado
+        desapercibido. Se re-corrió \texttt{05\_sarima\_baseline.py} para
+        ambos sitios, se regeneró \texttt{results/summary.csv} y las
+        Figuras~1--2 con \texttt{10\_paper\_figures.py}, y se borraron los
+        runs viejos. Los números cambian sustancialmente en El Paso (SARIMA
+        es mucho más débil sin la normalización por cielo claro:
+        skill$_\text{6h}\approx 0.03$ en vez de $0.21$) y poco en Uniandes.
 \end{itemize}
 
 Pendiente en el artículo: las tres tablas de datos que siguen vacías

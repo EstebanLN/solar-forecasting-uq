@@ -1,5 +1,5 @@
 {
-  "run_name": "uniandes_SARIMA_h1_h3_h6_20260511_140108",
+  "run_name": "uniandes_SARIMA_h1_h3_h6_20260716_160419",
   "site": "uniandes",
   "arch": "SARIMA",
   "model": {
@@ -15,14 +15,7 @@
       24
     ],
     "resolution": "hourly",
-    "cs_model": "ineichen (pvlib)",
-    "cs_floor_wm2": 10.0
-  },
-  "location": {
-    "lat": 4.6024,
-    "lon": -74.0663,
-    "elevation": 2600,
-    "tz": "America/Bogota"
+    "target": "ghi_raw_wm2"
   },
   "results": {
     "1": {
@@ -30,14 +23,14 @@
       "horizon_steps": 6,
       "test_metrics": {
         "n": 2016,
-        "rmse": 179.12842883945,
-        "mae": 87.212749224157,
+        "rmse": 175.91010369937695,
+        "mae": 100.30148842458003,
         "n_day": 886,
-        "rmse_day": 269.2504891730592,
-        "mae_day": 195.13359432066247,
+        "rmse_day": 262.5663996446924,
+        "mae_day": 214.47525871833545,
         "day_threshold": 20.0,
-        "skill_vs_persistence": 0.08905619749514082,
-        "skill_day_vs_persistence": 0.08090225899518133
+        "skill_vs_persistence": 0.10542274165448684,
+        "skill_day_vs_persistence": 0.1037186765439988
       },
       "persistence_train": {
         "n": 54530,
@@ -75,14 +68,14 @@
       "horizon_steps": 18,
       "test_metrics": {
         "n": 2014,
-        "rmse": 176.86071569456396,
-        "mae": 86.16963278928316,
+        "rmse": 175.1959002932012,
+        "mae": 100.11565464157495,
         "n_day": 890,
-        "rmse_day": 265.0870453320554,
-        "mae_day": 191.71067255036257,
+        "rmse_day": 260.7573013251687,
+        "mae_day": 212.88903171034798,
         "day_threshold": 20.0,
-        "skill_vs_persistence": 0.39728591914576883,
-        "skill_day_vs_persistence": 0.35327807331477246
+        "skill_vs_persistence": 0.4029593536362026,
+        "skill_day_vs_persistence": 0.36384117111791126
       },
       "persistence_train": {
         "n": 54507,
@@ -120,14 +113,14 @@
       "horizon_steps": 36,
       "test_metrics": {
         "n": 2011,
-        "rmse": 178.22782860567574,
-        "mae": 87.42051105975685,
+        "rmse": 176.42181721874425,
+        "mae": 101.4821339539731,
         "n_day": 899,
-        "rmse_day": 265.61095332771566,
-        "mae_day": 192.3037440193298,
+        "rmse_day": 261.1048303913995,
+        "mae_day": 213.53755350655132,
         "day_threshold": 20.0,
-        "skill_vs_persistence": 0.5465959023821829,
-        "skill_day_vs_persistence": 0.43474421634696614
+        "skill_vs_persistence": 0.5511903193684936,
+        "skill_day_vs_persistence": 0.4443338511857886
       },
       "persistence_train": {
         "n": 54470,
