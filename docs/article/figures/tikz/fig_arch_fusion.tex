@@ -91,17 +91,17 @@
   \draw[flow] (input1) -- (spatialenc);
   \draw[flow] (input2) -- (tabproj);
 
-  \draw[flow] (spatialenc.east) -| ($(spatialenc.east)+(6mm,0)$) |- (sum.north west)
-    node[dimlabel, pos=0.85, above, xshift=2mm] {$e_\ell$};
-  \draw[flow] (tabproj.east) -| ($(tabproj.east)+(6mm,0)$) |- (sum.south west)
-    node[dimlabel, pos=0.85, below, xshift=2mm] {$p_\ell$};
+  \draw[flow] (spatialenc.east) -| (sum.north)
+    node[dimlabel, pos=0.75, right, xshift=1mm] {$e_\ell$};
+  \draw[flow] (tabproj.east) -| (sum.south)
+    node[dimlabel, pos=0.9, right, xshift=1mm] {$p_\ell$};
 
   \draw[flow] (sum) -- (ln);
   \draw[flow] (ln) -- (lstm);
   \draw[flow] (lstm) -- (mlphead);
   \draw[flow] (mlphead) -- (out);
 
-  \node[dimlabel, below=4mm of sum] {residual sum,\\ same embedding space};
+  \node[dimlabel, below=13mm of sum, xshift=14mm] {residual sum,\\ same embedding space};
 
   % ----------------------------------------------------------------
   % Group box around the whole figure
