@@ -1,5 +1,5 @@
 {
-  "run_name": "elpaso_SARIMA_h1_h3_h6_20260421_173946",
+  "run_name": "elpaso_SARIMA_h1_h3_h6_20260716_160258",
   "site": "elpaso",
   "arch": "SARIMA",
   "model": {
@@ -15,14 +15,7 @@
       24
     ],
     "resolution": "hourly",
-    "cs_model": "ineichen (pvlib)",
-    "cs_floor_wm2": 10.0
-  },
-  "location": {
-    "lat": 9.737,
-    "lon": -73.695,
-    "elevation": 50,
-    "tz": "America/Bogota"
+    "target": "ghi_raw_wm2"
   },
   "results": {
     "1": {
@@ -30,14 +23,14 @@
       "horizon_steps": 6,
       "test_metrics": {
         "n": 2906,
-        "rmse": 317.1645662538442,
-        "mae": 175.56179819963063,
+        "rmse": 559.4758412490158,
+        "mae": 543.0816621604945,
         "n_day": 1450,
-        "rmse_day": 447.912367504958,
-        "mae_day": 333.72094221551043,
+        "rmse_day": 551.3248500831394,
+        "mae_day": 526.4038612023552,
         "day_threshold": 20.0,
-        "skill_vs_persistence": -1.1890757050471437,
-        "skill_day_vs_persistence": -1.204653632188557
+        "skill_vs_persistence": -2.8615126087534333,
+        "skill_day_vs_persistence": -1.7136565574696943
       },
       "persistence_train": {
         "n": 67769,
@@ -75,14 +68,14 @@
       "horizon_steps": 18,
       "test_metrics": {
         "n": 2904,
-        "rmse": 320.6383574435882,
-        "mae": 179.0402108754262,
+        "rmse": 559.2856560399605,
+        "mae": 542.702002572404,
         "n_day": 1465,
-        "rmse_day": 450.3739534600656,
-        "mae_day": 337.18606199606836,
+        "rmse_day": 551.0568691064802,
+        "mae_day": 525.9458123294127,
         "day_threshold": 20.0,
-        "skill_vs_persistence": -0.01751010469045111,
-        "skill_day_vs_persistence": -0.09308264896366336
+        "skill_vs_persistence": -0.7748307188393995,
+        "skill_day_vs_persistence": -0.33744568837714595
       },
       "persistence_train": {
         "n": 67757,
@@ -120,14 +113,14 @@
       "horizon_steps": 36,
       "test_metrics": {
         "n": 2901,
-        "rmse": 320.88327488211837,
-        "mae": 179.9312198417008,
+        "rmse": 558.4830641886138,
+        "mae": 541.7646634697146,
         "n_day": 1496,
-        "rmse_day": 445.8348579893851,
-        "mae_day": 332.1490203219304,
+        "rmse_day": 550.0112633523718,
+        "mae_day": 524.9774399601357,
         "day_threshold": 20.0,
-        "skill_vs_persistence": 0.34852422041752773,
-        "skill_day_vs_persistence": 0.20983969329103314
+        "skill_vs_persistence": -0.13386461092291846,
+        "skill_day_vs_persistence": 0.025206170500369995
       },
       "persistence_train": {
         "n": 67739,
