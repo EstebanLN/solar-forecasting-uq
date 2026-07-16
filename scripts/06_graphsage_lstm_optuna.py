@@ -140,22 +140,30 @@ def make_objective(
                 edge_weight=edge_weight,
             ).to(device)
 
-        out = train_one_model(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            normalizer=normalizer,
-            lr=lr,
-            weight_decay=weight_decay,
-            l1_reg=l1_reg,
-            use_amp=use_amp,
-            epochs=20,
-            patience=6,
-            day_threshold=day_threshold,
-            device=device,
-            fusion=fusion,
-            optuna_trial=trial,
-        )
+        try:
+            out = train_one_model(
+                model=model,
+                train_loader=train_loader,
+                val_loader=val_loader,
+                normalizer=normalizer,
+                lr=lr,
+                weight_decay=weight_decay,
+                l1_reg=l1_reg,
+                use_amp=use_amp,
+                epochs=20,
+                patience=6,
+                day_threshold=day_threshold,
+                device=device,
+                fusion=fusion,
+                optuna_trial=trial,
+            )
+        except torch.cuda.OutOfMemoryError as e:
+            del model
+            torch.cuda.empty_cache()
+            raise optuna.TrialPruned(
+                f"CUDA OOM: hidden_g={hidden_g}, n_sage_layers={n_sage_layers}, "
+                f"batch_size={batch_size}, patch={patch} (N={patch*patch} graph nodes): {e}"
+            )
 
         vm = out["final_val"]
         trial.set_user_attr("best_epoch",          out["best_epoch"])
