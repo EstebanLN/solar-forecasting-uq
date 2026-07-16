@@ -44,7 +44,7 @@
        y Cuantificación de Incertidumbre\\[0.6em]
        \normalsize Arquitecturas, Decisiones de Modelado y Experimentos Optuna}
 \author{Esteban Ladino Nieto}
-\date{Mayo 2026}
+\date{Julio 2026}
 % ================================================================
 
 \begin{document}
@@ -420,26 +420,34 @@ la fuente del beneficio.
 \subsection{Marco general}
 
 Se usa \textbf{Optuna} con el muestreador TPE (\textit{Tree-structured Parzen
-Estimator}) y el podador de la mediana (\textit{Median Pruner}).
+Estimator}) y el podador de la mediana (\textit{Median Pruner}, activo desde
+julio: antes estaba configurado pero nunca se llamaba
+\texttt{trial.report()}/\texttt{should\_prune()} dentro del loop, así que
+nunca podaba nada; ver Sección~\ref{sec:pipeline_fixes}).
 Cada estudio minimiza el $\text{RMSE}_\text{day}$ de validación.
 El protocolo es:
 
 \begin{enumerate}[leftmargin=1.5em]
-  \item Búsqueda: $N_\text{trials}$ trials en paralelo ($n_\text{jobs}=2$),
-        entrenando hasta 20 épocas con patience~6 y AMP.
+  \item Búsqueda: $N_\text{trials}$ trials, entrenando hasta 20 épocas
+        (25 para FlatMLP) con patience~6 (7 para FlatMLP) y AMP.
   \item Reentrenamiento: la configuración ganadora se reentrena hasta
-        30~épocas con patience~8.
+        30~épocas con patience~8 (35/10 para FlatMLP).
   \item Evaluación: el checkpoint con mejor val~$\text{RMSE}_\text{day}$
         se evalúa en el conjunto de prueba.
 \end{enumerate}
 
 Se corren 4 semillas independientes $\{42, 1, 7, 13\}$ por cada combinación
 (sitio $\times$ horizonte), para un total de $2 \times 3 \times 4 = 24$ runs
-por arquitectura.
+por arquitectura (excepto la ablación v2 de GraphSAGE, ver abajo, que usa
+solo 2 semillas).
 
-\textbf{El número de trials se aumentó de 20 (estudio piloto) a 50 para
-ResNet y GraphSAGE, y se está evaluando extender a 100} para confirmar
-convergencia del estudio.
+\textbf{Presupuesto de trials real (verificado contra los \texttt{summary.json}
+de los runs, no contra los defaults del script):} el estudio v1 ya completo
+(24/24 ResNet, 24/24 GraphSAGE, resultados de la Sección~\ref{sec:resultados})
+usó \textbf{20 trials}, no 50 como se planeaba originalmente. FlatMLP usa
+\textbf{50 trials}. El estudio v2 (ablación de conectividad $k$-NN ponderada,
+en curso) usa \textbf{75 trials} con solo 2~semillas $\{42,1\}$, para
+compensar el costo por trial más alto del espacio de búsqueda extendido.
 
 \subsection{Regularización L1 — implementación en el loop de entrenamiento}
 
@@ -458,7 +466,9 @@ Es retrocompatible: \texttt{l1\_reg=0.0} reproduce el comportamiento anterior.
 
 \begin{table}[H]
   \centering
-  \caption{Espacio de búsqueda Optuna para ResNet-LSTM (50 trials por run).}
+  \caption{Espacio de búsqueda Optuna para ResNet-LSTM (v1, 20 trials por
+           run; genera los resultados ya completos de la
+           Sección~\ref{sec:resultados}).}
   \label{tab:hp_resnet}
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lll}
@@ -482,8 +492,12 @@ Es retrocompatible: \texttt{l1\_reg=0.0} reproduce el comportamiento anterior.
 
 \begin{table}[H]
   \centering
-  \caption{Espacio de búsqueda Optuna para GraphSAGE-LSTM (50 trials por run).
-           Los parámetros marcados con $\dagger$ son nuevos respecto al estudio piloto.}
+  \caption{Espacio de búsqueda Optuna para GraphSAGE-LSTM. \texttt{k\_neighbors}
+           solo aplica al estudio \textbf{v2} (grafo $k$-NN ponderado, 75
+           trials, 2 semillas, en curso); el resto de la tabla corresponde al
+           estudio \textbf{v1} (grafo fijo de 8~vecinos, 20 trials, 4 semillas,
+           ya completo — Sección~\ref{sec:resultados}). Los parámetros
+           marcados con $\dagger$ son nuevos respecto al estudio piloto inicial.}
   \label{tab:hp_gsage}
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lll}
@@ -535,13 +549,16 @@ mismas condiciones de entrenamiento.
 \section{Cuantificación de Incertidumbre: Hoja de Ruta}
 % ================================================================
 
-Se sigue una hoja de ruta de tres etapas, desde cobertura marginal
-garantizada hasta descomposición bayesiana completa de la incertidumbre.
+Se planeó originalmente una hoja de ruta de tres etapas, desde cobertura
+marginal garantizada hasta descomposición bayesiana completa. En la práctica
+se saltó directamente a SGLD (Etapa~3): las Etapas 1 y 2 quedan documentadas
+por el código ya escrito, pero \textbf{no se priorizaron ni se ejecutaron} —
+no aparecen en el artículo final.
 
 % ------------------------------------------------------------
 \subsection{Etapa 1 — Predicción Conforme por División (Split CP)}
 \label{sec:conformal}
-\textbf{Estado: implementado.}
+\textbf{Estado: código implementado, nunca ejecutado. Deprioritizado.}
 % ------------------------------------------------------------
 
 \subsubsection{Mecanismo}
@@ -586,75 +603,122 @@ $\hat{q}$ es una constante global: el intervalo tiene \emph{ancho fijo}
 para todas las muestras, sin adaptarse a condiciones de mayor o menor
 variabilidad local (mediodía claro vs.\ paso de nubes).
 
-\subsubsection{Próximo paso}
+\subsubsection{Estado real}
 
-Ejecutar \texttt{07\_conformal\_explore.py} sobre runs representativos
-(GraphSAGE Optuna, El Paso, H6) y verificar que la cobertura diurna
-empírica $\hat{\text{cov}}_\text{day} \geq 1-\alpha$ para cada nivel
-$\alpha \in \{0.05, 0.10, 0.20\}$.
+El script \texttt{07\_conformal\_explore.py} nunca se corrió sobre un run
+real. Al decidir enfocar la cuantificación de incertidumbre del artículo
+únicamente en SGLD (ver Etapa~3), esta línea de trabajo quedó en pausa
+indefinida — no descartada, pero fuera del camino crítico actual.
 
 % ------------------------------------------------------------
 \subsection{Etapa 2 — Conformalized Quantile Regression (CQR)}
-\textbf{Estado: planificado.}
+\textbf{Estado: nunca iniciado. Superseded por SGLD.}
 % ------------------------------------------------------------
 
-Extiende Split CP con una puntuación de no-conformidad basada en
+Extendería Split CP con una puntuación de no-conformidad basada en
 regresión cuantil:
-$s_i = \max\{q_\alpha(x_i) - y_i,\; y_i - q_{1-\alpha}(x_i)\}$.
-Esto produce intervalos de \textbf{ancho variable}: más estrechos durante
-periodos predecibles (cielo claro) y más amplios durante eventos convectivos.
+$s_i = \max\{q_\alpha(x_i) - y_i,\; y_i - q_{1-\alpha}(x_i)\}$,
+produciendo intervalos de ancho variable. No se implementó: se decidió ir
+directo a SGLD en vez de pasar por esta etapa intermedia.
 
 % ------------------------------------------------------------
-\subsection{Etapa 3 — Descomposición bayesiana: SGLD + Cabeza de varianza}
-\textbf{Estado: planificado (método seleccionado: SGLD).}
+\subsection{Etapa 3 — Incertidumbre epistémica vía SGLD}
+\label{sec:sgld_etapa3}
+\textbf{Estado: implementado, corrido, y con un bug crítico encontrado y
+corregido en julio.}
 % ------------------------------------------------------------
 
-\subsubsection{Motivación}
+\subsubsection{Motivación y decisión: solo epistémica, no aleatórica}
 
-Las Etapas 1 y 2 producen intervalos de cobertura marginal pero no distinguen
-entre incertidumbre \emph{aleatórica} (variabilidad irreducible de la nubosidad)
-e incertidumbre \emph{epistémica} (limitación del modelo por datos finitos).
-La descomposición es operacionalmente útil: la incertidumbre epistémica puede
-reducirse con más datos o un modelo más grande; la aleatórica no.
+Se decidió \textbf{no implementar una cabeza de varianza separada} para
+incertidumbre aleatórica. La razón no es solo de tiempo: reemplazar la
+cabeza determinística por una salida $(\mu_\theta, \log\sigma_\theta^2)$
+entrenada con NLL gaussiana es un cambio de arquitectura y de loss que
+nunca se escribió en el código, y el artículo se reescribió (julio) para
+reflejar esto honestamente en vez de afirmar una descomposición
+aleatórica/epistémica completa que no existía. Lo que sí está implementado
+y corrido es \textbf{SGLD para incertidumbre epistémica}: el ensemble de
+muestras posteriores captura cuánto varía la predicción por falta de datos
+representativos, no la estocasticidad irreducible de la nubosidad misma.
+La cabeza de varianza queda documentada como trabajo futuro genuino, no
+como algo ya hecho.
 
 \subsubsection{SGLD — Stochastic Gradient Langevin Dynamics}
 
-Se usará \textbf{SGLD} para muestrear la distribución posterior sobre los pesos:
 \begin{equation}
-  \theta_{t+1} = \theta_t - \eta_t \nabla \tilde{\mathcal{L}}(\theta_t)
-                 + \sqrt{2\eta_t}\,\varepsilon_t, \quad \varepsilon_t \sim \mathcal{N}(0, I)
+  \theta_{t+1} = \theta_t - \epsilon \bigl(\nabla\mathcal{L}(\theta_t) +
+                 \lambda_\text{SGLD}\,\theta_t\bigr)
+                 + \sqrt{2\epsilon}\,\varepsilon_t, \quad \varepsilon_t \sim \mathcal{N}(0, I)
 \end{equation}
 
-donde $\tilde{\mathcal{L}}$ es el gradiente estocástico del negativo del
-log-posterior y $\eta_t$ es una tasa de aprendizaje que decae según un
-calendario polinomial. La inyección de ruido gaussiano transforma el
-descenso de gradiente estocástico en una cadena de Markov que converge
-(bajo condiciones de regularidad) a la distribución posterior.
+Implementado en \texttt{src/solar\_uq/sgld.py} como un
+\texttt{torch.optim.Optimizer} propio. \textbf{No hay decaimiento de tasa}:
+a diferencia de Adam, SGLD requiere un paso $\epsilon$ prácticamente
+constante para mantener ergodicidad (decaer a cero recupera SGD plano).
 
-\textbf{Protocolo de entrenamiento:}
+\textbf{Protocolo de entrenamiento real} (\texttt{scripts/08\_sgld.py},
+\texttt{src/solar\_uq/train\_sgld.py}):
 \begin{itemize}[leftmargin=1.5em, noitemsep]
-  \item 1000~épocas totales.
-  \item \emph{Burn-in}: las primeras 500~épocas se descartan (la cadena no
-        ha convergido).
-  \item \emph{Thinning}: se guarda un checkpoint cada 50~épocas después del
+  \item \textbf{1500~épocas totales} (no 1000): \texttt{burn\_in=500} +
+        \texttt{n\_samples=10} $\times$ \texttt{sample\_every=100}.
+  \item \emph{Burn-in}: las primeras 500~épocas se descartan.
+  \item \emph{Thinning}: un checkpoint cada 100~épocas (no 50) tras el
         burn-in → 10~muestras de la posterior.
-  \item Estructura de guardado: \texttt{runs/sgld/\{site\}\_H\{h\}\_seed\{s\}/}
-        con \texttt{checkpoint\_ep\{ep:04d\}.pt} y \texttt{sgld\_trace.json}
-        (epoch, loss\_train, loss\_val, checksum de parámetros).
+  \item AMP deshabilitado a propósito: el ruido debe inyectarse en la misma
+        escala fp32 que el gradiente.
 \end{itemize}
 
-\textbf{Inferencia y evaluación:}
+\subsubsection{Bug crítico encontrado y corregido (14--15 de julio)}
+\label{sec:sgld_bug}
+
+Los primeros runs de \texttt{mlp\_sgld} (incluyendo 4 que se habían dado por
+completos y ya commiteados) \textbf{divergían}: $\text{RMSE}_\text{day}$ de
+validación escalaba a miles o decenas de miles de W/m² (persistencia
+$\approx$~280--290), con \textit{skill} tan malo como $-19$.
+
+\textbf{Causa raíz:} el término de confinamiento gaussiano
+($\lambda_\text{SGLD}\,\theta$ en la ecuación de arriba) reutilizaba
+\emph{directamente} el \texttt{weight\_decay} que Optuna afinó para Adam
+(típicamente $\sim 10^{-6}$). La varianza estacionaria del paseo aleatorio de
+SGLD es $\approx 1/\lambda_\text{SGLD}$, \textbf{independiente de} $\epsilon$;
+con $\lambda_\text{SGLD} \sim 10^{-6}$, esa varianza es astronómica, y el
+tiempo de relajación hacia el equilibrio confinado es
+$\sim 1/(\epsilon\lambda_\text{SGLD})$ pasos — del orden de $10^{11}$ pasos
+con $\epsilon=10^{-5}$, es decir, un paseo esencialmente sin confinar en
+cualquier cadena práctica de 1500 épocas.
+
+\textbf{Fix:} se desacopló la precisión del prior de SGLD del
+\texttt{weight\_decay} de Optuna, agregando \texttt{--sgld\_prior\_precision}
+(nuevo hiperparámetro, default \textbf{100.0}) en \texttt{08\_sgld.py}. El
+\texttt{weight\_decay} original de Optuna se sigue guardando en
+\texttt{summary.json} como referencia, pero ya no se usa como prior de SGLD.
+
+\textbf{Validación empírica} (smoke test de 150--160 épocas sobre el combo
+exacto que había divergido, uniandes h1 seed42):
+\begin{itemize}[leftmargin=1.5em, noitemsep]
+  \item \texttt{precision=1e-2} (primer intento): trayectoria casi idéntica
+        a la rota — confirma que 1e-2 también es demasiado débil.
+  \item \texttt{precision=100, 1000}: $\text{RMSE}_\text{day}$ se mantiene
+        dentro de $\sim$20\% de la persistencia durante toda la corrida, sin
+        divergir.
+\end{itemize}
+
+Se borraron los 4 runs de \texttt{mlp\_sgld} ya commiteados (inválidos) y
+todos los directorios locales incompletos de intentos previos.
+
+\subsubsection{Inferencia y evaluación}
 \begin{itemize}[leftmargin=1.5em, noitemsep]
   \item Media del ensemble de 10~muestras → predicción puntual.
-  \item Desviación estándar del ensemble → incertidumbre epistémica.
-  \item Cabeza de varianza (NLL gaussiana) → incertidumbre aleatórica.
-  \item Métricas: CRPS, cobertura de intervalos, \textit{skill} diurno.
-  \item Diagnóstico de convergencia: autocorrelación de la cadena,
-        estadístico $\hat{R}$ de Gelman-Rubin (si se corren $\geq 2$ cadenas).
+  \item Desviación estándar del ensemble ($\sigma_\text{epi}$) → única
+        cantidad de incertidumbre reportada (no hay $\sigma_\text{ale}$).
+  \item Intervalo $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$, evaluado en
+        cobertura diurna a 80/90/95\%. Debe leerse como cota inferior de la
+        incertidumbre total, no como intervalo completo.
 \end{itemize}
 
 % ================================================================
 \section{Resultados Actuales}
+\label{sec:resultados}
 % ================================================================
 
 \subsection{Tabla de resultados — Optuna v1 completado}
@@ -705,12 +769,12 @@ Los modelos DL reportan media $\pm$ desviación estándar sobre 4~semillas.
     GraphSAGE+LSTM (Opt.) & 6h & $\mathbf{206.1\pm7.4}$ & $\mathbf{+0.636\pm0.013}$
                                 && $274.4\pm3.9$  & $+0.417\pm0.008$ \\
     \midrule
-    FlatMLP (Opt.)        & 1h & \multicolumn{2}{c}{\textit{en curso}} &&
-                                  \multicolumn{2}{c}{\textit{en curso}} \\
-    FlatMLP (Opt.)        & 3h & \multicolumn{2}{c}{\textit{en curso}} &&
-                                  \multicolumn{2}{c}{\textit{completo}} \\
-    FlatMLP (Opt.)        & 6h & \multicolumn{2}{c}{\textit{pendiente}} &&
-                                  \multicolumn{2}{c}{\textit{en curso}} \\
+    FlatMLP (Opt.)        & 1h & \multicolumn{2}{c}{\textit{completo (4/4)}} &&
+                                  \multicolumn{2}{c}{\textit{completo (4/4)}} \\
+    FlatMLP (Opt.)        & 3h & \multicolumn{2}{c}{\textit{en curso (3/4)}} &&
+                                  \multicolumn{2}{c}{\textit{completo (4/4)}} \\
+    FlatMLP (Opt.)        & 6h & \multicolumn{2}{c}{\textit{pendiente (0/4)}} &&
+                                  \multicolumn{2}{c}{\textit{en curso (2/4)}} \\
     \bottomrule
   \end{tabular}
 \end{table*}
@@ -724,12 +788,18 @@ captura mejor los gradientes de borde de nube que entran al parche desde el
 margen, un fenómeno que el CNN modela con el mismo filtro traslación-equivariante
 en todas las posiciones.
 
-\paragraph{SARIMA supera a los modelos DL en Uniandes 6h.}
-$\text{Skill} = 0.435$ (SARIMA) vs.\ $0.417 \pm 0.008$ (GraphSAGE). El clima
-ecuatorial de Bogotá tiene un patrón diurno muy regular (nubosidad convectiva
-vespertina), lo que favorece los términos AR/MA estacionales del SARIMA
-en horizontes largos. Los modelos DL aportan valor solo en el horizonte de 3h
-($+0.376$ vs.\ $+0.353$).
+\paragraph{SARIMA nominalmente supera a los modelos DL en Uniandes 6h
+--- con una salvedad metodológica importante.}
+$\text{Skill} = 0.435$ (SARIMA) vs.\ $0.417 \pm 0.008$ (GraphSAGE). Pero
+\textbf{estos dos números no son directamente comparables}: SARIMA se evalúa
+sobre un subconjunto horario (cada hora exacta, $m=24$) con su propia
+persistencia recalculada sobre ese mismo subconjunto más grueso, mientras
+que persistencia/ResNet/GraphSAGE usan los datos a 10~min completos. La
+comparación cualitativa (SARIMA es competitivo en Uniandes 6h) sigue siendo
+razonable, pero no debe leerse como ``SARIMA le gana a GraphSAGE por
+0.018 de skill''. El clima ecuatorial de Bogotá tiene un patrón diurno muy
+regular (nubosidad convectiva vespertina), lo que favorece los términos
+AR/MA estacionales del SARIMA en horizontes largos de todas formas.
 
 \paragraph{Horizonte de 1h: ningún modelo supera consistentemente la persistencia en El Paso.}
 El RMSE de persistencia en El Paso 1h es bajo (204.4~W/m²) porque la irradiancia
@@ -738,76 +808,186 @@ sobre-suavizan la señal y pagan un costo en las muestras de nubosidad baja
 que dominan la distribución.
 
 % ================================================================
-\section{Estado de Experimentos (mayo 2026)}
+\section{Estado de Experimentos (16 de julio de 2026)}
 % ================================================================
 
 \begin{table}[H]
   \centering
-  \caption{Estado de todos los experimentos al 25 de mayo de 2026.}
+  \small
+  \caption{Estado de todos los experimentos al 16 de julio de 2026.}
   \label{tab:estado}
-  \begin{tabular}{lccl}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}lccp{6.2cm}@{}}
     \toprule
-    \textbf{Modelo} & \textbf{Completados} & \textbf{Objetivo} & \textbf{Observación} \\
+    \textbf{Modelo} & \textbf{Compl.} & \textbf{Obj.} & \textbf{Observación} \\
     \midrule
-    ResNet+LSTM (baseline)        & 30 / 30 & 30 & 2 sitios $\times$ 3H $\times$ 5 semillas \\
-    GraphSAGE+LSTM (baseline)     & 30 / 30 & 30 & Ídem \\
-    SARIMA                        &  2 /  2 &  2 & Ambos sitios $\checkmark$ \\
-    ResNet+LSTM (Optuna v1)       & 24 / 24 & 24 & Completo $\checkmark$; 4 semillas \\
-    GraphSAGE+LSTM (Optuna v1)    & 24 / 24 & 24 & Completo $\checkmark$; 4 semillas \\
-    FlatMLP (Optuna)              & 16 / 24 & 24 & H6 elpaso pendiente; corriendo \\
-    ResNet+LSTM (Optuna v2)       &  0 / 24 & 24 & \textbf{Pendiente de lanzar} \\
-    GraphSAGE+LSTM (Optuna v2)    &  0 / 24 & 24 & \textbf{Pendiente de lanzar} \\
-    Split CP (conformal)          &  0      & -- & Script implementado; falta ejecutar \\
-    SGLD                          &  0      & -- & Diseñado; implementación pendiente \\
+    ResNet+LSTM (baseline)     & 30/30 & 30 & Completo $\checkmark$ \\
+    GraphSAGE+LSTM (baseline)  & 30/30 & 30 & Completo $\checkmark$ \\
+    SARIMA                     &  2/2  &  2 & Completo $\checkmark$ \\
+    ResNet+LSTM (Optuna v1)    & 24/24 & 24 & Completo $\checkmark$; 20 trials, 4 semillas \\
+    GraphSAGE+LSTM (Optuna v1) & 24/24 & 24 & Completo $\checkmark$; 20 trials, 4 semillas \\
+    FlatMLP (Optuna)           & 17/24 & 24 & Faltan elpaso h6 (0/4), h3 seed13, uniandes h6 (2/4) \\
+    ResNet+LSTM (Optuna v2)    & 18/24 & 24 & 75 trials, 4 semillas; corriendo, casi listo \\
+    GraphSAGE+LSTM (Optuna v2) &  1/24 & 24 & 75 trials, 2 semillas. \textbf{Cuello de botella}: $\sim$59~min/trial, $\sim$7 semanas restantes al ritmo actual (aceptado) \\
+    Fusion ResNet+LSTM         &  3/12 & 12 & Satélite + tabular; corriendo en servidor \\
+    Fusion GraphSAGE+LSTM      &  0/12 & 12 & Aún no alcanzado en la cola del servidor \\
+    SGLD ResNet+LSTM           &  1/24 & 24 & Solo smoke test antiguo; falta correr con el fix \\
+    SGLD GraphSAGE+LSTM        &  0/24 & 24 & No iniciado \\
+    SGLD FlatMLP               &  0/24 & 24 & Los 4 completados antes ten\'ian el bug de divergencia (Secci\'on~\ref{sec:sgld_bug}); borrados, reiniciando con el fix \\
+    GraphSAGE P=64 (1 semilla) &  0/6  &  6 & Petición del asesor; cola secuencial corriendo (Sección~\ref{sec:p64}) \\
+    Split CP (conformal)       &   0   & -- & Código implementado; deprioritizado \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Experimentos v2 — por qué son importantes}
+\subsection{Experimentos v2 — estado y lección de concurrencia aprendida}
 
-Los runs \textbf{Optuna v2} incorporan \emph{todos} los cambios arquitectónicos
-recomendados por el asesor (Secciones~\ref{sec:resnet}--\ref{sec:gsage}) en
-un estudio con 100~trials. Se esperan mejoras respecto a v1 especialmente:
+Los runs \textbf{Optuna v2} incorporan los cambios arquitectónicos
+recomendados por el asesor (Secciones~\ref{sec:resnet}--\ref{sec:gsage}):
+\texttt{n\_lstm\_layers}, \texttt{l1\_reg}, y para GraphSAGE el grafo
+$k$-NN ponderado con \texttt{k\_neighbors} tunable. El estudio usa
+\textbf{75~trials} (no 100 como se planeaba) con 2~semillas $\{42,1\}$ en
+vez de 4, para compensar el mayor costo por trial del espacio extendido.
+
+\textbf{Lección de julio:} el pipeline original lanzaba 4~ventanas
+concurrentes (\texttt{resnet\_optuna\_v2}/\texttt{gsage\_optuna\_v2} $\times$
+elpaso/uniandes) sobre una sola GPU de 16GB en el servidor. Al llegar a la
+fase de fusión (modelos más grandes), esto causaba fallos en cascada por
+CUDA OOM (\texttt{DataLoader worker exited unexpectedly}), marcados
+silenciosamente como \texttt{[FAIL]} por el wrapper sin detener el resto del
+pipeline — se perdieron varios días de cómputo en combos que morían a mitad
+de camino sin que nadie lo notara. \texttt{run\_sequential.sh} se reescribió
+para usar \textbf{solo 2 ventanas concurrentes} (familia ResNet y familia
+GraphSAGE), cada una procesando sus sitios en serie en vez de en paralelo.
+Desde el cambio, la GPU del servidor se mantiene sana (40--70\%, 5--10GB de
+16GB) sin más fallos de este tipo.
+
+También se agregó precarga de todo el patch store a RAM antes de crear el
+\texttt{DataLoader} (elimina I/O de disco repetido por época) y se conectó
+el \texttt{MedianPruner} de Optuna, que estaba configurado pero nunca podaba
+nada porque \texttt{trial.report()} no se llamaba dentro del loop.
+
+\subsection{Arquitectura de fusión (satélite + superficie)}
+\label{sec:fusion}
+
+Nueva línea de trabajo, no cubierta en el artículo actual: \texttt{FusionResNetLSTM}
+y \texttt{FusionGraphSAGE\_LSTM} combinan el encoder espacial satelital
+existente con $D_\text{tab}=9$ características tabulares de superficie
+(proyectadas con un \texttt{tabular\_projector}) antes del LSTM temporal.
+Corriendo en el servidor (75 trials por combo): \texttt{fusion\_resnet\_lstm}
+en 3/12, \texttt{fusion\_graphsage\_lstm} en 0/12 — la ventana de GraphSAGE
+del servidor aún no llega a esta fase por el atraso de v2.
+
+\subsection{Prueba de resolución de patch P=64 (petición del asesor)}
+\label{sec:p64}
+
+El asesor pidió probar si aumentar la resolución espacial del patch mejora
+el pronóstico, con una sola semilla. Hallazgo clave: \textbf{no hace falta
+reprocesar los datos crudos de GOES-16} — el archivo intermedio por hora ya
+guarda la grilla completa de $256\times256$ píxeles; el patch store actual
+($P=16$) es solo un recorte centrado en el sitio. Aumentar a $P=64$ es
+simplemente re-correr el recorte con una ventana más grande sobre datos que
+ya están en disco (extracción de los 30\,942 archivos de ambos sitios en
+$\sim$23~minutos).
+
+\textbf{Protocolo:} GraphSAGE-LSTM, ambos sitios, 3~horizontes, semilla~42,
+20~trials por combo (mismo protocolo que v1, para comparabilidad directa
+contra la Tabla~\ref{tab:resultados}).
+
+\textbf{Problema encontrado:} con $P=64$ el grafo pasa de 256 a 4096~nodos.
+Un solo trial (según \texttt{hidden\_g}/\texttt{n\_sage\_layers}/\texttt{batch\_size})
+puede ocupar los 11.5GB completos de la GPU local. Se probó con 6~combos y
+luego 2~combos concurrentes: ambas veces la memoria (RAM del sistema o VRAM)
+se agotó, causando desde reinicios del sistema operativo hasta que el
+OOM~killer matara VSCode y uno de los procesos de entrenamiento. Además, el
+\texttt{objective()} de Optuna no capturaba \texttt{OutOfMemoryError}, así
+que un solo trial que se quedara sin memoria mataba el estudio completo
+(sin \texttt{storage} persistente, se perdía todo el progreso previo).
+
+\textbf{Fix aplicado:} se agregó \texttt{try/except} alrededor de
+\texttt{train\_one\_model()} en \texttt{06\_graphsage\_lstm\_optuna.py} que
+captura \texttt{OutOfMemoryError} y poda el trial (\texttt{optuna.TrialPruned})
+en vez de matar el proceso. Los 6~combos ahora corren \textbf{uno a la vez}
+vía \texttt{scripts/run\_gsage\_p64\_queue.sh}, que encadena automáticamente
+el siguiente combo cuando termina el anterior.
+
+\textbf{Ritmo observado:} cada época tarda $\sim$1700--2200s ($\sim$6--8$\times$
+más lento que $P=16$, consistente con 16$\times$ más nodos). Estimado:
+$\sim$45~horas por combo, $\sim$11~días para completar los 6 — aceptado
+explícitamente en vez de recortar trials o alcance.
+
+% ================================================================
+\section{Progreso del artículo}
+\label{sec:paper_progress}
+% ================================================================
+
+En paralelo a los experimentos, se hizo una revisión completa del artículo
+(\texttt{docs/article/}), verificando cada afirmación contra los
+\texttt{summary.json} reales en vez de confiar en el texto heredado:
+
 \begin{itemize}[leftmargin=1.5em, noitemsep]
-  \item ResNet: el LSTM apilado ($n=2$) puede capturar dependencias temporales
-        de largo rango en la secuencia de 24~frames.
-  \item GraphSAGE: $k < 8$ podría ser óptimo para El Paso (baja variabilidad,
-        menor dependencia espacial de largo alcance), mientras que $k = 12$
-        o $k = 16$ podría serlo para Uniandes (frentes nubosos con mayor
-        extensión espacial).
+  \item \textbf{Gap de UQ corregido:} el artículo afirmaba en título, abstract,
+        metodología, discusión y conclusión que existía una cabeza de
+        varianza gaussiana (NLL) para incertidumbre aleatórica. No existe en
+        el código — solo SGLD (epistémica) está implementado. Se reescribieron
+        las 7~secciones para reflejar solo SGLD, con la cabeza de varianza
+        documentada como trabajo futuro genuino, no como algo ya hecho.
+  \item \textbf{Inconsistencias numéricas corregidas} (verificadas contra
+        \texttt{summary.json}): el abstract/introducción decían
+        ``resultados preliminares de una sola semilla'' cuando la Tabla~2
+        ya tiene 4~semillas completas; el presupuesto de trials del baseline
+        decía 50 cuando en realidad fue 20 (igual que se corrigió arriba en
+        este documento); las épocas/patience de reentrenamiento final se
+        generalizaban a los 3~modelos cuando FlatMLP usa valores distintos
+        (35/10 vs.\ 30/8); una desviación estándar (ResNet-LSTM El Paso 3h)
+        se citaba como $\pm 0.090$ en tres lugares del texto pero la tabla
+        dice $\pm 0.104$ (convención poblacional vs.\ muestral); el conteo
+        de FlatMLP estaba desactualizado (16/24 en vez de 17/24); una
+        afirmación de ``60\%+ de reducción de RMSE'' mezclaba las cifras de
+        3h ($\sim$42\%) y 6h ($\sim$64\%).
+  \item \textbf{Verificado y confirmado correcto} (sin tocar): toda la
+        Tabla~2 (medias y desviaciones de RMSE/skill), la tabla de
+        persistencia, y las tres figuras contra sus captions.
+  \item \textbf{Boilerplate de Elsevier agregado:} el artículo no tenía
+        \textit{Declaration of Competing Interest} ni \textit{Data
+        Availability} — esta última es necesaria porque la introducción
+        promete un ``reproducible GOES-16 benchmark'' sin ningún enlace que
+        lo respalde. Ambas secciones se agregaron con el mismo estilo que
+        usa el resto del documento.
 \end{itemize}
 
-El comando para lanzar los 4~procesos en paralelo:
-\begin{lstlisting}
-nohup bash run_sequential.sh resnet_optuna_v2 elpaso   > logs/run_resnet_v2_elpaso.out   2>&1 &
-nohup bash run_sequential.sh resnet_optuna_v2 uniandes > logs/run_resnet_v2_uniandes.out 2>&1 &
-nohup bash run_sequential.sh gsage_optuna_v2  elpaso   > logs/run_gsage_v2_elpaso.out    2>&1 &
-nohup bash run_sequential.sh gsage_optuna_v2  uniandes > logs/run_gsage_v2_uniandes.out  2>&1 &
-\end{lstlisting}
-
-Los runs v1 no se tocan (la función \texttt{already\_done()} distingue el
-directorio raíz por arquitectura).
+Pendiente en el artículo: las tres tablas de datos que siguen vacías
+(FlatMLP, ablación $k$-NN de GraphSAGE, descomposición SGLD) — esto es
+enteramente cuestión de que terminen los experimentos, no de redacción.
 
 % ================================================================
 \section{Trabajo Pendiente — Priorizado}
 % ================================================================
 
 \begin{enumerate}[leftmargin=1.5em]
-  \item \textbf{[Inmediato]} Esperar que FlatMLP complete sus 24 runs
-        (actualmente 16/24). Reportar resultados de ablación.
-  \item \textbf{[Inmediato]} Ejecutar \texttt{07\_conformal\_explore.py}
-        sobre el mejor run de cada sitio-horizonte y registrar
-        $(\hat{q}, \hat{\text{cov}}_\text{day})$.
-  \item \textbf{[Corto plazo]} Lanzar los 4~procesos Optuna v2 (ver arriba).
-        Tiempo estimado: 4--5 días con GPU disponible.
-  \item \textbf{[Mediano plazo]} Implementar el loop SGLD sobre la arquitectura
-        GraphSAGE-LSTM (mejor modelo identificado).
-  \item \textbf{[Mediano plazo]} Actualizar tabla de resultados y figuras
-        del artículo con resultados v2 y MLP.
-  \item \textbf{[Largo plazo]} Etapa 2 UQ: CQR sobre las cabezas cuantílicas
-        de los modelos DL.
-  \item \textbf{[Largo plazo]} Etapa 3 UQ: Descomposición aleatórica/epistémica
-        con SGLD + cabeza de varianza.
+  \item \textbf{[Inmediato]} FlatMLP: 7~combos restantes de 24 (elpaso h6
+        completo, h3 seed13, uniandes h6 seeds 7/13).
+  \item \textbf{[Inmediato]} SGLD-MLP: relanzar los 24~combos con el prior
+        de precisión corregido (Sección~\ref{sec:sgld_bug}); actualmente en 0/24
+        tras borrar los runs divergentes.
+  \item \textbf{[Corto plazo]} ResNet Optuna v2: terminar los 6~combos
+        restantes (18/24, cerca).
+  \item \textbf{[Corto plazo]} Dejar correr la cola de GraphSAGE P=64
+        (Sección~\ref{sec:p64}, $\sim$11~días, uno a la vez).
+  \item \textbf{[Mediano/largo plazo]} GraphSAGE Optuna v2: el cuello de
+        botella real del proyecto (1/24, $\sim$7~semanas al ritmo actual).
+        Bloquea \texttt{fusion\_graphsage\_lstm} y el backbone final para
+        SGLD-GraphSAGE.
+  \item \textbf{[Mediano plazo]} Fusión satélite+superficie: seguir
+        corriendo \texttt{fusion\_resnet\_lstm} (3/12) y
+        \texttt{fusion\_graphsage\_lstm} (0/12, bloqueado por v2).
+  \item \textbf{[Mediano plazo]} SGLD para ResNet-LSTM y GraphSAGE-LSTM una
+        vez v2 defina el mejor backbone por sitio-horizonte.
+  \item \textbf{[Mediano/largo plazo]} Llenar las tres tablas vacías del
+        artículo (FlatMLP, ablación $k$-NN, descomposición SGLD) conforme
+        completen los experimentos correspondientes.
+  \item \textbf{[Backburner, no priorizado]} Split CP / CQR: código existe
+        pero no se ha ejecutado ni se planea usar en el artículo actual.
 \end{enumerate}
 
 % ================================================================
@@ -815,20 +995,34 @@ directorio raíz por arquitectura).
 % ================================================================
 
 Los modelos de aprendizaje profundo con información satelital superan
-consistentemente a la persistencia y a SARIMA en los horizontes de 3 y 6~horas
+consistentemente a la persistencia en los horizontes de 3 y 6~horas
 (reducciones de RMSE del orden del 37--64\%), con GraphSAGE-LSTM obteniendo el
 mejor resultado individual: $\text{Skill}_\text{day} = 0.636$ en El Paso 6h.
+Este resultado (grafo fijo de 8~vecinos, v1, ya completo) no ha cambiado.
 
 La recomendación del asesor de pasar a grafos $k$-NN ponderados está
 completamente implementada en el código y es el eje del estudio Optuna v2,
-que permitirá determinar empíricamente el radio de vecindad óptimo por sitio
-y horizonte. La regularización L1 y el LSTM apilado también están implementados
-y se explorarán sistemáticamente en v2.
+\textbf{actualmente corriendo} (ResNet casi listo, GraphSAGE muy atrasado
+por costo computacional del grafo más grande). La regularización L1 y el
+LSTM apilado también están implementados y en exploración activa en v2.
 
-Para la cuantificación de incertidumbre, el método seleccionado para la
-Etapa~3 es \textbf{SGLD}, que ofrece inferencia bayesiana aproximada sin
-los costos de BNN completas o la varianza alta de MC~Dropout, y produce
-muestras de la posterior que permiten diagnósticos de convergencia explícitos.
+Para la cuantificación de incertidumbre, SGLD (incertidumbre epistémica) está
+\textbf{implementado, corrido, y ya pasó por un ciclo completo de
+diagnóstico y corrección de un bug de divergencia} (Sección~\ref{sec:sgld_bug}) ---
+la lección central: los hiperparámetros de confinamiento de una cadena SGLD
+no son intercambiables con los de regularización de un entrenamiento Adam
+puntual, aunque tengan el mismo nombre (\texttt{weight\_decay}). Se decidió,
+además, no perseguir una cabeza de varianza separada para incertidumbre
+aleatórica por ahora: el artículo se reescribió para reflejar honestamente
+un alcance solo-epistémico en vez de prometer una descomposición completa
+que nunca se implementó.
+
+Una lección operativa transversal, repetida en dos frentes distintos
+(el pipeline de 4~ventanas del servidor y los 6~combos de GraphSAGE~P=64 en
+local): \textbf{correr más procesos en paralelo de los que la GPU/RAM
+disponible soporta produce fallos silenciosos o en cascada} (CUDA OOM,
+OOM~killer del sistema, hasta reinicios) que son mucho más costosos en
+tiempo que simplemente reducir la concurrencia desde el principio.
 
 % ================================================================
 % Bibliografía (solo si se integra con .bib externo)
