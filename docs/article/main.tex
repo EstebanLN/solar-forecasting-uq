@@ -6,7 +6,7 @@
 \usepackage[authoryear,longnamesfirst]{natbib}
 \usepackage{amsmath,amsfonts}
 \usepackage{graphicx}
-\graphicspath{{figures/}}
+\graphicspath{{figures/}{figures/tikz/}}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{caption}
@@ -101,15 +101,14 @@ forecasting, supporting robust, risk-aware operational deployment.
 % HIGHLIGHTS
 % =========================
 \begin{highlights}
-\item GraphSAGE-LSTM for GHI forecasting, with an ablation isolating fixed
-      vs.\ learned weighted $k$-NN spatial connectivity.
-\item Rigorous comparison against ResNet-LSTM, a flat-MLP baseline, and
-      persistence at two climatically contrasting Colombian sites.
-\item An epistemic uncertainty-quantification layer via SGLD posterior
-      sampling, flagging forecasts made under data-scarce or atypical
+\item GraphSAGE-LSTM for GHI forecasting, with a fixed vs.\ learned $k$-NN
+      graph ablation.
+\item Compared against ResNet-LSTM, FlatMLP, and persistence at two
+      Colombian sites.
+\item An SGLD-based epistemic uncertainty layer flags data-scarce forecast
       conditions.
-\item A reproducible GOES-16 benchmark for tropical Andean solar forecasting,
-      a climate regime underrepresented in the literature.
+\item A reproducible GOES-16 benchmark for underrepresented tropical Andean
+      climates.
 \end{highlights}
 
 % =========================
@@ -117,10 +116,8 @@ forecasting, supporting robust, risk-aware operational deployment.
 % =========================
 \begin{keywords}
 Solar irradiance forecasting \sep GOES-16 \sep graph neural networks \sep
-GraphSAGE \sep LSTM \sep deep learning \sep uncertainty quantification \sep
-epistemic uncertainty \sep Bayesian deep learning \sep
-Stochastic Gradient Langevin Dynamics \sep tropical climate \sep
-renewable energy integration
+GraphSAGE \sep LSTM \sep epistemic uncertainty \sep
+Stochastic Gradient Langevin Dynamics \sep tropical climate
 \end{keywords}
 
 \maketitle
