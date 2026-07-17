@@ -154,7 +154,18 @@ point, visually flagged (hatched bars), rather than in Table~\ref{tab:main}.
 ResNet-LSTM is an encoder--decoder that treats each satellite frame as a
 conventional multi-channel image and lets a convolutional network learn its
 spatial representation, before a recurrent network reasons over the sequence
-of representations.
+of representations (Figure~\ref{fig:arch-resnet}).
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig_arch_resnet_lstm}
+  \caption{ResNet-LSTM architecture. Each of the $L=24$ satellite frames is
+           encoded independently by a shared lightweight ResNet, producing a
+           per-frame embedding $\mathbf{e}_\ell$; the resulting sequence is
+           processed by an LSTM and a final MLP head to produce the point
+           forecast $\hat{y}$.}
+  \label{fig:arch-resnet}
+\end{figure*}
 
 \textbf{Spatial encoder (per frame).} Each frame $X_\ell \in \R^{C \times P
 \times P}$ ($\ell = 1,\ldots,L$) is passed independently through a lightweight
@@ -191,7 +202,19 @@ GraphSAGE-LSTM shares the same encoder--decoder skeleton as ResNet-LSTM ---
 spatial encoder per frame, then LSTM over the embedding sequence, then MLP
 head --- but \emph{replaces the convolutional encoder with a graph neural
 network} that treats individual pixels, rather than the whole frame, as the
-basic spatial unit.
+basic spatial unit (Figure~\ref{fig:arch-gsage}).
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig_arch_graphsage_lstm}
+  \caption{GraphSAGE-LSTM architecture. Each satellite frame is reshaped into
+           $N=256$ pixel-nodes and processed by $K$ stacked GraphSAGE layers
+           over a $k$-NN graph (fixed unweighted baseline or learned
+           distance-weighted variant, Section~\ref{ssec:gsage}); a mean
+           readout produces the per-frame graph embedding $\mathbf{g}_\ell$,
+           which feeds the same LSTM and MLP head as ResNet-LSTM.}
+  \label{fig:arch-gsage}
+\end{figure*}
 
 \textbf{From pixels to a graph.} Each $(C, P, P)$ frame is reshaped (by
 \texttt{GraphSeqDataset}, Section~\ref{sssec:manifest}) into $N = P^2 = 256$
@@ -275,7 +298,8 @@ protocol, and data pipeline.
 \label{ssec:mlp}
 
 To isolate the contribution of \emph{spatial} encoding from that of temporal
-modelling, FlatMLP discards all pixel-level spatial structure. For every
+modelling, FlatMLP discards all pixel-level spatial structure
+(Figure~\ref{fig:arch-mlp}). For every
 frame $X_\ell \in \R^{C \times P \times P}$, a global spatial average pool
 collapses the $P \times P$ grid to its per-channel mean, $\bar{\mathbf{x}}_\ell
 \in \R^{C}$ --- i.e.\ each frame is reduced to a 16-dimensional ``patch-mean
@@ -294,6 +318,17 @@ and is trained with the same protocol, its skill gap relative to ResNet-LSTM
 and GraphSAGE-LSTM directly quantifies how much of their forecasting skill
 stems from \emph{spatial} encoding of the satellite patch, as opposed to
 simple per-frame statistics processed over time.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig_arch_flatmlp}
+  \caption{FlatMLP architecture. Spatial encoding is reduced to a per-frame
+           global average pool (no convolution, graph, or recurrence over
+           space), so any skill gap relative to ResNet-LSTM or GraphSAGE-LSTM
+           is directly attributable to spatial encoding of the satellite
+           patch.}
+  \label{fig:arch-mlp}
+\end{figure}
 
 \subsection{Hyperparameter optimisation}
 \label{ssec:optuna}
