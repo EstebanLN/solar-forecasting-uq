@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--patch",         type=int,   default=16)
     p.add_argument("--n_trials",      type=int,   default=75)
     p.add_argument("--debug",         action="store_true")
-    p.add_argument("--num_workers",   type=int,   default=4)
+    p.add_argument("--num_workers",   type=int,   default=0)
     p.add_argument("--day_threshold", type=float, default=20.0)
     p.add_argument("--runs_root",       default=None,
                    help="Directorio raíz donde guardar los runs "
@@ -105,7 +105,11 @@ def make_objective(
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
         batch_size    = trial.suggest_categorical("batch_size", [8, 16, 32])
 
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=2, seed=seed, device=device)
+        # num_workers=0: see 06_resnet_lstm_optuna.py -- forking a DataLoader
+        # worker after this process has touched CUDA intermittently crashes
+        # with "CUDA error: initialization error". Patches are already
+        # preloaded to RAM, so this costs little.
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=0, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)

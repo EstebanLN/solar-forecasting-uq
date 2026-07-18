@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--patch",         type=int, default=16)
     p.add_argument("--n_trials",      type=int, default=75)
     p.add_argument("--debug",         action="store_true")
-    p.add_argument("--num_workers",   type=int, default=4)
+    p.add_argument("--num_workers",   type=int, default=0)
     p.add_argument("--day_threshold", type=float, default=20.0)
     p.add_argument("--runs_root",       default=None,
                    help="Directorio raíz donde guardar los runs "
@@ -89,7 +89,12 @@ def make_objective(
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
         batch_size    = trial.suggest_categorical("batch_size", [16, 32, 64])
 
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
+        # num_workers=0: with >0, forking a new DataLoader worker on a later
+        # trial (after this process has already used CUDA) intermittently
+        # raises "CUDA error: initialization error" from c10::ExchangeDevice
+        # inside the worker -- the known fork-after-cuda-init hazard. Data is
+        # already preloaded to RAM (preload_patch_cache), so this costs little.
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=0, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         if fusion:
