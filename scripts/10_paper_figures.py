@@ -267,7 +267,7 @@ def fig_timeseries() -> None:
     test_man = pd.read_parquet(SITE_DIR / "manifest_test.parquet")
     L        = read_history_steps_from_manifest(test_man)
     test_ds  = GraphSeqDataset(test_man, PATCHES_ROOT, normalizer)
-    loader   = make_loader(test_ds, batch_size=64, shuffle=False, num_workers=2,
+    loader   = make_loader(test_ds, batch_size=64, shuffle=False, num_workers=0,
                            device=DEVICE)
 
     print("[fig3] Running inference on test set …")

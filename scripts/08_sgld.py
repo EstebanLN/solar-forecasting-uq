@@ -122,7 +122,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--n_samples",       type=int, default=10,
                    help="Number of posterior checkpoints to collect")
     # Training misc
-    p.add_argument("--num_workers",     type=int, default=4)
+    p.add_argument("--num_workers",     type=int, default=0)
     p.add_argument("--day_threshold",   type=float, default=20.0)
     p.add_argument("--runs_root",       default=None,
                    help="Override output directory (default: runs/{arch}_sgld)")
@@ -310,7 +310,6 @@ def main() -> None:
         args.burn_in      = 3
         args.n_samples    = 2
         args.sample_every = 2
-        args.num_workers  = 0  # avoid subprocess spawn overhead in debug
 
     seed_everything(args.seed)
 
@@ -331,6 +330,11 @@ def main() -> None:
     val_ds   = DS(val_man,   PATCHES_ROOT, normalizer)
     test_ds  = DS(test_man,  PATCHES_ROOT, normalizer)
 
+    # num_workers=0 by default: forking a DataLoader worker after this process
+    # has touched CUDA can crash with "CUDA error: initialization error"
+    # (c10::cuda::ExchangeDevice) -- a real risk here given SGLD chains run
+    # for up to 1500 epochs in one process. Patches are already preloaded to
+    # RAM via preload_patch_cache(), so this costs little.
     train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=args.num_workers, seed=args.seed, device=DEVICE)
     val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
     test_loader  = make_loader(test_ds,  batch_size, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
