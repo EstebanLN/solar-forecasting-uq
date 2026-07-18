@@ -73,15 +73,15 @@ def preload_patch_cache(patches_root: Path) -> None:
     """Eagerly load every patch .npz file under *patches_root* into RAM.
 
     A full patch store is <1GB per site (P16), so it fits comfortably next to
-    model/optimizer state. Call this once in the main process, before building
-    the DataLoader — num_workers>0 forks the process, so workers inherit the
-    populated cache via copy-on-write and every load_patch_npz() call becomes
-    a dict lookup instead of a disk read + npz decompression.
+    model/optimizer state. Call this once in the main process, before training
+    starts, so every load_patch_npz() call becomes a dict lookup instead of a
+    disk read + npz decompression on every access, every epoch.
 
-    Why this matters: previously, caching was disabled inside worker processes
-    (to avoid an old OOM), but train_loader always runs with num_workers>0, so
-    in practice *no* caching ever applied — every patch was re-read from disk
-    on every access, every epoch.
+    Note: train_loader deliberately uses num_workers=0 (see the training
+    scripts), so this cache is read directly by the main process rather than
+    inherited by forked workers via copy-on-write — forking a DataLoader
+    worker after the process has touched CUDA can crash with "CUDA error:
+    initialization error", so workers are avoided rather than relied upon.
     """
     patches_root = Path(patches_root)
     n_loaded = 0
