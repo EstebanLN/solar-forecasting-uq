@@ -22,12 +22,15 @@ cannot.
 \textbf{GraphSAGE-LSTM} (fixed-graph variant) achieves the best skill among
 the deep-learning models at the 6-hour horizon at \emph{both} sites (El~Paso:
 $\skillday = 0.636$ vs.\ $0.614$ for ResNet-LSTM; Uniandes: $0.417$ vs.\
-$0.368$), with lower seed variance throughout, confirming that
-graph-structured neighbourhood aggregation on the pixel graph provides a
+$0.368$), with lower seed variance throughout. This is consistent with
+graph-structured neighbourhood aggregation on the pixel graph providing a
 more stable and expressive spatial representation than fixed convolutional
-filters even without learned edge weighting. Whether the learned,
-distance-weighted $k$-NN graph variant improves further on this result is the
-subject of an ongoing ablation (Table~\ref{tab:ablation}).
+filters even without learned edge weighting, though the two architectures are
+statistically indistinguishable at the 3-hour horizon at El~Paso
+(Section~\ref{sec:results}), so this advantage should not be assumed to hold
+uniformly across horizons. Whether the learned, distance-weighted $k$-NN
+graph variant improves further on this result is the subject of an ongoing
+ablation (Table~\ref{tab:ablation}).
 
 At the \textbf{tropical mountain site} (Uniandes), however, the absolute skill
 of every model is markedly lower than at El~Paso even at the most favourable

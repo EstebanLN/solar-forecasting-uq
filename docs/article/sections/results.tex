@@ -56,13 +56,13 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
     \multirow{2}{*}{ResNet-LSTM}
       & $\rmseday$ & $238.6 \pm 22.4$ & $238.5 \pm 42.7$ & $218.4 \pm 13.2$
                    & $246.7 \pm 4.1$ & $255.7 \pm 4.8$ & $297.9 \pm 8.8$ \\
-      & $\skillday$ & $\mathbf{-0.167} \pm 0.110$ & $+0.420 \pm 0.104$ & $+0.614 \pm 0.023$
+      & $\skillday$ & $\mathbf{-0.167} \pm 0.110$ & $\mathbf{+0.420} \pm 0.104$ & $+0.614 \pm 0.023$
                     & $\mathbf{+0.161} \pm 0.014$ & $+0.369 \pm 0.012$ & $+0.368 \pm 0.019$ \\
     \midrule
     \multirow{2}{*}{GraphSAGE-LSTM}
       & $\rmseday$ & $244.7 \pm 8.1$ & $238.9 \pm 15.9$ & $\mathbf{206.1} \pm 7.4$
                    & $250.8 \pm 5.1$ & $252.5 \pm 1.5$ & $274.4 \pm 3.9$ \\
-      & $\skillday$ & $-0.197 \pm 0.040$ & $\mathbf{+0.419} \pm 0.039$ & $\mathbf{+0.636} \pm 0.013$
+      & $\skillday$ & $-0.197 \pm 0.040$ & $+0.419 \pm 0.039$ & $\mathbf{+0.636} \pm 0.013$
                     & $+0.147 \pm 0.017$ & $\mathbf{+0.376} \pm 0.004$ & $\mathbf{+0.417} \pm 0.008$ \\
     \midrule
     \multirow{2}{*}{FlatMLP}
@@ -176,10 +176,12 @@ which create more structure for the models to exploit.
 
 \paragraph{3-hour horizon.}
 Both deep-learning models outperform persistence at El~Paso by approximately
-42\% ($\skillday \approx 0.42$ for both architectures, with GraphSAGE-LSTM
-marginally ahead at $+0.419 \pm 0.039$). The large standard deviation for
-ResNet-LSTM ($\pm 0.104$) reflects seed-to-seed variability, with some seeds
-achieving near-GraphSAGE performance and others considerably below.
+42\% ($\skillday \approx 0.42$ for both architectures: $+0.420 \pm 0.104$ for
+ResNet-LSTM versus $+0.419 \pm 0.039$ for GraphSAGE-LSTM, a difference well
+within one standard deviation and therefore not distinguishable at this
+horizon). The large standard deviation for ResNet-LSTM ($\pm 0.104$) reflects
+seed-to-seed variability, with some seeds achieving near-GraphSAGE performance
+and others considerably below.
 
 At Uniandes, GraphSAGE-LSTM attains the best skill at this horizon
 ($+0.376 \pm 0.004$), narrowly ahead of ResNet-LSTM ($+0.369 \pm 0.012$); both

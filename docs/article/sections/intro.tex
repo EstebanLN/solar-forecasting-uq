@@ -46,6 +46,16 @@ However, systematic comparisons of GNN-based and CNN-based encoders for GHI
 forecasting remain scarce, and none, to the best of our knowledge, address the
 tropical Andean climate.
 
+Separately from the choice of spatial encoder, most deep-learning forecasting
+pipelines report only a point estimate or, at best, a single symmetric
+prediction interval that does not distinguish irreducible cloud stochasticity
+from uncertainty arising from limited or atypical training data
+\cite{kendall2017}. This distinction is operationally relevant: a forecast
+produced under well-represented conditions and one produced under a rare or
+under-sampled cloud regime can carry the same nominal interval width while
+warranting different operational responses, yet a single interval cannot
+tell them apart.
+
 \subsection*{Contributions}
 
 This paper makes the following contributions:
@@ -79,15 +89,15 @@ This paper makes the following contributions:
   \item We introduce an \textbf{epistemic uncertainty-quantification layer}
         based on an ensemble of posterior weight samples obtained via
         Stochastic Gradient Langevin Dynamics (SGLD) \cite{welling2011},
-        which quantifies uncertainty due to limited or atypical training
+        designed to quantify uncertainty due to limited or atypical training
         data and finite model capacity \cite{kendall2017}. Unlike a single
-        symmetric prediction interval, this signal tells an operator
-        \emph{when} a forecast was produced under conditions the model has
-        not adequately learned, supporting a conservative fallback or
-        flagging the forecast for prioritised retraining, rather than
+        symmetric prediction interval, this signal is intended to tell an
+        operator \emph{when} a forecast was produced under conditions the
+        model has not adequately learned, supporting a conservative fallback
+        or flagging the forecast for prioritised retraining, rather than
         uniformly widening intervals regardless of cause.
 
-  \item We establish a \textbf{reproducible GOES-16 benchmark for tropical
+  \item We provide a \textbf{reproducible GOES-16 benchmark for tropical
         Andean sites}, including data manifests, patch extraction, model code,
         Optuna studies, the graph-construction ablation, the SGLD
         epistemic-uncertainty pipeline, and evaluation scripts, addressing

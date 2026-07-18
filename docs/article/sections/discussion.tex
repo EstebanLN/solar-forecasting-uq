@@ -3,7 +3,7 @@
 \label{sec:discussion}
 % =============================================================
 
-\subsection{Why does GraphSAGE outperform ResNet at longer horizons?}
+\subsection{Why does GraphSAGE outperform ResNet at the 6-hour horizon?}
 
 At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieves a 2.2-percentage-point
 skill improvement over ResNet-LSTM ($0.636$ vs.\ $0.614$). We hypothesise two
@@ -79,8 +79,12 @@ cloud-event detection as a preprocessing step.
 \begin{itemize}
   \item For \textbf{El~Paso-type sites} (high irradiance, moderate variability),
         GraphSAGE-LSTM with Optuna-tuned hyperparameters is the recommended model
-        at 3h and 6h horizons, reducing RMSE over persistence by approximately
-        42\% at 3h and over 60\% at 6h. At 1h, the system should fall back to
+        at 6h, reducing RMSE over persistence by approximately 60\%. At 3h, the
+        two architectures achieve statistically indistinguishable mean skill
+        (both $\skillday \approx 0.42$), but GraphSAGE-LSTM's substantially
+        lower seed-to-seed variance ($\pm 0.039$ vs.\ $\pm 0.104$ for
+        ResNet-LSTM) makes it the more reliable choice for production
+        deployment at that horizon. At 1h, the system should fall back to
         persistence or a light-weight nowcasting model.
 
   \item For \textbf{Uniandes-type sites} (tropical mountain, high convective
@@ -91,21 +95,17 @@ cloud-event detection as a preprocessing step.
         the most consistent top performer at 3h and 6h, but gains over
         persistence are smaller and more sensitive to careful hyperparameter
         tuning.
-
-  \item The high seed variance of ResNet-LSTM at El~Paso 3h ($\pm 0.104$) suggests
-        that multiple retraining runs should be averaged for production deployment,
-        or that GraphSAGE-LSTM should be preferred for its higher stability.
 \end{itemize}
 
 \subsection{Why epistemic uncertainty matters on its own}
 \label{ssec:uq_discussion}
 
-Grid operators require probabilistic outputs --- prediction intervals that
-are well-calibrated across conditions of varying cloud cover --- not just
-point estimates. Beyond calibration, however, the central premise of this
-work is that knowing \emph{whether the model itself is confident} in a
-forecast is operationally valuable, independent of the width of any
-interval.
+We argue that grid operators are better served by probabilistic outputs ---
+prediction intervals that are well-calibrated across conditions of varying
+cloud cover --- than by point estimates alone. Beyond calibration, however,
+the central premise of this work is that knowing \emph{whether the model
+itself is confident} in a forecast is operationally valuable, independent of
+the width of any interval.
 
 \textbf{Why interval width alone is not enough.} A prediction interval's
 width alone does not tell an operator whether the underlying model was well
@@ -138,12 +138,12 @@ The results presented here connect directly to operational decision-making in
 solar-integrated power systems.
 
 \textbf{Situational awareness under cloud-induced uncertainty.}
-GraphSAGE-LSTM, by learning spatially-aware representations of incoming cloud
-systems from satellite imagery, provides operators with earlier detection of
-impending irradiance ramps --- the primary source of generation-side
-uncertainty in PV-heavy grids. The 63.6\% RMSE reduction over persistence at
-6h for El~Paso translates to significantly tighter dispatch intervals and
-reduced reserve requirements.
+By learning spatially-aware representations of incoming cloud systems from
+satellite imagery, GraphSAGE-LSTM may support earlier detection of impending
+irradiance ramps --- the primary source of generation-side uncertainty in
+PV-heavy grids. The 63.6\% RMSE reduction over persistence at 6h for
+El~Paso translates to significantly tighter dispatch intervals and reduced
+reserve requirements.
 
 \textbf{Epistemic-aware dispatch.}
 The SGLD-based epistemic estimate (Section~\ref{ssec:uq}) converts any point
