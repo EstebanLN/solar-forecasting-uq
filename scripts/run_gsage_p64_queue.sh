@@ -1,22 +1,11 @@
 #!/usr/bin/env bash
 # Sequential runner for the GraphSAGE-LSTM P=64 single-seed probe.
 # Runs one combo at a time (a single P64 trial can use the whole 11.5GB GPU;
-# running >1 concurrently caused CUDA OOM crashes). Waits for the currently
-# running elpaso/h1 combo (PID 148752) to finish before starting the rest.
+# running >1 concurrently caused CUDA OOM crashes).
 set -e
 cd /srv/projects/Proyecto_e_ladino
 
-wait_pid() {
-    local pid=$1
-    while ps -p "$pid" > /dev/null 2>&1; do
-        sleep 30
-    done
-}
-
-echo "[queue] esperando a que termine elpaso h1 (PID 148752) ..."
-wait_pid 148752
-
-for combo in "elpaso 3" "elpaso 6" "uniandes 1" "uniandes 3" "uniandes 6"; do
+for combo in "elpaso 1" "elpaso 3" "elpaso 6" "uniandes 1" "uniandes 3" "uniandes 6"; do
     set -- $combo
     site=$1; hours=$2
     logfile="logs/gsage_p64_${site}_h${hours}_s42.log"
