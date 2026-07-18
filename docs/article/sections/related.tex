@@ -20,7 +20,11 @@ been applied to GHI series after removing the deterministic clear-sky envelope
 \cite{reikard2009,bacher2009}. Working on the clear-sky index $k_t = \text{GHI}/\ghics$
 improves stationarity and allows standard time-series machinery at hourly resolution.
 Despite their simplicity, seasonal ARIMA models can be competitive at multi-hour
-horizons in climates with regular diurnal patterns \cite{pedro2012}.
+horizons in climates with regular diurnal patterns \cite{pedro2012}. However,
+both persistence and statistical models rely solely on the recent univariate
+GHI history and cannot exploit the spatial structure of incoming cloud fields
+visible in satellite imagery, motivating approaches that ingest the imagery
+directly.
 
 \subsection{Deep learning with satellite imagery}
 
@@ -39,7 +43,11 @@ Transformers have also been applied to satellite-based solar forecasting
 \cite{acikgoz2022,liu2023}, achieving competitive performance at the cost of
 increased parameter count and data requirements. For moderate dataset sizes such
 as those encountered in single-site studies, CNN+LSTM hybrids remain a practical
-and well-characterised baseline.
+and well-characterised baseline. Despite their strong performance, however, both
+CNN and Transformer encoders impose a fixed, regular receptive field over the
+satellite patch, applying the same spatial template regardless of where the
+relevant cloud structure actually appears within it. Graph neural networks
+offer an alternative that relaxes this assumption.
 
 \subsection{Graph neural networks for spatial data}
 
@@ -69,7 +77,10 @@ conditions, motivating the present work.
 
 \subsection{Forecasting for power system operation and decision-making}
 
-Accurate short-term irradiance forecasts feed directly into operational
+Beyond the climate-representativeness gap identified above, a second,
+related limitation concerns how forecast uncertainty itself is communicated
+to the systems that ultimately consume these forecasts. Accurate short-term
+irradiance forecasts feed directly into operational
 decision-making for solar-integrated power systems: they support reserve
 scheduling, unit commitment, and demand-response triggers, reducing the cost
 of accommodating variable renewable generation \cite{energyrev2021}. For
@@ -91,8 +102,10 @@ interval cannot make on its own.
 
 \subsection{Uncertainty quantification in deep learning for forecasting}
 
-Bayesian deep learning provides a principled route to decomposing predictive
-uncertainty. \cite{kendall2017} formalise the aleatoric/epistemic split for
+Making the aleatoric/epistemic distinction operational requires a model that
+can actually produce both quantities, rather than a single undifferentiated
+interval. Bayesian deep learning provides a principled route to decomposing
+predictive uncertainty in this way. \cite{kendall2017} formalise the aleatoric/epistemic split for
 deep regression and segmentation, combining a heteroscedastic Gaussian
 negative-log-likelihood (NLL) head for aleatoric noise with Monte Carlo
 sampling over model weights for epistemic uncertainty. Approximate posterior
@@ -112,5 +125,6 @@ This work contributes to this literature by (i) developing spatially-aware
 deep learning for solar forecasting at tropical Andean sites that remain
 underrepresented in existing benchmarks, and (ii) applying SGLD-based
 epistemic uncertainty quantification to satellite-based GHI forecasting,
-flagging forecasts made under data-scarce or atypical conditions to support
-robust operational decisions that a single point forecast cannot provide.
+designed to flag forecasts made under data-scarce or atypical conditions in
+support of robust operational decisions that a single point forecast cannot
+provide.

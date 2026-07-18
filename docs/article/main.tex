@@ -68,9 +68,9 @@ captured by coarse-resolution numerical weather prediction models. This paper
 proposes a graph neural network framework for short-term GHI forecasting from
 GOES-16 geostationary satellite imagery and couples it with an
 \textbf{epistemic uncertainty-quantification layer} based on posterior weight
-samples obtained with Stochastic Gradient Langevin Dynamics (SGLD), flagging
-forecasts made under data-scarce or atypical conditions to support robust,
-risk-aware forecasting. We introduce \textbf{GraphSAGE-LSTM}, which
+samples obtained with Stochastic Gradient Langevin Dynamics (SGLD), designed
+to flag forecasts made under data-scarce or atypical conditions in support of
+robust, risk-aware forecasting. We introduce \textbf{GraphSAGE-LSTM}, which
 treats each satellite patch as a graph of spatially connected pixels and
 performs neighbourhood aggregation via GraphSAGE before passing the resulting
 embedding sequence through an LSTM; we compare a fixed unweighted
@@ -90,11 +90,11 @@ inform model selection in operational forecasting pipelines; the flat-MLP
 spatial ablation, the weighted-graph-construction ablation, and the
 SGLD-based epistemic-uncertainty results are still in progress and will be
 reported in full. This
-work establishes a reproducible GOES-16 benchmark for tropical Andean sites
+work provides a reproducible GOES-16 benchmark for tropical Andean sites
 --- a climate regime markedly underrepresented in the solar forecasting
 literature --- and contributes one of the first applications of SGLD-based
 epistemic uncertainty quantification to satellite-based solar
-forecasting, supporting robust, risk-aware operational deployment.
+forecasting, in support of robust, risk-aware operational deployment.
 \end{abstract}
 
 % =========================
