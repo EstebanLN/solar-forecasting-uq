@@ -268,7 +268,15 @@ weighted-neighbour summary before a shared linear projection and ReLU:
   \label{eq:sage}
 \end{equation}
 where $\mathcal{N}(v)$ denotes the neighbours of $v$ under whichever graph
-variant is in use, $\Vert$ is concatenation, and $\sigma$ is ReLU. For the
+variant is in use, $\Vert$ is concatenation, and $\sigma$ is ReLU. Two further
+implementation choices are left to Optuna rather than fixed a priori
+(\texttt{input\_bn}, \texttt{concat\_agg} in Table~\ref{tab:hpspace}): whether
+node features are passed through a BatchNorm1d layer before the first SAGE
+layer, and whether the aggregation step uses the concatenation of
+Eq.~\ref{eq:sage} or an additive alternative,
+$\mathbf{h}_v^{(k)} = \sigma(\mathbf{W}^{(k)}_\text{self}\mathbf{h}_v^{(k-1)} +
+\mathbf{W}^{(k)}_\text{nei}\,\overline{\mathbf{h}}_u^{(k-1)})$, which halves
+the number of parameters per layer relative to concatenation. For the
 fixed unweighted baseline, $w_{vu} = 1$ for all $(v,u) \in E$, reducing
 Eq.~\ref{eq:sage} to the standard unweighted SAGE neighbourhood mean; the two
 graph variants therefore share the same aggregation layer and differ only in
@@ -359,7 +367,9 @@ to 256 to increase capacity.
 For \textbf{GraphSAGE-LSTM}, the number of nearest neighbours
 ($k \in \{4, 8, 12, 16\}$) used to build the weighted pixel graph is
 additionally tunable, allowing the study to determine the optimal spatial
-connectivity for each site-horizon combination. The fixed-graph baseline
+connectivity for each site-horizon combination, together with the
+\texttt{input\_bn} and \texttt{concat\_agg} choices described in
+Section~\ref{ssec:gsage}. The fixed-graph baseline
 (Section~\ref{ssec:gsage}) is tuned with the same search space, excluding
 \texttt{k\_neighbors} since its topology is fixed a priori, and serves as the
 ablation reference for the value of learned spatial connectivity.
@@ -371,7 +381,11 @@ dropout, learning rate, and weight decay (50 trials).
   \caption{Optuna hyperparameter search spaces. L1 coefficient and LSTM depth are
            new relative to the initial baseline study. The \texttt{k\_neighbors}
            parameter determines the weighted $k$-NN graph built per trial for
-           GraphSAGE-LSTM.}
+           GraphSAGE-LSTM. \texttt{input\_bn} toggles the input BatchNorm1d
+           described below; \texttt{concat\_agg} toggles between the
+           concatenation-based aggregation of Eq.~\ref{eq:sage} and an additive
+           alternative (Section~\ref{ssec:gsage}) --- both are tuned per trial
+           rather than fixed a priori.}
   \label{tab:hpspace}
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lll}
@@ -383,6 +397,8 @@ dropout, learning rate, and weight decay (50 trials).
     \texttt{hidden\_t} (LSTM)                    & $\{64,128,192,256\}$                  & $\{64,96,128,192,256\}$               \\
     \texttt{n\_lstm\_layers}                     & $\{1,2\}$                             & $\{1,2\}$                             \\
     \texttt{k\_neighbors}                        & ---                                   & $\{4,8,12,16\}$                       \\
+    \texttt{input\_bn}                           & ---                                   & $\{\text{True},\text{False}\}$        \\
+    \texttt{concat\_agg}                         & ---                                   & $\{\text{True},\text{False}\}$        \\
     \texttt{l1\_reg}                             & $\{0,\,10^{-5},\,10^{-4},\,10^{-3}\}$& $\{0,\,10^{-5},\,10^{-4},\,10^{-3}\}$\\
     \texttt{dropout}                             & $\{0,0.1,0.2,0.3\}$                  & $\{0,0.1,0.2\}$                       \\
     \texttt{lr}                                  & $[3{\times}10^{-4},\;3{\times}10^{-3}]$ & $[5{\times}10^{-5},\;2{\times}10^{-3}]$ \\
