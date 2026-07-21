@@ -46,7 +46,11 @@ from solar_uq.data import (
     read_history_steps_from_manifest,
 )
 from solar_uq.metrics import eval_persistence, skill_score
-from solar_uq.models.graphsage_lstm import GraphSAGE_LSTM, build_weighted_knn_edge_index
+from solar_uq.models.graphsage_lstm import (
+    GraphSAGE_LSTM,
+    build_edge_index_8n,
+    build_weighted_knn_edge_index,
+)
 from solar_uq.models.mlp import FlatMLP
 from solar_uq.models.resnet_lstm import ResNetLSTM
 from solar_uq.train import seed_everything, eval_model
@@ -202,8 +206,19 @@ def build_model(
         )
 
     elif arch == "graphsage":
-        k = best_params.get("k_neighbors", 8)
-        edge_index, edge_weight = build_weighted_knn_edge_index(patch, k)
+        # best_params only contains "k_neighbors" for studies that actually
+        # tuned the weighted k-NN graph (the ablation, v2, introduced in the
+        # 2026-05-20 rewrite of 06_graphsage_lstm_optuna.py). Runs predating
+        # that ablation (v1, the fixed-graph baseline used in the paper's
+        # main results Table 2) were built with the fixed unweighted
+        # 8-neighbour grid (build_edge_index_8n) -- reconstructing them with
+        # a k-NN graph instead silently changes the topology (and, since the
+        # two graphs have different edge counts, makes the saved checkpoint
+        # fail to load with a size-mismatch error rather than a helpful one).
+        if "k_neighbors" in best_params:
+            edge_index, edge_weight = build_weighted_knn_edge_index(patch, best_params["k_neighbors"])
+        else:
+            edge_index, edge_weight = build_edge_index_8n(patch), None
         model = GraphSAGE_LSTM(
             in_dim=16,
             hidden_g=best_params["hidden_g"],
