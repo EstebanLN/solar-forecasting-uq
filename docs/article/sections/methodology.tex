@@ -133,9 +133,11 @@ serves as the standard benchmark for short-term solar forecasting.
 
 As a non-deep-learning reference, we fit a seasonal ARIMA model,
 SARIMAX$(2,1,2)(1,1,1)_{24}$, directly on the raw hourly GHI series at each
-site (order selected by grid search on validation AIC; no clear-sky
-normalisation is applied, so the model targets the same physical quantity,
-GHI in W/m$^2$, as every other model). Because a seasonal period of $m=144$
+site. A single order was selected via AIC/BIC grid search (documented
+separately) and applied uniformly at both sites, rather than re-selected
+per site, to keep the classical-statistical reference comparable across
+sites; no clear-sky normalisation is applied, so the model targets the same
+physical quantity, GHI in W/m$^2$, as every other model. Because a seasonal period of $m=144$
 (10-minute native resolution) is computationally intractable over the
 multi-year training window, the satellite-resolution series is first
 resampled to hourly cadence ($m=24$), and SARIMA is therefore evaluated only
@@ -209,7 +211,7 @@ basic spatial unit (Figure~\ref{fig:arch-gsage}).
   \includegraphics[width=0.85\textwidth]{fig_arch_graphsage_lstm}
   \caption{GraphSAGE-LSTM architecture. Each satellite frame is reshaped into
            $N=256$ pixel-nodes and processed by $K$ stacked GraphSAGE layers
-           over a $k$-NN graph (fixed unweighted baseline or learned
+           over a $k$-NN graph (fixed unweighted baseline or tuned
            distance-weighted variant, Section~\ref{ssec:gsage}); a mean
            readout produces the per-frame graph embedding $\mathbf{g}_\ell$,
            which feeds the same LSTM and MLP head as ResNet-LSTM.}
@@ -225,7 +227,7 @@ grid and reused for every frame and every sample; the edge index and weights
 are precomputed once, registered as model buffers, and replicated across the
 batch dimension, so the same mini-batch \texttt{DataLoader} and training loop
 used for ResNet-LSTM apply unchanged. We compare two graph-construction
-variants, isolating the contribution of \emph{learned spatial connectivity}
+variants, isolating the contribution of \emph{tuned spatial connectivity}
 to forecasting skill (ablation reported in Section~\ref{sec:results}):
 
 \begin{itemize}
@@ -233,20 +235,23 @@ to forecasting skill (ablation reported in Section~\ref{sec:results}):
         8 immediate grid neighbours (cardinal and diagonal) with unit edge
         weight, the standard local-connectivity topology used in early graph
         convolutional networks applied to image-like data.
-  \item \textbf{Learned weighted $k$-NN graph (proposed).} Each node connects
+  \item \textbf{Tuned weighted $k$-NN graph (proposed).} Each node connects
         to its $k$ closest pixels by Euclidean distance in 2-D pixel
         coordinates ($k \in \{4,8,12,16\}$, tuned per site/horizon,
-        Section~\ref{ssec:optuna}), and every edge is assigned an
+        Section~\ref{ssec:optuna}), and every edge is assigned a fixed
         inverse-distance weight $w_{vu} = 1/d(v,u)$
-        (Eq.~\ref{eq:edge_weight} below). Larger $k$ values progressively add
-        diagonal, two-step, and knight-move neighbours, so $k$ effectively
-        controls the spatial receptive field of a single graph layer. Unlike
-        the fixed baseline or a convolutional filter, this topology lets the
-        model learn \emph{different} aggregation weights for
-        differently-located pixels (e.g.\ patch centre vs.\ periphery), rather
-        than sliding one shared template across the image, and lets Optuna
-        select the neighbourhood size that best matches each site's cloud
-        spatial scale.
+        (Eq.~\ref{eq:edge_weight} below) --- the edge weights themselves are
+        a deterministic function of pixel geometry, not a trainable
+        parameter; only the neighbourhood size $k$ is selected by Optuna.
+        Larger $k$ values progressively add diagonal, two-step, and
+        knight-move neighbours, so $k$ effectively controls the spatial
+        receptive field of a single graph layer. Unlike the fixed baseline
+        or a convolutional filter, this topology lets the \emph{trainable}
+        GraphSAGE weights $\mathbf{W}^{(k)}$ (Eq.~\ref{eq:sage}) apply
+        \emph{different} effective aggregation to differently-located pixels
+        (e.g.\ patch centre vs.\ periphery), rather than sliding one shared
+        template across the image, and lets Optuna select the neighbourhood
+        size that best matches each site's cloud spatial scale.
 \end{itemize}
 
 \begin{equation}
@@ -297,12 +302,12 @@ are normalised and stacked into $(\mathbf{g}_1,\ldots,\mathbf{g}_L) \in
 hidden state feeds an identical MLP head producing $\hat{y}$. The two
 architectures are thus directly comparable: they differ \emph{only} in how
 the per-frame spatial embedding is produced --- convolution-and-downsampling
-over a regular grid (ResNet) versus weighted message-passing over a learned
+over a regular grid (ResNet) versus weighted message-passing over a tuned
 $k$-NN pixel graph at full $256$-node resolution, with no spatial downsampling
 (GraphSAGE) --- while sharing the same temporal model, output head, training
 protocol, and data pipeline.
 
-\subsubsection{FlatMLP: temporal-only ablation}
+\subsubsection{FlatMLP: spatial-ablation baseline}
 \label{ssec:mlp}
 
 To isolate the contribution of \emph{spatial} encoding from that of temporal
@@ -323,9 +328,13 @@ to every unit in the next (a standard dense MLP), with no recurrence, no
 convolution, and no graph structure. Because FlatMLP receives exactly the
 same $L\times C \times P \times P$ input tensors (via \texttt{PatchSeqDataset})
 and is trained with the same protocol, its skill gap relative to ResNet-LSTM
-and GraphSAGE-LSTM directly quantifies how much of their forecasting skill
-stems from \emph{spatial} encoding of the satellite patch, as opposed to
-simple per-frame statistics processed over time.
+and GraphSAGE-LSTM provides an approximate estimate of how much of their
+forecasting skill stems from \emph{spatial} encoding of the satellite patch,
+as opposed to simple per-frame statistics processed over time. Note that
+FlatMLP also replaces the shared LSTM with a feed-forward network over the
+concatenated sequence, so its skill gap reflects the joint loss of spatial
+structure \emph{and} of the recurrent temporal model, not spatial encoding
+in isolation (Section~\ref{sec:discussion}, Limitations).
 
 \begin{figure}[t]
   \centering
@@ -372,7 +381,7 @@ connectivity for each site-horizon combination, together with the
 Section~\ref{ssec:gsage}. The fixed-graph baseline
 (Section~\ref{ssec:gsage}) is tuned with the same search space, excluding
 \texttt{k\_neighbors} since its topology is fixed a priori, and serves as the
-ablation reference for the value of learned spatial connectivity.
+ablation reference for the value of tuned spatial connectivity.
 For \textbf{FlatMLP}, the study searches over MLP depth, hidden dimension,
 dropout, learning rate, and weight decay (50 trials).
 
@@ -409,9 +418,16 @@ dropout, learning rate, and weight decay (50 trials).
 \end{table*}
 
 The Optuna study identifies the best trial on validation $\rmseday$; the
-winning configuration is then retrained with a longer epoch budget and
-increased patience (ResNet-LSTM and GraphSAGE-LSTM: 30~epochs, patience~8;
-FlatMLP: 35~epochs, patience~10) and evaluated on the held-out test set.
+winning configuration is then retrained from scratch with a longer epoch
+budget and increased patience (ResNet-LSTM and GraphSAGE-LSTM: 30~epochs,
+patience~8; FlatMLP: 35~epochs, patience~10), early-stopped on the same
+validation split, and evaluated on the held-out test set. Because the
+20-trial (50-trial for FlatMLP) Optuna budget is run independently
+\emph{per seed} (Section~\ref{ssec:optuna}), the four-seed statistics
+reported in Section~\ref{sec:results} reflect variability from both
+independent hyperparameter search outcomes and training stochasticity
+(weight initialisation, data shuffling) jointly, not training stochasticity
+alone under a single fixed hyperparameter configuration.
 
 \subsection{Training protocol}
 
@@ -420,8 +436,10 @@ loss on normalised targets ($y_\text{norm} = (y - \bar{y}) / s_y$, with $\bar{y}
 and $s_y$ estimated from the training set). Training uses early stopping with
 patience~6 during Optuna trials for ResNet-LSTM and GraphSAGE-LSTM (patience~7
 for FlatMLP) and the higher final-retraining patience noted above. Automatic
-Mixed Precision (AMP) is enabled when a GPU is available. Each experiment is
-replicated with four seeds
+Mixed Precision (AMP) is enabled when a GPU is available, except for SGLD
+posterior sampling (Section~\ref{ssec:uq}), which is run entirely in fp32 so
+that the injected Langevin noise is not distorted by mixed-precision loss
+scaling. Each experiment is replicated with four seeds
 $\{42, 1, 7, 13\}$ to report mean~$\pm$~std statistics, except the weighted
 $k$-NN ablation, which uses two seeds $\{42, 1\}$ as noted in
 Section~\ref{ssec:optuna}.
@@ -429,8 +447,10 @@ Section~\ref{ssec:optuna}.
 \subsection{Uncertainty quantification: epistemic uncertainty via SGLD posterior sampling}
 \label{ssec:uq}
 
-The best-performing backbone identified in Sections~\ref{ssec:resnet}--\ref{ssec:mlp}
-is extended into a probabilistic model that quantifies \emph{epistemic}
+The best-performing architecture and hyperparameter configuration identified
+in Sections~\ref{ssec:resnet}--\ref{ssec:mlp} is retrained from a fresh
+initialisation under an SGLD posterior sampler, yielding a probabilistic
+model that quantifies \emph{epistemic}
 uncertainty \cite{kendall2017}: the reducible share of predictive uncertainty
 due to limited or atypical training data and finite model capacity, as
 opposed to the irreducible stochasticity of cloud formation itself
@@ -443,21 +463,37 @@ when a forecast should be treated cautiously (Section~\ref{sec:intro}).
 \textbf{Epistemic uncertainty: SGLD posterior sampling.}
 Standard SGD/Adam training returns a single point estimate $\hat\theta$ of
 the network weights. To approximate the posterior distribution
-$p(\theta \mid \mathcal{D})$ instead, we use Stochastic Gradient Langevin
-Dynamics (SGLD, \cite{welling2011}), which injects calibrated Gaussian noise
-into each gradient step:
+$p(\theta \mid \mathcal{D}) \propto \exp(-\mathcal{L}(\theta))\,p(\theta)$
+instead, we use Stochastic Gradient Langevin Dynamics (SGLD,
+\cite{welling2011}) under an isotropic Gaussian prior
+$p(\theta) = \mathcal{N}(0, \lambda^{-1}I)$ of fixed precision $\lambda$,
+which injects calibrated Gaussian noise into each confined gradient step:
 \begin{equation}
-  \theta_{t+1} = \theta_t - \epsilon_t \nabla_\theta \mathcal{L}(\theta_t)
-  + \sqrt{2\epsilon_t}\,\eta_t, \qquad \eta_t \sim \mathcal{N}(0, I),
+  \theta_{t+1} = \theta_t - \epsilon_t \bigl(\nabla_\theta \mathcal{L}(\theta_t)
+  + \lambda\,\theta_t\bigr) + \sqrt{2\epsilon_t}\,\eta_t, \qquad
+  \eta_t \sim \mathcal{N}(0, I),
   \label{eq:sgld}
 \end{equation}
-where $\epsilon_t$ is the (decaying) step size. Under suitable conditions on
-$\epsilon_t$, the resulting Markov chain asymptotically samples from
-$p(\theta \mid \mathcal{D})$ without the computational overhead of full MCMC.
-Following a burn-in period of $T_\text{burn-in}$ epochs (discarded, while the
-chain moves away from the SGD initialisation), we collect $T$ weight
-snapshots $\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval
-$\Delta$ (epochs), yielding an inexpensive approximate ensemble.
+where $\epsilon_t$ is the (decaying) step size and the $\lambda\theta_t$ term
+is the gradient of the negative log-prior, confining the chain around the
+origin rather than allowing an unconfined random walk. Under suitable
+conditions on $\epsilon_t$, the resulting Markov chain asymptotically samples
+from $p(\theta \mid \mathcal{D})$ without the computational overhead of full
+MCMC. We fix $\lambda = 100$ throughout, chosen independently of the
+Optuna-tuned Adam weight decay used to obtain $\hat\theta$ in
+Sections~\ref{ssec:resnet}--\ref{ssec:mlp}: the confined chain's stationary
+variance scales as $1/\lambda$ and its relaxation timescale as
+$1/(\epsilon_t\lambda)$ steps, so reusing Adam's much smaller weight decay
+(${\sim}10^{-6}$) leaves the chain effectively unconfined and numerically
+divergent over the sampling budget used here, which we verified empirically
+before fixing $\lambda$ at this value. Training starts from a fresh random
+initialisation (using the architecture and hyperparameters of the winning
+Optuna trial, not its trained weights) and runs under the SGLD update rule
+throughout; following a burn-in period of $T_\text{burn-in} = 500$ epochs
+(discarded, while the chain moves from its random initialisation toward the
+confined posterior regime), we collect $T = 10$ weight snapshots
+$\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval of $\Delta = 100$
+epochs, yielding an inexpensive approximate ensemble.
 
 \textbf{Ensemble point forecast and epistemic variance.}
 For a test input $x$, each posterior sample $\theta_t$ produces a point
@@ -481,9 +517,51 @@ model's epistemic (weight-posterior) disagreement and should not be
 interpreted as a full predictive interval capturing irreducible cloud
 stochasticity as well (Section~\ref{sec:discussion}, Limitations).
 
+\subsection{Toward full uncertainty disentanglement: a cooperative aleatoric
+variance network}
+\label{ssec:variance}
+
+The SGLD pipeline above quantifies epistemic uncertainty alone. Training a
+single network to output both a point forecast and its variance jointly is
+known to produce imbalanced gradients and overconfident variance estimates
+\citep{yi2025cooperative}; we are therefore extending the pipeline with the
+cooperative, sequential strategy of \citet{yi2025cooperative}, which trains
+a mean network, a variance network, and a Bayesian network in strict
+sequence rather than jointly. The mean network of this strategy is already
+the Optuna-tuned backbone of Sections~\ref{ssec:resnet}--\ref{ssec:mlp};
+here we describe the second component, an aleatoric variance network,
+currently being trained across the site-horizon-seed combinations for
+which a mean-network checkpoint is available.
+
+\textbf{Aleatoric variance network.} With the mean network $\hat\theta$
+from Sections~\ref{ssec:resnet}--\ref{ssec:mlp} frozen, we train a separate
+network of the same architecture family whose final layer is replaced by a
+two-unit head producing $(\alpha(x), \lambda(x))$, both mapped through a
+softplus to ensure positivity. Following the Gamma-likelihood
+reparameterisation of \citet{yi2025cooperative}, the network is trained to
+predict the squared residual $r(x) = (\hat\mu(x) - y)^2$ of the frozen mean
+network under a Gamma$(\text{shape}=\alpha(x), \text{rate}=\lambda(x))$
+likelihood, minimising the negative log-likelihood
+\begin{equation}
+  \mathcal{L}_\text{var} = \mathbb{E}\bigl[-\alpha(x)\log\lambda(x)
+  + \log\Gamma(\alpha(x)) - (\alpha(x)-1)\log r(x) + \lambda(x)\,r(x)\bigr],
+  \label{eq:gamma_nll}
+\end{equation}
+which yields the aleatoric variance as the Gamma distribution's mean,
+$\sigma^2_\text{a}(x) = \alpha(x)/\lambda(x)$. Training only on daytime
+samples ($\text{GHI} \geq 20$~W/m²) keeps the variance network's target
+consistent with the daytime evaluation convention used throughout this
+paper. This component has been implemented and validated --- synthetic
+recovery of known Gamma parameters, and cross-checked residual statistics
+against the frozen backbone's own reported error --- and is currently being
+trained across the available backbones; integrating its output into a
+warm-started, variance-weighted SGLD sampler, completing the third
+component of the cooperative strategy, is ongoing work
+(Section~\ref{sec:conclusion}).
+
 \subsection{Evaluation metrics}
 
-Following standard practice in solar forecasting \cite{coimbra2013}, we report:
+Following standard practice in solar forecasting \cite{coimbra2013,zhang2015}, we report:
 
 \textbf{Daytime RMSE} ($\rmseday$, W/m²): RMSE computed only over test samples
 with observed $\text{GHI} \geq 20$~W/m², excluding night-time samples where all
@@ -495,4 +573,3 @@ models trivially predict zero.
   \label{eq:skill}
 \end{equation}
 A score of 0 indicates parity with persistence; positive values indicate improvement.
-We also report $\text{MAE}_\text{day}$ for completeness.

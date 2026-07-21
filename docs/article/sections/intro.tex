@@ -31,13 +31,13 @@ every 10~minutes at sub-kilometre resolution, making them well-suited for
 sub-hourly to hourly irradiance estimation and forecasting. The dominant paradigm
 couples a spatial feature extractor (applied to a patch of satellite pixels
 centred on the target site) with a temporal model that exploits the recent
-history of observed GHI or satellite state \cite{zhang2015,reno2016}.
+history of observed GHI or satellite state \cite{paletta2021,wang2019}.
 
 Deep learning has substantially advanced this paradigm. Convolutional neural
 networks (CNNs) applied to satellite patches learn translation-invariant spatial
 patterns associated with cloud regimes, and when combined with recurrent models
 such as LSTMs they achieve state-of-the-art performance on benchmark datasets
-\cite{alessandrini2015,huertas2018,paletta2021}. More recently, graph neural networks
+\cite{alessandrini2015,paletta2021}. More recently, graph neural networks
 (GNNs) have emerged as an alternative spatial encoder: by representing pixels as
 nodes in a graph and learning neighbourhood aggregation rules, GNNs relax the
 translation-invariance assumption of CNNs and can capture irregular spatial
@@ -58,7 +58,11 @@ tell them apart.
 
 \subsection*{Contributions}
 
-This paper makes the following contributions:
+Two gaps thus remain open in the literature reviewed above: whether
+graph-based spatial encoders offer any advantage over convolutional ones
+under tropical Andean cloud dynamics, and whether posterior-sampling-based
+epistemic uncertainty can reliably flag data-scarce forecasts in this same
+setting. This paper addresses both, with the following contributions:
 
 \begin{enumerate}
   \item We propose \textbf{GraphSAGE-LSTM}, a model that treats a GOES-16 satellite
@@ -66,25 +70,18 @@ This paper makes the following contributions:
         \cite{hamilton2017} over it, and passes the resulting sequence of graph
         embeddings through an LSTM to produce a point forecast of GHI at horizons
         of 1, 3, and 6~hours. We compare a fixed unweighted nearest-neighbour
-        graph against a learned, distance-weighted $k$-nearest-neighbour variant
+        graph against a tuned, distance-weighted $k$-nearest-neighbour variant
         with a tunable neighbourhood size, isolating the contribution of
-        \emph{learned spatial connectivity} to forecasting skill.
+        \emph{tuned spatial connectivity} to forecasting skill.
 
-  \item We conduct a \textbf{rigorous empirical comparison} across two climatologically
+  \item We conduct an \textbf{empirical comparison} across two climatologically
         distinct Colombian sites, three forecast horizons, and multiple random seeds,
         including Bayesian hyperparameter optimisation via Optuna \cite{akiba2019}
-        for GraphSAGE-LSTM, ResNet-LSTM, and a flat MLP spatial-ablation baseline,
-        together with the graph-construction ablation described above.
-
-  \item Four-seed results indicate that GraphSAGE-LSTM is
-        \textbf{competitive with or superior to ResNet-LSTM} among the
-        deep-learning models at multi-hour horizons at both sites, while the
-        absolute skill of both models is markedly lower at the climatologically
-        harder high-altitude site --- evidence that site-specific cloud
-        dynamics, not just model architecture, govern attainable forecasting
-        skill. The flat-MLP spatial ablation and the graph-construction
-        ablation isolating learned spatial connectivity are in progress
-        (Section~\ref{sec:results}).
+        for GraphSAGE-LSTM, ResNet-LSTM, and a FlatMLP spatial-ablation baseline,
+        together with the graph-construction ablation described above; holding
+        data, splits, temporal model, and training protocol fixed across
+        architectures enables a controlled attribution of skill differences to
+        the choice of spatial encoder.
 
   \item We introduce an \textbf{epistemic uncertainty-quantification layer}
         based on an ensemble of posterior weight samples obtained via
@@ -105,6 +102,15 @@ This paper makes the following contributions:
         --- with epistemic uncertainty quantification --- for Latin American
         and equatorial tropical contexts.
 \end{enumerate}
+
+Four-seed results (Section~\ref{sec:results}) indicate that GraphSAGE-LSTM is
+\textbf{competitive with or superior to ResNet-LSTM} among the deep-learning
+models at multi-hour horizons at both sites, while the absolute skill of both
+models is markedly lower at the climatologically harder high-altitude site,
+consistent with site-specific cloud dynamics shaping attainable forecasting
+skill alongside model architecture. The FlatMLP spatial ablation and the
+graph-construction ablation isolating tuned spatial connectivity are in
+progress (Section~\ref{sec:results}).
 
 \subsection*{Paper organisation}
 

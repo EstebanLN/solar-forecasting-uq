@@ -72,56 +72,13 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
   \end{tabular}}
   \par\smallskip
   \textit{\footnotesize GraphSAGE-LSTM rows use the \textbf{fixed unweighted
-  graph} variant (Section~\ref{ssec:gsage}); results for the learned weighted
+  graph} variant (Section~\ref{ssec:gsage}); results for the tuned weighted
   $k$-NN variant are in progress and reported separately in
   Table~\ref{tab:ablation}. FlatMLP results are pending completion of
   the four-seed sweep (Section~\ref{sec:discussion}, Limitations) and will be
   populated prior to submission; this row quantifies what fraction of
   deep-learning skill arises from spatial encoding versus temporal dynamics
   alone.}
-\end{table*}
-
-\FloatBarrier
-\subsection{Graph-construction ablation: fixed vs.\ learned spatial connectivity}
-\label{ssec:ablation}
-
-Table~\ref{tab:ablation} isolates the contribution of \emph{learned spatial
-connectivity} by comparing the fixed unweighted 8-neighbour graph (used for
-the GraphSAGE-LSTM rows of Table~\ref{tab:main}) against the learned,
-distance-weighted $k$-nearest-neighbour graph with Optuna-tuned neighbourhood
-size $k$ (Section~\ref{ssec:gsage}), holding the rest of the architecture,
-training protocol, and data pipeline fixed. The weighted-graph variant uses a
-reduced two-seed protocol (Section~\ref{ssec:optuna}); we report it alongside
-the four-seed fixed-graph baseline with this caveat rather than withholding
-it pending a full four-seed re-run.
-
-\begin{table*}[t]
-  \centering
-  \caption{Graph-construction ablation for GraphSAGE-LSTM. $\skillday$ relative
-           to persistence (higher is better). Fixed graph: mean~$\pm$~std over
-           4 seeds. Weighted $k$-NN graph: mean~$\pm$~std over 2 seeds
-           $\{42,1\}$ (Section~\ref{ssec:optuna}). \textit{[Weighted $k$-NN
-           ablation in progress; values to be populated as runs complete.]}}
-  \label{tab:ablation}
-  \setlength{\tabcolsep}{5pt}
-  \resizebox{\textwidth}{!}{%
-  \begin{tabular}{llcccccc}
-    \toprule
-    & & \multicolumn{3}{c}{\textbf{El Paso (César)}} &
-         \multicolumn{3}{c}{\textbf{Uniandes (Bogotá)}} \\
-    \cmidrule(lr){3-5}\cmidrule(lr){6-8}
-    \textbf{Graph variant} & \textbf{Metric} & \textbf{1h} & \textbf{3h} & \textbf{6h}
-                                              & \textbf{1h} & \textbf{3h} & \textbf{6h} \\
-    \midrule
-    Fixed unweighted, $k=8$ (4 seeds)
-      & $\skillday$ & $-0.197 \pm 0.040$ & $+0.419 \pm 0.039$ & $+0.636 \pm 0.013$
-                    & $+0.147 \pm 0.017$ & $+0.376 \pm 0.004$ & $+0.417 \pm 0.008$ \\
-    \midrule
-    \multirow{2}{*}{Weighted $k$-NN, tuned (2 seeds)}
-      & $\skillday$ & --- & --- & --- & --- & --- & --- \\
-      & best $k$ & --- & --- & --- & --- & --- & --- \\
-    \bottomrule
-  \end{tabular}}
 \end{table*}
 
 \begin{figure*}[t]
@@ -159,10 +116,53 @@ it pending a full four-seed re-run.
   \label{fig:rmse}
 \end{figure*}
 
+\FloatBarrier
+\subsection{Graph-construction ablation: fixed vs.\ tuned spatial connectivity}
+\label{ssec:ablation}
+
+Table~\ref{tab:ablation} isolates the contribution of \emph{tuned spatial
+connectivity} by comparing the fixed unweighted 8-neighbour graph (used for
+the GraphSAGE-LSTM rows of Table~\ref{tab:main}) against the tuned,
+distance-weighted $k$-nearest-neighbour graph with Optuna-tuned neighbourhood
+size $k$ (Section~\ref{ssec:gsage}), holding the rest of the architecture,
+training protocol, and data pipeline fixed. The weighted-graph variant uses a
+reduced two-seed protocol (Section~\ref{ssec:optuna}); we report it alongside
+the four-seed fixed-graph baseline with this caveat rather than withholding
+it pending a full four-seed re-run.
+
+\begin{table*}[t]
+  \centering
+  \caption{Graph-construction ablation for GraphSAGE-LSTM. $\skillday$ relative
+           to persistence (higher is better). Fixed graph: mean~$\pm$~std over
+           4 seeds. Weighted $k$-NN graph: mean~$\pm$~std over 2 seeds
+           $\{42,1\}$ (Section~\ref{ssec:optuna}). \textit{[Weighted $k$-NN
+           ablation in progress; values to be populated as runs complete.]}}
+  \label{tab:ablation}
+  \setlength{\tabcolsep}{5pt}
+  \resizebox{\textwidth}{!}{%
+  \begin{tabular}{llcccccc}
+    \toprule
+    & & \multicolumn{3}{c}{\textbf{El Paso (César)}} &
+         \multicolumn{3}{c}{\textbf{Uniandes (Bogotá)}} \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-8}
+    \textbf{Graph variant} & \textbf{Metric} & \textbf{1h} & \textbf{3h} & \textbf{6h}
+                                              & \textbf{1h} & \textbf{3h} & \textbf{6h} \\
+    \midrule
+    Fixed unweighted, $k=8$ (4 seeds)
+      & $\skillday$ & $-0.197 \pm 0.040$ & $+0.419 \pm 0.039$ & $+0.636 \pm 0.013$
+                    & $+0.147 \pm 0.017$ & $+0.376 \pm 0.004$ & $+0.417 \pm 0.008$ \\
+    \midrule
+    \multirow{2}{*}{Weighted $k$-NN, tuned (2 seeds)}
+      & $\skillday$ & --- & --- & --- & --- & --- & --- \\
+      & best $k$ & --- & --- & --- & --- & --- & --- \\
+    \bottomrule
+  \end{tabular}}
+\end{table*}
+
 \subsection{Horizon-by-horizon analysis}
 
 \paragraph{1-hour horizon.}
-Both deep-learning models fail to beat persistence at El~Paso: ResNet-LSTM
+Both deep-learning models fail to beat persistence at El~Paso (Figure~\ref{fig:skill}): ResNet-LSTM
 ($\skillday = -0.167 \pm 0.110$) and GraphSAGE-LSTM ($-0.197 \pm 0.040$) show
 negative skill, meaning they produce higher RMSE than simply repeating the last
 observation. At Uniandes the picture is more favourable: ResNet-LSTM achieves
@@ -189,7 +189,8 @@ are similar to each other and slightly below their El~Paso counterparts despite
 the higher absolute persistence error at this site.
 
 \paragraph{6-hour horizon.}
-This is the most favourable horizon for the deep-learning models.
+This is the most favourable horizon for the deep-learning models
+(Figures~\ref{fig:skill}--\ref{fig:rmse}).
 \textbf{GraphSAGE-LSTM achieves the best overall result}: $\rmseday = 206.1 \pm 7.4$~W/m²
 and $\skillday = 0.636 \pm 0.013$ at El~Paso, reducing the persistence RMSE by
 63.6\%. ResNet-LSTM is close ($0.614 \pm 0.023$) but consistently below GraphSAGE

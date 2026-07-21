@@ -9,21 +9,27 @@ At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieves a 2.2-percentage-poin
 skill improvement over ResNet-LSTM ($0.636$ vs.\ $0.614$). We hypothesise two
 mechanisms:
 
-\textbf{Irregular spatial structure.} At longer lead times, the relevant cloud
-signal migrates from the centre of the patch (where it directly causes GHI
-reduction) toward the periphery, where incoming cloud advection is reflected in
-the satellite channels. CNN filters, being translation-equivariant, apply the same
-spatial template across all positions; GraphSAGE, by contrast, learns separate
-aggregation rules that can weight distant pixels differently depending on their
-graph neighbourhood. This flexibility may be especially valuable for detecting
-cloud-edge gradients that precede GHI events.
+\textbf{Irregular spatial structure (hypothesis).} We hypothesise that, at
+longer lead times, the relevant cloud signal migrates from the centre of the
+patch (where it directly causes GHI reduction) toward the periphery, where
+incoming cloud advection would be reflected in the satellite channels. CNN
+filters, being translation-equivariant, apply the same spatial template
+across all positions; GraphSAGE, by contrast, learns separate aggregation
+rules that can weight distant pixels differently depending on their graph
+neighbourhood. This flexibility may be especially valuable for detecting
+cloud-edge gradients that precede GHI events, though we do not directly
+verify the hypothesised centre-to-periphery migration here (Section~\ref{sec:discussion}, Limitations).
 
-\textbf{Reduced redundancy.} The ResNet applies multiple stacked convolutions
-that effectively redundantly process the spatial information across layers; the
-GraphSAGE message-passing is applied once per hop and is less prone to
-over-smoothing at the patch scale ($P = 16$). The lower seed variance of
-GraphSAGE ($\pm 0.013$ vs.\ $\pm 0.023$ at El~Paso 6h) is consistent with a
-more stable loss landscape.
+\textbf{Reduced redundancy (hypothesis).} We further hypothesise that the
+ResNet's multiple stacked convolutions redundantly process spatial
+information across layers, while GraphSAGE's message-passing, applied once
+per hop, is less prone to over-smoothing at the patch scale ($P = 16$); we
+do not directly measure representation redundancy or over-smoothing here.
+The lower seed variance of GraphSAGE ($\pm 0.013$ vs.\ $\pm 0.023$ at
+El~Paso 6h) is consistent with a more stable loss landscape, though as noted
+in Section~\ref{ssec:optuna} this variance also reflects independently
+re-run hyperparameter search outcomes across seeds, not training
+stochasticity alone.
 
 \subsection{Why is forecasting skill lower at Uniandes than at El~Paso?}
 
@@ -43,14 +49,16 @@ in its own recent history and time-of-day, leaving comparatively less
 contribute --- which compresses the achievable skill ceiling for every model,
 spatially-aware or not.
 
-\textbf{Satellite signal saturation at longer horizons.} At 6 hours, the
-satellite patch observed at $t$ may carry little predictive information about
-the ground GHI at $t + 6\,\text{h}$: the cloud system that will eventually
-affect the site has often not yet entered the $16\times16$-pixel field of
-view, particularly at a site where convection forms locally through
-orographic lifting rather than advecting in from a stable upstream direction.
-This limits how much spatial encoding --- regardless of architecture --- can
-contribute at the longest horizon.
+\textbf{Satellite signal saturation at longer horizons (hypothesis).} At 6
+hours, the satellite patch observed at $t$ may carry little predictive
+information about the ground GHI at $t + 6\,\text{h}$: we hypothesise that
+the cloud system that will eventually affect the site has often not yet
+entered the $16\times16$-pixel field of view, particularly at a site where
+convection forms locally through orographic lifting rather than advecting in
+from a stable upstream direction. If so, this would limit how much spatial
+encoding --- regardless of architecture --- can contribute at the longest
+horizon; we do not directly measure cloud advection speed against the patch
+footprint here.
 
 This result suggests that \emph{site-specific climatological structure should
 inform both model design and expectation-setting}: in climates with strong,
@@ -65,9 +73,11 @@ The negative skill at 1-hour El~Paso (all DL models, $\skillday \approx -0.17$
 to $-0.20$) can be explained by the \emph{low persistence error}: at 204.4~W/m²,
 persistence is already very accurate because the predominantly clear-sky regime
 means irradiance rarely drops by more than a small fraction over 10 minutes.
-The DL models, trained to minimise MSE over the full distribution (including
-the occasional cloud event), learn a slightly smoothed version of the target
-trajectory that incurs higher error on the flat clear-sky majority.
+We hypothesise that the DL models, trained to minimise MSE over the full
+distribution (including the occasional cloud event), learn a slightly
+smoothed version of the target trajectory that incurs higher error on the
+flat clear-sky majority; we do not directly inspect residuals here to
+confirm this smoothing.
 
 A potential remedy is a loss function that differentially weights cloud events
 relative to the clear-sky envelope (e.g., scaling the per-sample MSE by the
@@ -79,7 +89,7 @@ cloud-event detection as a preprocessing step.
 \begin{itemize}
   \item For \textbf{El~Paso-type sites} (high irradiance, moderate variability),
         GraphSAGE-LSTM with Optuna-tuned hyperparameters is the recommended model
-        at 6h, reducing RMSE over persistence by approximately 60\%. At 3h, the
+        at 6h, reducing RMSE over persistence by approximately 63.6\%. At 3h, the
         two architectures achieve statistically indistinguishable mean skill
         (both $\skillday \approx 0.42$), but GraphSAGE-LSTM's substantially
         lower seed-to-seed variance ($\pm 0.039$ vs.\ $\pm 0.104$ for
@@ -96,6 +106,13 @@ cloud-event detection as a preprocessing step.
         persistence are smaller and more sensitive to careful hyperparameter
         tuning.
 \end{itemize}
+
+Within a site, the best architecture also depends on the horizon: persistence
+is hard to beat at 1h in the clear-sky-dominated El~Paso regime, while
+GraphSAGE-LSTM is the most consistent top performer at 3h and 6h at both
+sites. A horizon-aware portfolio strategy --- a light-weight nowcasting
+fallback at very short horizons, spatial deep learning at multi-hour horizons
+--- could optimise the accuracy-cost tradeoff for operational deployment.
 
 \subsection{Why epistemic uncertainty matters on its own}
 \label{ssec:uq_discussion}
@@ -156,29 +173,25 @@ $\sigma_\text{epi}$ as candidates for a more conservative fallback strategy
 or for prioritised inclusion in future retraining data --- a distinction
 unavailable from a point forecast alone.
 
-\textbf{Climate- and horizon-adaptive model selection.}
-The marked difference in absolute skill between El~Paso (up to $\skillday =
-0.636$ at 6h) and Uniandes (up to $0.417$) has a direct operational
-implication: forecasting pipelines should be benchmarked and calibrated
-locally rather than assuming that skill levels transfer across climates.
-Within a site, the best architecture also depends on the horizon ---
-persistence is hard to beat at 1h in the clear-sky-dominated El~Paso regime,
-while GraphSAGE-LSTM is the most consistent top performer at 3h and 6h at
-both sites. A horizon-aware portfolio strategy --- a light-weight nowcasting
-fallback at very short horizons, spatial deep learning at multi-hour horizons
---- could optimise the accuracy-cost tradeoff for operational deployment.
-
 \subsection{Limitations}
 
 \textbf{Geographic scope.} Both sites are located in Colombia and represent
 two tropical climate sub-types. Generalisation to other tropical or subtropical
 regions requires additional validation.
 
-\textbf{Flat MLP ablation in progress.} The FlatMLP experiments are currently
-completing their Optuna runs (17 of the 24 site $\times$ horizon $\times$ seed
+\textbf{FlatMLP ablation in progress.} The FlatMLP experiments are currently
+completing their Optuna runs (10 of the 24 site $\times$ horizon $\times$ seed
 configurations evaluated at the time of writing). Final results will be
 incorporated to quantify what fraction of deep-learning skill arises from
 spatial encoding versus temporal dynamics alone.
+
+\textbf{FlatMLP is not a pure spatial ablation.} Because FlatMLP also
+replaces the shared LSTM with a feed-forward network over the concatenated
+sequence (Section~\ref{ssec:mlp}), its skill gap relative to ResNet-LSTM and
+GraphSAGE-LSTM reflects the joint loss of spatial structure \emph{and} of
+the recurrent temporal model, and should be read as an approximate upper
+bound on the spatial-encoding contribution rather than a clean, single-factor
+estimate.
 
 \textbf{Graph-construction ablation uses fewer seeds.} The weighted $k$-NN
 GraphSAGE-LSTM variant (Table~\ref{tab:ablation}) is evaluated with two
@@ -195,15 +208,17 @@ tracks data scarcity (Section~\ref{ssec:uq_discussion}) is currently a
 hypothesis motivating the design, not yet an empirical finding; it will be
 assessed quantitatively once sampling completes.
 
-\textbf{No separate aleatoric uncertainty estimate.} This work quantifies
-only the epistemic (reducible, data-dependent) share of predictive
-uncertainty via the SGLD ensemble; it does not separately estimate the
-aleatoric (irreducible) uncertainty arising from genuine cloud stochasticity,
-e.g.\ via a heteroscedastic variance head. Consequently, the reported
-interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$ should be read as a
-lower bound on total predictive uncertainty rather than a fully calibrated
-interval; combining it with an explicit aleatoric component is a natural
-direction for future work (Section~\ref{sec:conclusion}).
+\textbf{No separate aleatoric uncertainty estimate yet integrated.} The
+results reported here quantify only the epistemic (reducible,
+data-dependent) share of predictive uncertainty via the SGLD ensemble;
+consequently, the reported interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$
+should be read as a lower bound on total predictive uncertainty rather than
+a fully calibrated interval. An aleatoric variance network
+(Section~\ref{ssec:variance}), following \citet{yi2025cooperative}'s
+cooperative strategy, is being trained separately across the available
+backbones, but its output is not yet integrated into the SGLD sampler or
+the reported interval; completing this integration to obtain a full
+aleatoric/epistemic decomposition is ongoing work (Section~\ref{sec:conclusion}).
 
 \textbf{Single-step output.} Current models produce a single-step forecast at
 horizon $H$. Simultaneous multi-step output (forecasts for all three horizons

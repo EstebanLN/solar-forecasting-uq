@@ -6,18 +6,21 @@
 We presented a graph neural network framework for satellite-based solar
 irradiance forecasting that addresses the situational-awareness needs of
 solar-integrated power system operators in tropical climates, with a focus on
-\emph{robust, uncertainty-aware} forecasting rather than point accuracy
+\emph{uncertainty-aware} forecasting rather than point accuracy
 alone. The key contributions are: (i) a GraphSAGE-LSTM architecture that
 explicitly models spatial cloud structure from GOES-16 patches, together with
-an ablation isolating the value of learned, distance-weighted spatial
-connectivity over a fixed local graph; (ii) a rigorous comparative evaluation
-against a ResNet-LSTM baseline, a flat-MLP spatial-ablation baseline, and
-persistence at two Colombian sites with contrasting climatic regimes; and
-(iii) an epistemic uncertainty-quantification layer --- based on Stochastic
+an ablation isolating the value of tuned, distance-weighted spatial
+connectivity over a fixed local graph; (ii) a comparative evaluation
+against a ResNet-LSTM baseline, a FlatMLP spatial-ablation baseline, and
+persistence at two Colombian sites with contrasting climatic regimes; (iii)
+an epistemic uncertainty-quantification layer --- based on Stochastic
 Gradient Langevin Dynamics (SGLD) posterior sampling --- that flags
 forecasts made under data-scarce or atypical conditions, supporting a
 conservative fallback or prioritised retraining that a point forecast alone
-cannot.
+cannot; and (iv) a reproducible GOES-16 benchmark --- data manifests, patch
+extraction, model code, Optuna studies, and evaluation scripts --- for a
+tropical Andean climate regime markedly underrepresented in the solar
+forecasting literature.
 
 \textbf{GraphSAGE-LSTM} (fixed-graph variant) achieves the best skill among
 the deep-learning models at the 6-hour horizon at \emph{both} sites (El~Paso:
@@ -25,19 +28,20 @@ $\skillday = 0.636$ vs.\ $0.614$ for ResNet-LSTM; Uniandes: $0.417$ vs.\
 $0.368$), with lower seed variance throughout. This is consistent with
 graph-structured neighbourhood aggregation on the pixel graph providing a
 more stable and expressive spatial representation than fixed convolutional
-filters even without learned edge weighting, though the two architectures are
+filters even without tuned edge weighting, though the two architectures are
 statistically indistinguishable at the 3-hour horizon at El~Paso
 (Section~\ref{sec:results}), so this advantage should not be assumed to hold
-uniformly across horizons. Whether the learned, distance-weighted $k$-NN
+uniformly across horizons. Whether the tuned, distance-weighted $k$-NN
 graph variant improves further on this result is the subject of an ongoing
 ablation (Table~\ref{tab:ablation}).
 
 At the \textbf{tropical mountain site} (Uniandes), however, the absolute skill
 of every model is markedly lower than at El~Paso even at the most favourable
-horizon ($\skillday \leq 0.42$ vs.\ $0.64$ at 6h), revealing that the strong
-diurnal autocorrelation of the Bogot{\'a} clear-sky cycle and the locally-driven
-nature of orographic convection limit the marginal benefit of satellite
-spatial features at this site. This finding has a direct operational
+horizon ($\skillday \leq 0.42$ vs.\ $0.64$ at 6h), consistent with the
+hypothesis that the strong diurnal autocorrelation of the Bogot{\'a}
+clear-sky cycle and the locally-driven nature of orographic convection limit
+the marginal benefit of satellite spatial features at this site
+(Section~\ref{sec:discussion}). This finding has a direct operational
 implication: model selection and skill expectations should be climate-aware,
 and forecasting pipelines should always be benchmarked and calibrated against
 the local persistence reference rather than assumed to transfer across sites.
@@ -57,10 +61,21 @@ scarcity. A natural extension is to use $\sigma_\text{epi}$ as an
 active-learning signal --- prioritising under-represented conditions for
 future data collection --- closing the loop between uncertainty
 quantification and dataset improvement. Complementing this epistemic
-estimate with an explicit aleatoric component --- e.g.\ a heteroscedastic
-Gaussian variance head trained jointly with the point-forecast backbone ---
-to obtain a full aleatoric/epistemic decomposition of predictive uncertainty
-is a natural and currently unimplemented direction for future work.
+estimate with an explicit aleatoric component is a natural direction for
+future work, now partly underway. Following \citet{yi2025cooperative}'s
+cooperative, sequential strategy --- rather than the naive approach of
+training a heteroscedastic variance head jointly with the point-forecast
+backbone, known to produce imbalanced gradients and overconfident variance
+estimates --- we have implemented and begun training the second of its
+three components (Section~\ref{ssec:variance}): with the existing
+Optuna-tuned backbone serving as the fixed mean network, a separate
+variance network is trained on the frozen mean's squared residuals via a
+Gamma-likelihood loss to obtain the aleatoric variance $\sigma^2_\text{a}(x)$.
+Remaining work is to warm-start the SGLD sampler of Section~\ref{ssec:uq}
+from the mean network's weights and re-run it under a Gaussian likelihood
+that uses this fixed $\sigma^2_\text{a}(x)$, so that the resulting posterior
+spread yields an epistemic variance $\sigma^2_\text{epi}(x)$ genuinely
+disentangled from aleatoric noise.
 
 \textbf{Additional planned work} includes completing the FlatMLP
 spatial-ablation sweep and the weighted $k$-NN graph-construction ablation
