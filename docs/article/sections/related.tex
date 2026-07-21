@@ -8,7 +8,7 @@ Short-term GHI forecasting methods span a wide spectrum from statistical time-se
 models to physically-based NWP and data-driven machine learning
 \cite{diagne2013,voyant2017}. For intra-hour and sub-day horizons (0--6~h),
 satellite-based and ground-observation methods generally outperform NWP, which
-requires several hours of spin-up time \cite{perez2013}.
+requires several hours of spin-up time \cite{perez2010}.
 
 \textbf{Persistence} (assuming future irradiance equals the most recent observation)
 is the standard benchmark for short-term forecasting. It is competitive at very
@@ -33,15 +33,15 @@ have become the dominant approach for satellite-based GHI forecasting. Early
 work showed that cloud-motion vectors extracted from visible channels improve
 short-term forecasts \cite{chow2011}. More recent studies feed raw satellite
 reflectances directly into CNNs followed by fully-connected regressors or LSTMs
-\cite{huertas2018,paletta2021,feng2022}. The encoder-decoder design, where a CNN
+\cite{acikgoz2022,paletta2021,feng2022}. The encoder-decoder design, where a CNN
 extracts per-frame spatial embeddings that are then processed by a recurrent model,
 has shown consistent gains over purely spatial or purely temporal baselines
 \cite{wang2019}.
 
-Attention-based architectures including Vision Transformers (ViT) and Swin
-Transformers have also been applied to satellite-based solar forecasting
-\cite{acikgoz2022,liu2023}, achieving competitive performance at the cost of
-increased parameter count and data requirements. For moderate dataset sizes such
+Attention-based architectures, including transformer-based temporal fusion
+models, have also been applied to satellite-based solar forecasting
+\cite{liu2023}, achieving competitive performance at the cost of increased
+parameter count and data requirements. For moderate dataset sizes such
 as those encountered in single-site studies, CNN+LSTM hybrids remain a practical
 and well-characterised baseline. Despite their strong performance, however, both
 CNN and Transformer encoders impose a fixed, regular receptive field over the
@@ -53,27 +53,32 @@ offer an alternative that relaxes this assumption.
 
 GraphSAGE \cite{hamilton2017} is an inductive GNN that learns aggregation
 functions over local neighbourhoods, enabling generalisation to unseen nodes.
-It has been applied to traffic forecasting \cite{li2018}, air quality prediction,
-and wind power generation \cite{kazem2021}, where spatial proximity defines the
-graph topology. In the context of satellite imagery, representing pixels as graph
+It has been applied to traffic forecasting \cite{li2018} and other
+spatially-structured prediction tasks where proximity defines the graph
+topology. In the context of satellite imagery, representing pixels as graph
 nodes allows the model to capture irregular spatial dependencies that periodic
 CNN filters may miss, such as cloud boundaries or fractional cloud cover patterns.
 
-Closest to our work, \cite{ji2022} applied a GNN-LSTM model to multi-site solar
+Closest to our work, \citet{ji2022} applied a GNN-LSTM model to multi-site solar
 irradiance forecasting, treating monitoring stations as nodes. Our approach differs
 in that we build the graph within a single satellite patch (pixel level), without
 requiring multi-station measurements, which is more practical for single-site
-deployment.
+deployment. Nevertheless, GNN-based solar forecasting studies to date --- including
+our closest comparator --- have been validated exclusively in temperate or
+station-network settings, leaving open whether these architectural advantages
+transfer to a single-patch, tropical-mountain regime with fundamentally
+different cloud dynamics.
 
 \subsection{Forecasting in tropical and Andean climates}
 
 Most GHI forecasting benchmarks are conducted in temperate or semi-arid climates
-(Europe, southwestern United States, Australia) \cite{paletta2022,benchmarks2023}.
+(Europe, southwestern United States, Australia) \cite{paletta2022,yang2018}.
 Tropical Andean sites present distinct challenges: convective cloud formation is
 driven by topographic lifting and moisture advection, producing strong intraday
-variability concentrated in the afternoon \cite{poveda2004}. Few published studies
+variability concentrated in the afternoon \cite{poveda2014}. Few published studies
 address satellite-based forecasting for Colombian or equivalent tropical mountain
-conditions, motivating the present work.
+conditions, motivating the architectural comparison undertaken in
+Sections~\ref{sec:methodology}--\ref{sec:results}.
 
 \subsection{Forecasting for power system operation and decision-making}
 
@@ -83,7 +88,7 @@ to the systems that ultimately consume these forecasts. Accurate short-term
 irradiance forecasts feed directly into operational
 decision-making for solar-integrated power systems: they support reserve
 scheduling, unit commitment, and demand-response triggers, reducing the cost
-of accommodating variable renewable generation \cite{energyrev2021}. For
+of accommodating variable renewable generation. For
 renewable integration specifically, accurate forecasting reduces the need for
 spinning reserves and allows pre-emptive load balancing, directly limiting the
 impact of generation uncertainty on grid stability.
@@ -105,7 +110,7 @@ interval cannot make on its own.
 Making the aleatoric/epistemic distinction operational requires a model that
 can actually produce both quantities, rather than a single undifferentiated
 interval. Bayesian deep learning provides a principled route to decomposing
-predictive uncertainty in this way. \cite{kendall2017} formalise the aleatoric/epistemic split for
+predictive uncertainty in this way. \citet{kendall2017} formalise the aleatoric/epistemic split for
 deep regression and segmentation, combining a heteroscedastic Gaussian
 negative-log-likelihood (NLL) head for aleatoric noise with Monte Carlo
 sampling over model weights for epistemic uncertainty. Approximate posterior
