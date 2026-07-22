@@ -1,0 +1,86 @@
+[
+  {
+    "epoch": 1,
+    "train_gamma_nll": 155.36136982601542,
+    "val_gamma_nll": 11.720119665904217,
+    "epoch_seconds": 244.78188252449036
+  },
+  {
+    "epoch": 2,
+    "train_gamma_nll": 11.259490830910638,
+    "val_gamma_nll": 16.644312680485736,
+    "epoch_seconds": 243.42232537269592
+  },
+  {
+    "epoch": 3,
+    "train_gamma_nll": 11.243535674297748,
+    "val_gamma_nll": 11.6371753704117,
+    "epoch_seconds": 240.01206231117249
+  },
+  {
+    "epoch": 4,
+    "train_gamma_nll": 11.245212170744189,
+    "val_gamma_nll": 11.612536459084017,
+    "epoch_seconds": 281.4289884567261
+  },
+  {
+    "epoch": 5,
+    "train_gamma_nll": 11.23525195788843,
+    "val_gamma_nll": 12.165994276483374,
+    "epoch_seconds": 227.74363780021667
+  },
+  {
+    "epoch": 6,
+    "train_gamma_nll": 11.223734636998547,
+    "val_gamma_nll": 11.475319362548461,
+    "epoch_seconds": 240.74767303466797
+  },
+  {
+    "epoch": 7,
+    "train_gamma_nll": 43.18285169132015,
+    "val_gamma_nll": 11.743172725999212,
+    "epoch_seconds": 242.59221267700195
+  },
+  {
+    "epoch": 8,
+    "train_gamma_nll": 11.21320012196358,
+    "val_gamma_nll": 11.904073152197412,
+    "epoch_seconds": 241.8226888179779
+  },
+  {
+    "epoch": 9,
+    "train_gamma_nll": 11.194870765962749,
+    "val_gamma_nll": 11.542740637997547,
+    "epoch_seconds": 229.95343708992004
+  },
+  {
+    "epoch": 10,
+    "train_gamma_nll": 11.201859123348573,
+    "val_gamma_nll": 11.668836783213788,
+    "epoch_seconds": 237.7608323097229
+  },
+  {
+    "epoch": 11,
+    "train_gamma_nll": 11.19546215398324,
+    "val_gamma_nll": 20.341583567929554,
+    "epoch_seconds": 229.60964274406433
+  },
+  {
+    "epoch": 12,
+    "train_gamma_nll": 11.19445979533418,
+    "val_gamma_nll": 13.035120906600033,
+    "epoch_seconds": 232.0094120502472
+  },
+  {
+    "epoch": 13,
+    "train_gamma_nll": 11.196965872314928,
+    "val_gamma_nll": 11.610766324652246,
+    "epoch_seconds": 238.81995248794556
+  },
+  {
+    "epoch": 14,
+    "train_gamma_nll": 11.186498086069532,
+    "val_gamma_nll": 51.38542465416782,
+    "epoch_seconds": 217.90592098236084
+  }
+]
