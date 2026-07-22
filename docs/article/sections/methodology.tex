@@ -533,6 +533,22 @@ here we describe the second component, an aleatoric variance network,
 currently being trained across the site-horizon-seed combinations for
 which a mean-network checkpoint is available.
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig_uq_pipeline}
+  \caption{Cooperative aleatoric/epistemic uncertainty pipeline. Step~1
+           (mean network) is the already-trained, frozen backbone of
+           Sections~\ref{ssec:resnet}--\ref{ssec:mlp}. Step~2 (variance
+           network, this section) is implemented and currently being
+           trained across the available backbones. Step~3 reuses the SGLD
+           sampler of Section~\ref{ssec:uq}, but warm-started from the mean
+           network's weights and re-weighted by the fixed $\sigma^2_\text{a}(x)$
+           from Step~2 rather than the plain-MSE likelihood currently
+           implemented there; this integration is not yet done
+           (Section~\ref{sec:discussion}, Limitations).}
+  \label{fig:uq-pipeline}
+\end{figure}
+
 \textbf{Aleatoric variance network.} With the mean network $\hat\theta$
 from Sections~\ref{ssec:resnet}--\ref{ssec:mlp} frozen, we train a separate
 network of the same architecture family whose final layer is replaced by a
