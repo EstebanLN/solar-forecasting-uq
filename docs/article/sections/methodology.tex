@@ -56,6 +56,21 @@ single timestamp is resolved to its $(C, P, P) = (16, 16, 16)$ frame by
 selecting the corresponding hourly archive and 10-minute slot, so no
 redundant decoding of the original satellite granules is required.
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig7_patch_snapshot}
+  \caption{Example $16\times16$ satellite patch (a single ABI reflectance
+           channel, one 10-minute slot) at each site, same daytime hour.
+           El~Paso shows a spatially coherent cloud edge typical of the
+           site's predominantly clear-sky regime; Uniandes shows more
+           fragmented, patchy structure consistent with locally-forming
+           convective cloud cover (Section~\ref{sec:discussion}).}
+  \label{fig:patch-snapshot}
+\end{figure}
+
+Figure~\ref{fig:patch-snapshot} shows an example patch at each site for
+orientation.
+
 \subsubsection{Manifests, sequence construction, and temporal split}
 \label{sssec:manifest}
 
@@ -132,8 +147,10 @@ serves as the standard benchmark for short-term solar forecasting.
 \label{ssec:sarima}
 
 As a non-deep-learning reference, we fit a seasonal ARIMA model,
-SARIMAX$(2,1,2)(1,1,1)_{24}$, directly on the raw hourly GHI series at each
-site. A single order was selected via AIC/BIC grid search (documented
+SARIMA$(2,1,2)(1,1,1)_{24}$ --- implemented via \texttt{statsmodels}'
+\texttt{SARIMAX} class with no exogenous regressors, i.e.\ a plain SARIMA
+model rather than a SARIMAX one in the methodological sense --- directly on
+the raw hourly GHI series at each site. A single order was selected via AIC/BIC grid search (documented
 separately) and applied uniformly at both sites, rather than re-selected
 per site, to keep the classical-statistical reference comparable across
 sites; no clear-sky normalisation is applied, so the model targets the same

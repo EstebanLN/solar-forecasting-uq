@@ -1,0 +1,17 @@
+{
+  "run_name": "uniandes_H6_L24_P16_seed13_20260722_111232",
+  "arch": "mlp",
+  "site": "uniandes",
+  "seed": 13,
+  "horizon_hours": 1.0,
+  "source_mean_ckpt": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/uniandes_H6_L24_P16_seed13_20260518_003914/best_model.pt",
+  "best_epoch": 14,
+  "train_seconds_total": 3419.4521527290344,
+  "test": {
+    "gamma_nll": 11.985221859954653,
+    "sigma_a_mean": 275.8360900878906,
+    "sigma_a_std": 8.342140790773556e-05,
+    "abs_residual_mean": 216.77911376953125,
+    "corr_sigma_a_vs_abs_residual": 0.013679158100195295
+  }
+}

@@ -42,12 +42,25 @@ properties of the Bogot{\'a} climate:
 At $4.6^{\circ}\text{N}$, the solar declination varies little across the year
 ($\pm 4.6^{\circ}$), producing a highly repeatable clear-sky envelope. Cloud
 formation in Bogot{\'a} is predominantly triggered by orographic lifting in
-the early afternoon, generating a strong, regular diurnal cycle. Much of the
+the early afternoon, generating a strong, regular diurnal cycle (Figure~\ref{fig:diurnal}).
+Much of the
 predictable structure in the Uniandes GHI series is therefore already encoded
 in its own recent history and time-of-day, leaving comparatively less
 \emph{additional} information for a 4-hour satellite patch sequence to
 contribute --- which compresses the achievable skill ceiling for every model,
 spatially-aware or not.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig4_diurnal_profile}
+  \caption{Diurnal GHI profile (mean $\pm$ 1 std by local hour of day) at
+           both sites. Both follow a similarly regular bell-shaped envelope
+           in the mean, consistent with their shared equatorial solar
+           geometry; Uniandes shows a wider relative spread around the
+           midday peak, reflecting its more variable afternoon convective
+           cloud cover.}
+  \label{fig:diurnal}
+\end{figure}
 
 \textbf{Satellite signal saturation at longer horizons (hypothesis).} At 6
 hours, the satellite patch observed at $t$ may carry little predictive
@@ -72,7 +85,21 @@ persistence baseline rather than compared at face value across sites.
 The negative skill at 1-hour El~Paso (all DL models, $\skillday \approx -0.17$
 to $-0.20$) can be explained by the \emph{low persistence error}: at 204.4~W/m²,
 persistence is already very accurate because the predominantly clear-sky regime
-means irradiance rarely drops by more than a small fraction over 10 minutes.
+means irradiance rarely drops by more than a small fraction over 10 minutes
+(Figure~\ref{fig:delta-hist}).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig6_delta_hist}
+  \caption{Distribution of 1-hour daytime GHI changes at both sites.
+           El~Paso's distribution is sharply concentrated near zero, i.e.\
+           irradiance rarely changes much within an hour, whereas
+           Uniandes shows a markedly wider spread from frequent cloud
+           passages --- directly illustrating why persistence is a much
+           harder baseline to beat at El~Paso at this horizon.}
+  \label{fig:delta-hist}
+\end{figure}
+
 We hypothesise that the DL models, trained to minimise MSE over the full
 distribution (including the occasional cloud event), learn a slightly
 smoothed version of the target trajectory that incurs higher error on the
