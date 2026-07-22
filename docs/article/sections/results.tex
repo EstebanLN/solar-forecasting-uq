@@ -172,7 +172,21 @@ reference: El~Paso's 1-hour persistence RMSE (204.4~W/m²) is comparatively low
 because irradiance changes slowly under predominantly clear-sky conditions,
 leaving little room for improvement from data-driven methods. Uniandes' 1-hour
 persistence RMSE (293.9~W/m²) is higher due to the frequent cloud passages,
-which create more structure for the models to exploit.
+which create more structure for the models to exploit. This is consistent
+with the raw GHI series itself: its autocorrelation decays faster at
+Uniandes than at El~Paso at every lag up to 6~hours (Figure~\ref{fig:acf}),
+so the most recent observation --- what persistence relies on --- is a
+comparatively weaker predictor there.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig5_acf_ghi}
+  \caption{Autocorrelation of the raw 10-minute GHI series up to a 6-hour
+           lag, both sites. Faster decay at Uniandes reflects its more
+           variable cloud cover and explains its higher persistence RMSE
+           at every horizon (Table~\ref{tab:persistence}).}
+  \label{fig:acf}
+\end{figure}
 
 \paragraph{3-hour horizon.}
 Both deep-learning models outperform persistence at El~Paso by approximately

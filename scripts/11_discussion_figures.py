@@ -120,7 +120,7 @@ def fig_acf() -> None:
                 transform=ax.get_xaxis_transform())
     ax.set_xlabel("Lag (hours)")
     ax.set_ylabel("Autocorrelation")
-    ax.set_title("Autocorrelation of raw GHI series", fontweight="bold")
+    ax.set_title("Autocorrelation of raw GHI series", fontweight="bold", pad=16)
     ax.set_xlim(0, 6)
     ax.legend(loc="upper right", framealpha=0.9)
     ax.grid(axis="both", linestyle=":", linewidth=0.5, alpha=0.6)
@@ -162,9 +162,13 @@ def fig_patch_snapshot(channel: int = 1) -> None:
     to visualise the 16x16-pixel field of view relative to cloud scale.
     Channel index is arbitrary (for spatial-extent illustration only, not a
     quantitative comparison of reflectance/brightness-temperature values)."""
+    # Hour must be daytime (UTC) at both sites, or the visible/near-IR
+    # reflectance channels used here are near-zero noise-floor everywhere --
+    # the original timestamps (03 UTC elpaso, 07 UTC uniandes) were both
+    # local nighttime and produced a degenerate, non-illustrative image.
     examples = {
-        "elpaso": PROJECT_ROOT / "data/patches_v1/elpaso/P16/2024/02/20240202_03_patch.npz",
-        "uniandes": PROJECT_ROOT / "data/patches_v1/uniandes/P16/2025/02/20250227_07_patch.npz",
+        "elpaso": PROJECT_ROOT / "data/patches_v1/elpaso/P16/2024/02/20240202_16_patch.npz",
+        "uniandes": PROJECT_ROOT / "data/patches_v1/uniandes/P16/2025/02/20250227_16_patch.npz",
     }
     fig, axes = plt.subplots(1, 2, figsize=(6.0, 3.2))
     for ax, site in zip(axes, ("elpaso", "uniandes")):
