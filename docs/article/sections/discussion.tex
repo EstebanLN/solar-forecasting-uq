@@ -3,10 +3,24 @@
 \label{sec:discussion}
 % =============================================================
 
+\textbf{A note on El~Paso figures marked \dag.} A satellite-timestamp
+alignment bug affecting only El~Paso was identified after this paper's
+El~Paso deep-learning results were first computed (Section~\ref{sec:results};
+Section~\ref{sec:discussion}, Limitations); the ground-truth file has since
+been corrected and El~Paso retraining is in progress. Every El~Paso figure
+below marked \dag\ was computed before that fix and is reported as
+originally obtained --- pending re-confirmation on the corrected data ---
+because it still reflects the hypotheses and reasoning this paper puts
+forward, and because Uniandes (unaffected throughout) independently shows
+the same qualitative pattern in every case below unless noted otherwise.
+
 \subsection{Why does GraphSAGE outperform ResNet at the 6-hour horizon?}
 
-At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieves a 2.2-percentage-point
-skill improvement over ResNet-LSTM ($0.636$ vs.\ $0.614$). We hypothesise two
+At the 6-hour horizon for El~Paso, GraphSAGE-LSTM achieved a 2.2-percentage-point
+skill improvement over ResNet-LSTM ($0.636^\dagger$ vs.\ $0.614^\dagger$). The same
+ordering holds at Uniandes, where results are unaffected and current
+($0.417$ vs.\ $0.368$, a 4.9-percentage-point margin --- the widest of the
+three horizons tested there). We hypothesise two
 mechanisms:
 
 \textbf{Irregular spatial structure (hypothesis).} We hypothesise that, at
@@ -25,8 +39,9 @@ ResNet's multiple stacked convolutions redundantly process spatial
 information across layers, while GraphSAGE's message-passing, applied once
 per hop, is less prone to over-smoothing at the patch scale ($P = 16$); we
 do not directly measure representation redundancy or over-smoothing here.
-The lower seed variance of GraphSAGE ($\pm 0.013$ vs.\ $\pm 0.023$ at
-El~Paso 6h) is consistent with a more stable loss landscape, though as noted
+The lower seed variance of GraphSAGE ($\pm 0.013^\dagger$ vs.\ $\pm 0.023^\dagger$ at
+El~Paso 6h; $\pm 0.008$ vs.\ $\pm 0.019$ at Uniandes 6h, unaffected) is
+consistent with a more stable loss landscape, though as noted
 in Section~\ref{ssec:optuna} this variance also reflects independently
 re-run hyperparameter search outcomes across seeds, not training
 stochasticity alone.
@@ -35,7 +50,7 @@ stochasticity alone.
 
 Across all deep-learning models and horizons, absolute skill is markedly lower
 at the Uniandes mountain site than at El~Paso (e.g., GraphSAGE-LSTM at 6h:
-$\skillday = 0.417$ vs.\ $0.636$). We attribute this gap to two related
+$\skillday = 0.417$ vs.\ $0.636^\dagger$). We attribute this gap to two related
 properties of the Bogot{\'a} climate:
 
 \textbf{Diurnal regularity narrows the room for improvement.}
@@ -82,11 +97,14 @@ persistence baseline rather than compared at face value across sites.
 
 \subsection{Why is the 1-hour horizon intractable at El~Paso?}
 
-The negative skill at 1-hour El~Paso (all DL models, $\skillday \approx -0.17$
-to $-0.20$) can be explained by the \emph{low persistence error}: at 204.4~W/m²,
-persistence is already very accurate because the predominantly clear-sky regime
-means irradiance rarely drops by more than a small fraction over 10 minutes
-(Figure~\ref{fig:delta-hist}).
+The negative skill at 1-hour El~Paso (all DL models, $\skillday \approx -0.17^\dagger$
+to $-0.20^\dagger$) can be explained by the \emph{low persistence error}: at
+204.4~W/m²$^\dagger$, persistence is already very accurate because the predominantly
+clear-sky regime means irradiance rarely drops by more than a small fraction over 10
+minutes --- a characterisation Figure~\ref{fig:delta-hist} confirms directly
+from the corrected ground-truth record (unaffected by the timestamp bug,
+since it involves no satellite pairing), independently of the \dag ed
+skill/persistence figures above.
 
 \begin{figure}[t]
   \centering
@@ -115,18 +133,21 @@ cloud-event detection as a preprocessing step.
 
 \begin{itemize}
   \item For \textbf{El~Paso-type sites} (high irradiance, moderate variability),
-        GraphSAGE-LSTM with Optuna-tuned hyperparameters is the recommended model
-        at 6h, reducing RMSE over persistence by approximately 63.6\%. At 3h, the
-        two architectures achieve statistically indistinguishable mean skill
-        (both $\skillday \approx 0.42$), but GraphSAGE-LSTM's substantially
-        lower seed-to-seed variance ($\pm 0.039$ vs.\ $\pm 0.104$ for
-        ResNet-LSTM) makes it the more reliable choice for production
+        GraphSAGE-LSTM with Optuna-tuned hyperparameters was the recommended model
+        at 6h, reducing RMSE over persistence by approximately 63.6\%$^\dagger$. At 3h, the
+        two architectures achieved statistically indistinguishable mean skill
+        (both $\skillday \approx 0.42^\dagger$), but GraphSAGE-LSTM's substantially
+        lower seed-to-seed variance ($\pm 0.039^\dagger$ vs.\ $\pm 0.104^\dagger$ for
+        ResNet-LSTM) made it the more reliable choice for production
         deployment at that horizon. At 1h, the system should fall back to
-        persistence or a light-weight nowcasting model.
+        persistence or a light-weight nowcasting model. These recommendations
+        are pending re-confirmation on corrected data (note at the start of
+        this section).
 
   \item For \textbf{Uniandes-type sites} (tropical mountain, high convective
-        variability), even the best models achieve markedly lower skill than at
-        El~Paso ($\skillday \leq 0.42$ vs.\ $0.64$ at 6h); operators should
+        variability), even the best models achieve markedly lower skill than
+        previously reported at El~Paso ($\skillday \leq 0.42$ vs.\
+        $0.64^\dagger$ at 6h); operators should
         calibrate reserve margins to the local persistence baseline rather than
         assume that skill levels transfer across climates. GraphSAGE-LSTM remains
         the most consistent top performer at 3h and 6h, but gains over
@@ -185,9 +206,9 @@ solar-integrated power systems.
 By learning spatially-aware representations of incoming cloud systems from
 satellite imagery, GraphSAGE-LSTM may support earlier detection of impending
 irradiance ramps --- the primary source of generation-side uncertainty in
-PV-heavy grids. The 63.6\% RMSE reduction over persistence at 6h for
-El~Paso translates to significantly tighter dispatch intervals and reduced
-reserve requirements.
+PV-heavy grids. The 63.6\%$^\dagger$ RMSE reduction over persistence at 6h for
+El~Paso (41.7\% at Uniandes, unaffected and current) translates to
+significantly tighter dispatch intervals and reduced reserve requirements.
 
 \textbf{Epistemic-aware dispatch.}
 The SGLD-based epistemic estimate (Section~\ref{ssec:uq}) converts any point
@@ -201,6 +222,28 @@ or for prioritised inclusion in future retraining data --- a distinction
 unavailable from a point forecast alone.
 
 \subsection{Limitations}
+
+\textbf{El~Paso results (marked \dag\ above) are pending re-confirmation.}
+A satellite-timestamp alignment bug --- a false UTC offset on the raw
+ground-truth file, causing every satellite patch to be paired with the
+wrong GHI label --- was identified after El~Paso's deep-learning results
+had already been computed. The ground-truth file has been corrected and
+El~Paso retraining on it is in progress; we report the pre-fix figures
+marked \dag\ throughout this section as originally obtained, since Uniandes
+(unaffected) independently confirms the same qualitative pattern in every
+case, but they should be read as motivating evidence rather than final
+results until re-confirmed. GraphSAGE-LSTM's El~Paso result will use the
+tuned, distance-weighted $k$-NN graph (Section~\ref{ssec:gsage}) once
+available, rather than the fixed-graph baseline reported for Uniandes,
+since the fixed-graph training code path has since been superseded by the
+tunable one and we do not consider it good practice to reinstate
+discontinued code merely to reproduce a superseded baseline; El~Paso will
+therefore not have its own fixed-vs-tuned graph ablation
+(Table~\ref{tab:ablation} remains Uniandes-only in that respect). SARIMA
+and all ground-truth-only descriptive figures in this paper
+(Figures~\ref{fig:diurnal}, \ref{fig:acf}, \ref{fig:delta-hist}, and the
+example satellite patch in Section~\ref{sssec:satellite}) were computed on
+the corrected data and are unaffected.
 
 \textbf{Geographic scope.} Both sites are located in Colombia and represent
 two tropical climate sub-types. Generalisation to other tropical or subtropical

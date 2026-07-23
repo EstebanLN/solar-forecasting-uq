@@ -1,0 +1,159 @@
+{
+  "run_name": "uniandes_SARIMA_h1_h3_h6_20260723_142326",
+  "site": "uniandes",
+  "arch": "SARIMA",
+  "model": {
+    "order": [
+      2,
+      1,
+      2
+    ],
+    "seasonal_order": [
+      1,
+      1,
+      1,
+      24
+    ],
+    "resolution": "hourly",
+    "target": "ghi_raw_wm2",
+    "evaluation": "rolling_origin_fixed_params",
+    "n_origins": 2016
+  },
+  "results": {
+    "1": {
+      "hours_ahead": 1,
+      "horizon_steps": 6,
+      "test_metrics": {
+        "n": 2016,
+        "rmse": 130.76191283589873,
+        "mae": 68.01771536540417,
+        "n_day": 886,
+        "rmse_day": 196.08453814360564,
+        "mae_day": 147.51208131650588,
+        "day_threshold": 20.0,
+        "skill_vs_persistence": 0.3350203824524972,
+        "skill_day_vs_persistence": 0.3306572752856719
+      },
+      "persistence_train": {
+        "n": 54530,
+        "rmse": 186.8767751992772,
+        "mae": 96.77239943150559,
+        "n_day": 24695,
+        "rmse_day": 274.0422963905876,
+        "mae_day": 202.98731447661473,
+        "day_threshold": 20.0
+      },
+      "persistence_val": {
+        "n": 12436,
+        "rmse": 186.78888879318058,
+        "mae": 93.81208748793826,
+        "n_day": 5322,
+        "rmse_day": 282.470628754978,
+        "mae_day": 208.5904742577978,
+        "day_threshold": 20.0
+      },
+      "persistence_test": {
+        "n": 2016,
+        "rmse": 196.64048248299443,
+        "mae": 97.74450694444445,
+        "n_day": 886,
+        "rmse_day": 292.9508768879094,
+        "mae_day": 210.09537471783293,
+        "day_threshold": 20.0
+      },
+      "n_on_hour_evaluated": 2016,
+      "n_total_test": 12105,
+      "n_on_hour_available": 2016
+    },
+    "3": {
+      "hours_ahead": 3,
+      "horizon_steps": 18,
+      "test_metrics": {
+        "n": 2014,
+        "rmse": 162.46871307352657,
+        "mae": 89.30861245459351,
+        "n_day": 890,
+        "rmse_day": 242.02867183120546,
+        "mae_day": 190.17122303005874,
+        "day_threshold": 20.0,
+        "skill_vs_persistence": 0.4463316475729373,
+        "skill_day_vs_persistence": 0.40953263572847953
+      },
+      "persistence_train": {
+        "n": 54507,
+        "rmse": 297.47920806960843,
+        "mae": 176.6130889610509,
+        "n_day": 24893,
+        "rmse_day": 406.97961339298257,
+        "mae_day": 319.8906504639858,
+        "day_threshold": 20.0
+      },
+      "persistence_val": {
+        "n": 12424,
+        "rmse": 279.2358520044971,
+        "mae": 159.75912910495813,
+        "n_day": 5363,
+        "rmse_day": 388.4280430826495,
+        "mae_day": 303.88528883087827,
+        "day_threshold": 20.0
+      },
+      "persistence_test": {
+        "n": 2014,
+        "rmse": 293.44049079440344,
+        "mae": 167.9154736842105,
+        "n_day": 890,
+        "rmse_day": 409.8933937353232,
+        "mae_day": 316.7541101123596,
+        "day_threshold": 20.0
+      },
+      "n_on_hour_evaluated": 2014,
+      "n_total_test": 12093,
+      "n_on_hour_available": 2014
+    },
+    "6": {
+      "hours_ahead": 6,
+      "horizon_steps": 36,
+      "test_metrics": {
+        "n": 2011,
+        "rmse": 164.8752288317383,
+        "mae": 91.21633208272338,
+        "n_day": 899,
+        "rmse_day": 244.51886415221753,
+        "mae_day": 191.9235743270275,
+        "day_threshold": 20.0,
+        "skill_vs_persistence": 0.5805643544399621,
+        "skill_day_vs_persistence": 0.4796310150516332
+      },
+      "persistence_train": {
+        "n": 54470,
+        "rmse": 419.8303181060779,
+        "mae": 281.04479528180656,
+        "n_day": 25215,
+        "rmse_day": 498.6695422994848,
+        "mae_day": 398.23299048185606,
+        "day_threshold": 20.0
+      },
+      "persistence_val": {
+        "n": 12406,
+        "rmse": 378.32913327097435,
+        "mae": 247.05014589714656,
+        "n_day": 5467,
+        "rmse_day": 462.17602240706213,
+        "mae_day": 370.62950722516916,
+        "day_threshold": 20.0
+      },
+      "persistence_test": {
+        "n": 2011,
+        "rmse": 393.0882617560879,
+        "mae": 252.78378120338138,
+        "n_day": 899,
+        "rmse_day": 469.89515367922854,
+        "mae_day": 367.9083003337042,
+        "day_threshold": 20.0
+      },
+      "n_on_hour_evaluated": 2011,
+      "n_total_test": 12075,
+      "n_on_hour_available": 2011
+    }
+  }
+}

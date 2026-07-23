@@ -131,7 +131,16 @@ def _build_tab_vector(
 
 
 def _compute_medians(surface_df: pd.DataFrame, available_cols: List[str]) -> Dict[str, float]:
-    """Column-wise medians over the provided surface slice (used for imputation)."""
+    """Column-wise medians over the provided surface slice (used for imputation).
+
+    Callers should restrict *surface_df* to the training period before calling
+    (see compute_tab_stats, which does this and ships the result to val/test
+    via tab_stats["medians"]) so that imputation constants never see val/test
+    data. The full-record fallback in the dataset constructors exists only for
+    backward compatibility with tab_stats dicts produced before this fix; the
+    difference is a handful of imputation constants for missing rows and is
+    numerically negligible either way.
+    """
     medians: Dict[str, float] = {}
     for col in available_cols:
         valid = surface_df[col].dropna()
@@ -191,7 +200,13 @@ class FusionPatchSeqDataset(Dataset):
             c for c in self.feature_cols if c != "hour_of_day" and c in surface_df.columns
         ]
         self.surface_df = surface_df[self.available_cols] if self.available_cols else surface_df[[]]
-        self.tab_medians = _compute_medians(self.surface_df, self.available_cols)
+        # Imputation medians: prefer the training-period medians shipped in
+        # tab_stats (no val/test data involved); fall back to full-record
+        # medians only for legacy tab_stats dicts that predate the fix.
+        if tab_stats is not None and "medians" in tab_stats:
+            self.tab_medians = dict(tab_stats["medians"])
+        else:
+            self.tab_medians = _compute_medians(self.surface_df, self.available_cols)
 
         if normalize_tab:
             if tab_stats is None:
@@ -270,10 +285,15 @@ class FusionPatchSeqDataset(Dataset):
 
         Must be called on the **training split only** and the returned dict
         passed to the val/test dataset constructors to avoid data leakage.
+        Imputation medians are likewise computed over the training period only
+        (t_label range of the provided manifest, minus the history window) and
+        shipped in the returned dict so every split imputes with the same
+        train-only constants.
 
         Returns:
             dict with keys ``mean`` (List[float]), ``std`` (List[float]),
-            ``d_tab`` (int), ``feature_cols`` (List[str]).
+            ``medians`` (Dict[str, float]), ``d_tab`` (int),
+            ``feature_cols`` (List[str]).
         """
         ds = FusionPatchSeqDataset(
             manifest=manifest,
@@ -283,6 +303,14 @@ class FusionPatchSeqDataset(Dataset):
             feature_cols=feature_cols,
             normalize_tab=False,
         )
+
+        # Train-period imputation medians (replaces the constructor's
+        # full-record fallback before any feature vector is sampled).
+        t_labels = pd.to_datetime(manifest["t_label"], utc=True)
+        train_lo = t_labels.min() - pd.Timedelta(hours=4)   # cover history window
+        train_hi = t_labels.max()
+        train_slice = ds.surface_df.loc[train_lo:train_hi]
+        ds.tab_medians = _compute_medians(train_slice, ds.available_cols)
 
         rng  = np.random.default_rng(seed)
         n    = min(len(ds.man), n_samples)
@@ -306,6 +334,7 @@ class FusionPatchSeqDataset(Dataset):
         return {
             "mean":         mean.tolist(),
             "std":          std.tolist(),
+            "medians":      ds.tab_medians,
             "d_tab":        ds.d_tab,
             "feature_cols": ds.feature_cols,
         }
@@ -354,7 +383,11 @@ class FusionGraphSeqDataset(Dataset):
             c for c in self.feature_cols if c != "hour_of_day" and c in surface_df.columns
         ]
         self.surface_df = surface_df[self.available_cols] if self.available_cols else surface_df[[]]
-        self.tab_medians = _compute_medians(self.surface_df, self.available_cols)
+        # Same train-only imputation medians convention as FusionPatchSeqDataset.
+        if tab_stats is not None and "medians" in tab_stats:
+            self.tab_medians = dict(tab_stats["medians"])
+        else:
+            self.tab_medians = _compute_medians(self.surface_df, self.available_cols)
 
         if normalize_tab:
             if tab_stats is None:

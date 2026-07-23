@@ -13,7 +13,11 @@ Design notes:
 - No LR scheduler: unlike Adam, SGLD requires a near-constant (or very slowly
   decaying) step size to maintain ergodicity. Decaying to zero recovers SGD.
 - weight_decay encodes the Gaussian prior precision (σ² = 1/weight_decay).
-  It is separate from Adam's weight_decay conceptually but numerically equivalent.
+  It is a SEPARATE hyperparameter from the Optuna-tuned Adam weight_decay:
+  reusing Adam's value (~1e-6..1e-3) leaves the chain effectively unconfined
+  over 1000+ epochs and it diverges. Use scripts/08_sgld.py's
+  --sgld_prior_precision (default 100.0) instead — see that script's help
+  text for the relaxation-timescale argument and the empirical verification.
 - n_train scaling: we do NOT rescale the gradient by N/batch_size here;
   the LR absorbs that factor, consistent with the existing train_one_model loop.
 """
@@ -29,7 +33,9 @@ class SGLD(torch.optim.Optimizer):
         params:        model parameters (same interface as any torch Optimizer)
         lr:            SGLD step size ε. Typically 1e-5 to 1e-4 — much smaller
                        than Adam's LR. Rule of thumb: ε ≈ adam_lr * 0.01.
-        weight_decay:  L2 prior precision. Use the value found by Optuna.
+        weight_decay:  L2 prior precision (NOT the Optuna-tuned Adam
+                       weight_decay — see module docstring; default in
+                       scripts/08_sgld.py is 100.0).
     """
 
     def __init__(self, params, lr: float = 1e-5, weight_decay: float = 0.0):
