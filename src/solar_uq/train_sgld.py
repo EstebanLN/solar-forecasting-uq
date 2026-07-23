@@ -74,7 +74,9 @@ def train_sgld(
         normalizer:     TargetNormalizer fitted on training targets.
         run_dir:        Directory where checkpoints and logs are saved.
         sgld_lr:        SGLD step size ε (see sgld.py).
-        weight_decay:   Gaussian prior precision (same as Optuna best_params value).
+        weight_decay:   Gaussian prior precision for the confining term (NOT
+                        the Optuna-tuned Adam weight_decay — see sgld.py and
+                        scripts/08_sgld.py --sgld_prior_precision).
         l1_reg:         L1 penalty coefficient from Optuna (0.0 = disabled).
         burn_in:        Epochs to run before saving any checkpoint.
         sample_every:   Epochs between consecutive checkpoint saves.

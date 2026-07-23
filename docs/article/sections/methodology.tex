@@ -154,16 +154,29 @@ the raw hourly GHI series at each site. A single order was selected via AIC/BIC 
 separately) and applied uniformly at both sites, rather than re-selected
 per site, to keep the classical-statistical reference comparable across
 sites; no clear-sky normalisation is applied, so the model targets the same
-physical quantity, GHI in W/m$^2$, as every other model. Because a seasonal period of $m=144$
+physical quantity, GHI in W/m$^2$, as every other model.
+
+Evaluation is \emph{rolling-origin}: model parameters are estimated once on
+the training period and then held fixed, and the underlying state-space
+(Kalman) filter is advanced observation-by-observation through the
+validation and test periods with no re-estimation. At each test forecast
+origin $t$, a genuine $H$-hour-ahead forecast of $t+H$ is issued from the
+filtered state that incorporates all observations up to and including $t$
+--- exactly the information persistence and the deep-learning models are
+allowed to condition on, and never the future. Because a seasonal period of $m=144$
 (10-minute native resolution) is computationally intractable over the
 multi-year training window, the satellite-resolution series is first
-resampled to hourly cadence ($m=24$), and SARIMA is therefore evaluated only
+resampled to hourly cadence ($m=24$; missing hours are handled natively by
+the filter as missing observations), and SARIMA is therefore evaluated only
 on the subset of test timestamps that fall on an exact hour, with the
 persistence reference \emph{recomputed on that same coarser subset} so that
 SARIMA's own skill score is internally consistent. \textbf{This makes
 SARIMA's $\rmseday$ and $\skillday$ not directly comparable to the
 full 10-minute-resolution metrics reported for persistence and the
-deep-learning models elsewhere in this paper}; it is included in
+deep-learning models elsewhere in this paper} --- both because of the
+coarser evaluation subset and because SARIMA is fit on, and therefore
+forecasts, hourly-\emph{mean} GHI while being scored against the same
+instantaneous 10-minute targets as every other model; it is included in
 Figs.~\ref{fig:skill}--\ref{fig:rmse} as a classical-statistical reference
 point, visually flagged (hatched bars), rather than in Table~\ref{tab:main}.
 
@@ -271,6 +284,15 @@ to forecasting skill (ablation reported in Section~\ref{sec:results}):
         size that best matches each site's cloud spatial scale.
 \end{itemize}
 
+Both variants are trained and reported for Uniandes. For El~Paso, a
+satellite-timestamp alignment bug (Section~\ref{sec:discussion},
+Limitations) invalidated all pre-fix results, and by the time this was
+found, the fixed-graph training code path had already been superseded by
+the tuned-graph one described above; rather than reinstate discontinued
+code to reproduce a fixed-graph result for El~Paso, we report El~Paso's
+GraphSAGE-LSTM using only the tuned-graph variant once its corrected
+retraining completes, with no fixed-vs-tuned ablation at that site.
+
 \begin{equation}
   w_{vu} = \frac{1}{d(v,u)}, \quad (v, u) \in E.
   \label{eq:edge_weight}
@@ -371,22 +393,34 @@ For the three deep-learning models (ResNet-LSTM, GraphSAGE-LSTM, and FlatMLP)
 we use Optuna \cite{akiba2019} with the TPE sampler and Median pruner.
 The fixed-graph GraphSAGE-LSTM baseline and the corresponding ResNet-LSTM
 configuration use a budget of 20 trials per configuration (site $\times$
-horizon $\times$ seed) across four random seeds $\{42,1,7,13\}$; FlatMLP
+horizon $\times$ seed) across four random seeds
+$\{42,1,7,13\}$;\footnote{One fixed-graph configuration (GraphSAGE-LSTM,
+Uniandes, 6-hour horizon, seed~1) was run with 50 trials during an early
+budget experiment; its result is included in the four-seed statistics
+as obtained.} FlatMLP
 uses a larger budget of 50 trials given its lower per-trial cost. The
 extended search space used for the weighted $k$-NN ablation
 (Table~\ref{tab:hpspace}) increases per-trial cost substantially --- larger
 embeddings, optionally deeper LSTMs, and a tunable graph rebuilt per trial
---- so this variant instead uses a larger per-seed budget of 75 trials
+--- so this variant instead uses a larger per-seed budget of 75--100 trials
+(100 in the initial Uniandes configurations; 75 under the standardised
+protocol used for all subsequent runs)
 across a reduced set of two random seeds $\{42,1\}$, trading seed count for
 per-seed search coverage of the most consequential hyperparameters (graph
 connectivity, model capacity); results are reported with this caveat
 wherever the two protocols are compared (Section~\ref{sec:results}).
+El~Paso's corrected retraining (Section~\ref{sec:results} note;
+Section~\ref{sec:discussion}, Limitations) follows this extended-space
+two-seed protocol for \emph{both} architectures, not only the GraphSAGE-LSTM
+ablation, and the affected tables state this alongside the numbers.
 
-The ResNet-LSTM and GraphSAGE-LSTM search spaces (Table~\ref{tab:hpspace})
-include \texttt{n\_lstm\_layers}~$\in\{1,2\}$ to allow stacked recurrent
-processing, and a categorical L1 regularisation coefficient
-(\texttt{l1\_reg}) to penalise large weights in high-capacity configurations;
-both are new relative to the initial baseline study.
+Table~\ref{tab:hpspace} lists the \emph{extended} search space. Relative to
+the initial 20-trial spaces behind the fixed-graph four-seed results, it
+adds a categorical L1 regularisation coefficient (\texttt{l1\_reg}) for both
+architectures, to penalise large weights in high-capacity configurations,
+and --- for ResNet-LSTM --- stacked recurrent processing via
+\texttt{n\_lstm\_layers}~$\in\{1,2\}$ (GraphSAGE-LSTM's initial space
+already tuned its LSTM depth).
 For \textbf{ResNet-LSTM} specifically, the embedding dimension
 (\texttt{emb\_dim}) and temporal hidden size (\texttt{hidden\_t}) are extended
 to 256 to increase capacity.
@@ -396,16 +430,19 @@ additionally tunable, allowing the study to determine the optimal spatial
 connectivity for each site-horizon combination, together with the
 \texttt{input\_bn} and \texttt{concat\_agg} choices described in
 Section~\ref{ssec:gsage}. The fixed-graph baseline
-(Section~\ref{ssec:gsage}) is tuned with the same search space, excluding
-\texttt{k\_neighbors} since its topology is fixed a priori, and serves as the
+(Section~\ref{ssec:gsage}) is tuned over the initial space (the same
+architectural choices minus \texttt{k\_neighbors}, whose topology is fixed
+a priori, and minus \texttt{l1\_reg}), and serves as the
 ablation reference for the value of tuned spatial connectivity.
 For \textbf{FlatMLP}, the study searches over MLP depth, hidden dimension,
 dropout, learning rate, and weight decay (50 trials).
 
 \begin{table*}[t]
   \centering
-  \caption{Optuna hyperparameter search spaces. L1 coefficient and LSTM depth are
-           new relative to the initial baseline study. The \texttt{k\_neighbors}
+  \caption{Optuna hyperparameter search spaces (extended protocol). The
+           \texttt{l1\_reg} coefficient is new relative to the initial
+           20-trial spaces for both architectures; \texttt{n\_lstm\_layers}
+           is new for ResNet-LSTM only. The \texttt{k\_neighbors}
            parameter determines the weighted $k$-NN graph built per trial for
            GraphSAGE-LSTM. \texttt{input\_bn} toggles the input BatchNorm1d
            described below; \texttt{concat\_agg} toggles between the

@@ -22,9 +22,18 @@ extraction, model code, Optuna studies, and evaluation scripts --- for a
 tropical Andean climate regime markedly underrepresented in the solar
 forecasting literature.
 
+\textbf{A note on El~Paso (figures marked \dag).} A satellite-timestamp
+alignment bug affecting only El~Paso was found after this paper's El~Paso
+deep-learning results were first computed; the ground-truth file has been
+corrected and El~Paso retraining on it is in progress
+(Section~\ref{sec:results}; Section~\ref{sec:discussion}, Limitations).
+Figures below marked \dag\ are reported as originally obtained, pending
+re-confirmation, because Uniandes (unaffected) independently shows the
+same qualitative pattern in each case.
+
 \textbf{GraphSAGE-LSTM} (fixed-graph variant) achieves the best skill among
 the deep-learning models at the 6-hour horizon at \emph{both} sites (El~Paso:
-$\skillday = 0.636$ vs.\ $0.614$ for ResNet-LSTM; Uniandes: $0.417$ vs.\
+$\skillday = 0.636^\dagger$ vs.\ $0.614^\dagger$ for ResNet-LSTM; Uniandes: $0.417$ vs.\
 $0.368$), with lower seed variance throughout. This is consistent with
 graph-structured neighbourhood aggregation on the pixel graph providing a
 more stable and expressive spatial representation than fixed convolutional
@@ -33,11 +42,13 @@ statistically indistinguishable at the 3-hour horizon at El~Paso
 (Section~\ref{sec:results}), so this advantage should not be assumed to hold
 uniformly across horizons. Whether the tuned, distance-weighted $k$-NN
 graph variant improves further on this result is the subject of an ongoing
-ablation (Table~\ref{tab:ablation}).
+ablation (Table~\ref{tab:ablation}, Uniandes-only until El~Paso's corrected
+tuned-graph result is available, Section~\ref{sec:discussion} Limitations).
 
 At the \textbf{tropical mountain site} (Uniandes), however, the absolute skill
-of every model is markedly lower than at El~Paso even at the most favourable
-horizon ($\skillday \leq 0.42$ vs.\ $0.64$ at 6h), consistent with the
+of every model is markedly lower than previously reported at El~Paso even at
+the most favourable horizon ($\skillday \leq 0.42$ vs.\ $0.64^\dagger$ at 6h),
+consistent with the
 hypothesis that the strong diurnal autocorrelation of the Bogot{\'a}
 clear-sky cycle and the locally-driven nature of orographic convection limit
 the marginal benefit of satellite spatial features at this site
@@ -46,10 +57,13 @@ implication: model selection and skill expectations should be climate-aware,
 and forecasting pipelines should always be benchmarked and calibrated against
 the local persistence reference rather than assumed to transfer across sites.
 
-At the \textbf{1-hour horizon}, no model consistently beats persistence at El~Paso,
-consistent with the low persistence error ($204.4$~W/m²) in a predominantly
-clear-sky regime. Modest positive skill ($\approx 0.15$) is achieved at Uniandes,
-where frequent cloud passages create exploitable structure.
+At the \textbf{1-hour horizon}, no model consistently beat persistence at
+El~Paso in our initial results, consistent with the low persistence error
+($204.4$~W/m²$^\dagger$) in a predominantly
+clear-sky regime; the underlying low short-horizon variability is confirmed
+directly from the corrected ground-truth record (Figure~\ref{fig:delta-hist}),
+independently of the \dag ed model results. Modest positive skill ($\approx 0.15$)
+is achieved at Uniandes, where frequent cloud passages create exploitable structure.
 
 \textbf{Toward robust, uncertainty-aware forecasting.} The SGLD
 posterior-sampling pipeline (Section~\ref{ssec:uq}) is implemented; remaining

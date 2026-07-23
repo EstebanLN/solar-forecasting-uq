@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 """
-08_results_table.py — Aggregate all run results into a comparison table.
+09_results_table.py — Aggregate all run results into a comparison table.
 
 Usage (from project root):
-    .venv/bin/python scripts/08_results_table.py
-    .venv/bin/python scripts/08_results_table.py --latex
-    .venv/bin/python scripts/08_results_table.py --out results/summary.csv
+    .venv/bin/python scripts/09_results_table.py
+    .venv/bin/python scripts/09_results_table.py --latex
+    .venv/bin/python scripts/09_results_table.py --out results/summary.csv
 """
 from __future__ import annotations
 
@@ -31,17 +31,26 @@ MODEL_ORDER = [
     "GraphSAGE+LSTM (Optuna)",
     "ResNet+LSTM (Optuna v2)",
     "GraphSAGE+LSTM (Optuna v2)",
+    "Fusion ResNet+LSTM",
+    "Fusion GraphSAGE+LSTM",
+    "ResNet+LSTM (SGLD)",
+    "GraphSAGE+LSTM (SGLD)",
+    "MLP (SGLD)",
 ]
 
-# Expected seeds per model family (for progress tracking)
+# Expected seeds per model family (for progress tracking).
+# v2 and fusion use the reduced two-seed protocol {42, 1} (see
+# run_sequential.sh and methodology ssec:optuna).
 EXPECTED_SEEDS: dict[str, int] = {
     "ResNet+LSTM":                 5,
     "GraphSAGE+LSTM":              5,
     "MLP (Optuna)":                4,
     "ResNet+LSTM (Optuna)":        4,
     "GraphSAGE+LSTM (Optuna)":     4,
-    "ResNet+LSTM (Optuna v2)":     4,
-    "GraphSAGE+LSTM (Optuna v2)":  4,
+    "ResNet+LSTM (Optuna v2)":     2,
+    "GraphSAGE+LSTM (Optuna v2)":  2,
+    "Fusion ResNet+LSTM":          2,
+    "Fusion GraphSAGE+LSTM":       2,
 }
 
 
@@ -316,6 +325,8 @@ def _print_progress(all_records: list[dict]) -> None:
         "GraphSAGE+LSTM (Optuna)",
         "ResNet+LSTM (Optuna v2)",
         "GraphSAGE+LSTM (Optuna v2)",
+        "Fusion ResNet+LSTM",
+        "Fusion GraphSAGE+LSTM",
     ]
     sub = df[df["model"].isin(optuna_models)]
     if sub.empty:
@@ -413,6 +424,11 @@ def main() -> None:
     all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna",      "GraphSAGE+LSTM (Optuna)")
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna_v2",      "ResNet+LSTM (Optuna v2)")
     all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna_v2",   "GraphSAGE+LSTM (Optuna v2)")
+    all_records += _load_nn_runs(RUNS_ROOT / "fusion_resnet_lstm",         "Fusion ResNet+LSTM")
+    all_records += _load_nn_runs(RUNS_ROOT / "fusion_graphsage_lstm",      "Fusion GraphSAGE+LSTM")
+    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_sgld",           "ResNet+LSTM (SGLD)")
+    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_sgld",        "GraphSAGE+LSTM (SGLD)")
+    all_records += _load_nn_runs(RUNS_ROOT / "mlp_sgld",                   "MLP (SGLD)")
     all_records += _load_sarima_runs(RUNS_ROOT / "sarima")
 
     if not all_records:

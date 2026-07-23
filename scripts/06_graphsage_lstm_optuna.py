@@ -4,10 +4,12 @@
 
 Extended search space vs the original notebook:
   - n_sage_layers [2, 3, 4]
-  - hidden_g up to 192 (was 128)
+  - hidden_g up to 256 (was 128)
   - input_bn [True, False]
   - concat_agg [True, False]  — standard SAGEConv vs additive
   - n_lstm_layers [1, 2]
+  - k_neighbors [4, 8, 12, 16] — tuned weighted k-NN graph (v2 only)
+  - l1_reg [0, 1e-5, 1e-4, 1e-3]
   - LR range extended downward to 5e-5
 
 Objective: minimise val RMSE_day.

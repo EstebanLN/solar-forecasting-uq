@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-09_paper_figures.py — Generate publication-quality figures for the article.
+10_paper_figures.py — Generate publication-quality figures for the article.
 
 Figures produced:
   fig1_skill_day.pdf/.png  — Grouped bar chart: skill_day by model / horizon / site
@@ -9,8 +9,8 @@ Figures produced:
                              (elpaso, 6h horizon, seed 42, 5-day window in Jan 2024)
 
 Usage (from project root):
-    .venv/bin/python scripts/09_paper_figures.py
-    .venv/bin/python scripts/09_paper_figures.py --no-timeseries   # skip slow inference
+    .venv/bin/python scripts/10_paper_figures.py
+    .venv/bin/python scripts/10_paper_figures.py --no-timeseries   # skip slow inference
 """
 from __future__ import annotations
 
@@ -105,11 +105,17 @@ def _bar_positions(n_horizons: int, n_models: int, group_gap: float = 0.35) -> n
 # ── Figure 1: Skill_day ──────────────────────────────────────────────────────
 
 def fig_skill_day(df: pd.DataFrame) -> None:
+    # El Paso is kept in the figure: its pre-fix "(Optuna)" [v1] deep-learning
+    # rows are gone from summary.csv (satellite-timestamp bug, see
+    # results.tex note), so its panel currently shows Persistence/SARIMA only
+    # -- ResNet-LSTM/GraphSAGE-LSTM bars will reappear once corrected
+    # retraining completes and repopulates summary.csv.
     sites      = ["elpaso", "uniandes"]
     horizons   = [1.0, 3.0, 6.0]
     models     = [m for m in MODEL_ORDER if m in df["model"].unique()]
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.0), sharey=False)
+    fig, axes = plt.subplots(1, len(sites), figsize=(7.0, 3.0), sharey=False, squeeze=False)
+    axes = axes.flatten()
     fig.subplots_adjust(wspace=0.35)
 
     bar_w = (1.0 - 0.30) / len(models)
@@ -160,11 +166,13 @@ def fig_skill_day(df: pd.DataFrame) -> None:
 # ── Figure 2: RMSE_day ───────────────────────────────────────────────────────
 
 def fig_rmse_day(df: pd.DataFrame) -> None:
+    # El Paso is kept in the figure -- see matching note in fig_skill_day above.
     sites    = ["elpaso", "uniandes"]
     horizons = [1.0, 3.0, 6.0]
     models   = [m for m in MODEL_ORDER if m in df["model"].unique()]
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.0), sharey=False)
+    fig, axes = plt.subplots(1, len(sites), figsize=(7.0, 3.0), sharey=False, squeeze=False)
+    axes = axes.flatten()
     fig.subplots_adjust(wspace=0.35)
 
     bar_w     = (1.0 - 0.30) / len(models)
