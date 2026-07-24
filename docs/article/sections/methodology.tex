@@ -543,11 +543,17 @@ divergent over the sampling budget used here, which we verified empirically
 before fixing $\lambda$ at this value. Training starts from a fresh random
 initialisation (using the architecture and hyperparameters of the winning
 Optuna trial, not its trained weights) and runs under the SGLD update rule
-throughout; following a burn-in period of $T_\text{burn-in} = 500$ epochs
+throughout; following a burn-in period of $T_\text{burn-in} = 50$ epochs
 (discarded, while the chain moves from its random initialisation toward the
 confined posterior regime), we collect $T = 10$ weight snapshots
-$\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval of $\Delta = 100$
-epochs, yielding an inexpensive approximate ensemble.
+$\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval of $\Delta = 10$
+epochs, yielding an inexpensive approximate ensemble. The burn-in length is
+set relative to the deterministic training dynamics of these backbones,
+which reach their validation optimum within roughly ten epochs under Adam
+(Section~\ref{ssec:optuna}); fifty epochs therefore allow the noise-injected
+chain to reach and explore the confined posterior region well beyond the
+point where the underlying loss has plateaued, and the ten-epoch snapshot
+spacing decorrelates consecutive samples.
 
 \textbf{Ensemble point forecast and epistemic variance.}
 For a test input $x$, each posterior sample $\theta_t$ produces a point

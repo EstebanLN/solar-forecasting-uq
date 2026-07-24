@@ -119,10 +119,16 @@ def parse_args() -> argparse.Namespace:
                         "thousands/tens-of-thousands by epoch ~150; "
                         "100-1000 -> stays within ~20% of the persistence "
                         "baseline over 150 epochs)")
-    p.add_argument("--burn_in",         type=int, default=500,
-                   help="Epochs to discard before collecting samples")
-    p.add_argument("--sample_every",    type=int, default=100,
-                   help="Epochs between consecutive checkpoint saves")
+    p.add_argument("--burn_in",         type=int, default=50,
+                   help="Epochs to discard before collecting samples. Default 50: "
+                        "these backbones reach their val optimum within ~10 epochs "
+                        "under Adam, so 50 noise-injected epochs reach and explore "
+                        "the confined posterior well past the loss plateau. (The "
+                        "original 500 assumed a ~30x lower per-epoch cost than the "
+                        "~450s/epoch actually observed on full-resolution data, "
+                        "which made a 1500-epoch schedule ~8 days/run.)")
+    p.add_argument("--sample_every",    type=int, default=10,
+                   help="Epochs between consecutive checkpoint saves (decorrelates samples)")
     p.add_argument("--n_samples",       type=int, default=10,
                    help="Number of posterior checkpoints to collect")
     # Training misc
