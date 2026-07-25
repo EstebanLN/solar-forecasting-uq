@@ -9,9 +9,13 @@ Hyperparameters are loaded automatically from the corresponding Optuna run
 Protocol
 --------
 1. Find the Optuna run for (arch, optuna_version, site, hours_ahead, seed).
-2. Extract best_params → instantiate the model with those weights/architecture.
-3. Run SGLD burn-in (default 500 epochs, samples discarded).
-4. Run SGLD sampling (default 10 checkpoints × 100 epochs apart).
+2. Instantiate the model and WARM-START it from the Optuna-trained checkpoint
+   (default), so SGLD samples the local posterior around the good solution
+   rather than trying to train from scratch under the tiny SGLD step size
+   (fresh init underfits at sgld_lr=1e-5 -- pass --fresh_init to force it).
+3. Run SGLD burn-in (default 20 epochs, samples discarded) to let the Langevin
+   noise equilibrate into the local posterior.
+4. Run SGLD sampling (default 10 checkpoints × 5 epochs apart).
 5. Evaluate the ensemble mean on the test set → write summary.json compatible
    with 08_results_table.py.
 
@@ -102,8 +106,19 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--optuna_version",  default="v2", choices=["v1", "v2"],
                    help="Which Optuna run to read best_params from")
     # SGLD hyperparameters
-    p.add_argument("--sgld_lr",         type=float, default=1e-5,
-                   help="SGLD step size ε. Rule of thumb: optuna_lr * 0.01")
+    p.add_argument("--sgld_lr",         type=float, default=1e-7,
+                   help="SGLD step size ε. Default 1e-7, calibrated on "
+                        "full-resolution data: each epoch is ~3.4k SGLD steps "
+                        "(54k train samples / batch 16), so the per-step Langevin "
+                        "noise accumulates over many more steps than the original "
+                        "1e-5 (set for a much smaller/subsampled setup) assumed. "
+                        "Verified sweep from a warm-started backbone (Uniandes "
+                        "ResNet 1h): 1e-5 diverges (train loss 0.9->78 in 4 "
+                        "epochs), 1e-6 degrades the fit toward the predict-mean "
+                        "floor (ensemble skill ~0.03), 1e-7 keeps train loss "
+                        "stable at the backbone level (~0.36) with ensemble "
+                        "skill 0.184 (>= backbone 0.175) and a non-degenerate "
+                        "sigma_epi (~17 W/m^2).")
     p.add_argument("--sgld_prior_precision", type=float, default=100.0,
                    help="Gaussian prior precision for the SGLD confining term "
                         "(NOT the Optuna-tuned Adam weight_decay). The chain's "
@@ -119,18 +134,30 @@ def parse_args() -> argparse.Namespace:
                         "thousands/tens-of-thousands by epoch ~150; "
                         "100-1000 -> stays within ~20% of the persistence "
                         "baseline over 150 epochs)")
-    p.add_argument("--burn_in",         type=int, default=50,
-                   help="Epochs to discard before collecting samples. Default 50: "
-                        "these backbones reach their val optimum within ~10 epochs "
-                        "under Adam, so 50 noise-injected epochs reach and explore "
-                        "the confined posterior well past the loss plateau. (The "
-                        "original 500 assumed a ~30x lower per-epoch cost than the "
-                        "~450s/epoch actually observed on full-resolution data, "
-                        "which made a 1500-epoch schedule ~8 days/run.)")
-    p.add_argument("--sample_every",    type=int, default=10,
-                   help="Epochs between consecutive checkpoint saves (decorrelates samples)")
+    p.add_argument("--burn_in",         type=int, default=20,
+                   help="Epochs to discard before collecting samples. Default 20 "
+                        "(warm-start): the chain starts AT the Optuna-trained mode, "
+                        "so burn-in only needs to let the Langevin noise equilibrate "
+                        "into the local posterior, not train from scratch. The "
+                        "confined-chain relaxation timescale is ~1/(sgld_lr*prior) "
+                        "= ~1000 steps << one epoch (~3.4k steps), so 20 epochs is "
+                        "well past equilibration. (A prior fresh-init attempt with a "
+                        "much longer schedule underfit badly: at sgld_lr=1e-5, plain "
+                        "SGD-like updates cannot train a net from random init in any "
+                        "practical epoch budget -- train loss stayed at the "
+                        "predict-the-mean floor. Warm-start fixes this at the root.)")
+    p.add_argument("--sample_every",    type=int, default=5,
+                   help="Epochs between consecutive checkpoint saves. Default 5: "
+                        "the sample autocorrelation time near the mode is "
+                        "~1/(sgld_lr*prior) ~ 1000 steps (~0.3 epoch), so 5-epoch "
+                        "spacing (~17k steps) yields well-decorrelated samples.")
     p.add_argument("--n_samples",       type=int, default=10,
                    help="Number of posterior checkpoints to collect")
+    p.add_argument("--fresh_init",      action="store_true",
+                   help="Start SGLD from a fresh random init instead of warm-starting "
+                        "from the Optuna checkpoint. NOT recommended: at sgld_lr=1e-5 "
+                        "the chain cannot train from scratch and underfits. Kept only "
+                        "to reproduce the original (broken) behaviour if ever needed.")
     # Training misc
     p.add_argument("--num_workers",     type=int, default=0)
     p.add_argument("--day_threshold",   type=float, default=20.0)
@@ -150,10 +177,12 @@ def find_optuna_best_params(
     site: str,
     horizon_hours: float,
     seed: int,
-) -> dict:
+) -> tuple[dict, str | None]:
     """Scan runs_root for a summary.json matching (site, horizon_hours, seed).
 
-    Returns the ``optuna.best_params`` dict from the first matching run.
+    Returns ``(optuna.best_params, best_ckpt_path)`` from the first matching
+    run. ``best_ckpt_path`` is the trained mean-network checkpoint used for
+    warm-starting SGLD (None if the run has no usable checkpoint).
     Raises FileNotFoundError if no matching run is found.
     """
     if not runs_root.exists():
@@ -175,9 +204,13 @@ def find_optuna_best_params(
             bp = meta.get("optuna", {}).get("best_params")
             if bp is None:
                 raise ValueError(f"summary.json in {run_dir} has no optuna.best_params")
+            ckpt = meta.get("best_model", {}).get("best_ckpt_path")
+            if ckpt is not None and not Path(ckpt).exists():
+                ckpt = None
             print(f"  Optuna source: {run_dir.name}")
             print(f"  best_params:   {bp}")
-            return bp
+            print(f"  checkpoint:    {ckpt if ckpt else '(none — warm-start unavailable)'}")
+            return bp, ckpt
 
     raise FileNotFoundError(
         f"No completed Optuna run found in {runs_root} "
@@ -296,16 +329,36 @@ def main() -> None:
     # Optuna best_params
     # ------------------------------------------------------------------
     print(f"\nLooking for Optuna run in: {OPTUNA_ROOT}")
-    best_params = find_optuna_best_params(
+    best_params, mean_ckpt_path = find_optuna_best_params(
         OPTUNA_ROOT, args.site, horizon_hours, args.seed
     )
+    if not args.fresh_init and mean_ckpt_path is None:
+        raise FileNotFoundError(
+            "Warm-start requested (default) but the Optuna run has no usable "
+            "checkpoint on this machine. Either run where the .pt exists, or "
+            "pass --fresh_init (not recommended — underfits at sgld_lr=1e-5)."
+        )
     l1_reg           = float(best_params.get("l1_reg", 0.0))
     adam_weight_decay = float(best_params.get("weight_decay", 1e-4))
     batch_size       = int(best_params.get("batch_size", 32))
-    # SGLD's confining prior is a separate hyperparameter from Optuna's
-    # Adam-tuned weight_decay (see --sgld_prior_precision help text) --
-    # reusing adam_weight_decay directly leaves long chains unconfined.
-    sgld_weight_decay = args.sgld_prior_precision
+    # Prior precision (Gaussian prior N(0, 1/lambda) confining term):
+    #   fresh-init: a strong prior (--sgld_prior_precision, default 100) is
+    #     needed to keep the from-scratch chain from diverging over a long run.
+    #   warm-start: the chain starts at the trained mode, which sits far from
+    #     zero; a strong zero-centred prior would drag the weights back toward
+    #     zero (gradient lambda*theta) and destroy the fit (verified: lambda=100
+    #     makes train loss climb and val explode). We therefore sample under the
+    #     SAME weak Gaussian prior the backbone was trained with (Adam's tuned
+    #     weight_decay), so SGLD samples the local posterior consistent with the
+    #     point estimate rather than a different, over-regularised one. Override
+    #     with --sgld_prior_precision if given explicitly.
+    if args.fresh_init:
+        sgld_weight_decay = args.sgld_prior_precision
+    else:
+        sgld_weight_decay = (
+            args.sgld_prior_precision if args.sgld_prior_precision != 100.0
+            else adam_weight_decay
+        )
 
     # ------------------------------------------------------------------
     # Dataset & loaders
@@ -361,11 +414,22 @@ def main() -> None:
     test_loader  = make_loader(test_ds,  batch_size, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
 
     # ------------------------------------------------------------------
-    # Model instantiation
+    # Model instantiation (+ warm-start from the Optuna-trained checkpoint)
     # ------------------------------------------------------------------
     model = build_model(args.arch, best_params, args.patch, L, DEVICE)
     n_params = int(sum(p.numel() for p in model.parameters()))
     print(f"  Model params: {n_params:,}")
+
+    if args.fresh_init:
+        print("  Init: FRESH random (--fresh_init) -- NOT recommended, underfits at "
+              "sgld_lr=1e-5")
+    else:
+        # Warm-start: load the Optuna-trained weights so SGLD samples the
+        # LOCAL posterior around the good solution instead of trying (and
+        # failing) to train from scratch under the tiny SGLD step size.
+        state = torch.load(mean_ckpt_path, map_location=DEVICE, weights_only=True)
+        model.load_state_dict(state["model_state"] if "model_state" in state else state)
+        print(f"  Init: WARM-START from {Path(mean_ckpt_path).name}")
 
     # ------------------------------------------------------------------
     # Run directory (created inside train_sgld)
@@ -462,6 +526,8 @@ def main() -> None:
             "persistence_test":  baseline_test,
         },
         "sgld": {
+            "init":               "fresh" if args.fresh_init else "warm_start",
+            "warm_start_ckpt":    None if args.fresh_init else mean_ckpt_path,
             "sgld_lr":            args.sgld_lr,
             "sgld_weight_decay":  sgld_weight_decay,
             "adam_weight_decay":  adam_weight_decay,

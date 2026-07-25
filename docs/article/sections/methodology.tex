@@ -523,37 +523,46 @@ instead, we use Stochastic Gradient Langevin Dynamics (SGLD,
 $p(\theta) = \mathcal{N}(0, \lambda^{-1}I)$ of fixed precision $\lambda$,
 which injects calibrated Gaussian noise into each confined gradient step:
 \begin{equation}
-  \theta_{t+1} = \theta_t - \epsilon_t \bigl(\nabla_\theta \mathcal{L}(\theta_t)
-  + \lambda\,\theta_t\bigr) + \sqrt{2\epsilon_t}\,\eta_t, \qquad
+  \theta_{t+1} = \theta_t - \epsilon \bigl(\nabla_\theta \mathcal{L}(\theta_t)
+  + \lambda\,\theta_t\bigr) + \sqrt{2\epsilon}\,\eta_t, \qquad
   \eta_t \sim \mathcal{N}(0, I),
   \label{eq:sgld}
 \end{equation}
-where $\epsilon_t$ is the (decaying) step size and the $\lambda\theta_t$ term
-is the gradient of the negative log-prior, confining the chain around the
-origin rather than allowing an unconfined random walk. Under suitable
-conditions on $\epsilon_t$, the resulting Markov chain asymptotically samples
-from $p(\theta \mid \mathcal{D})$ without the computational overhead of full
-MCMC. We fix $\lambda = 100$ throughout, chosen independently of the
-Optuna-tuned Adam weight decay used to obtain $\hat\theta$ in
-Sections~\ref{ssec:resnet}--\ref{ssec:mlp}: the confined chain's stationary
-variance scales as $1/\lambda$ and its relaxation timescale as
-$1/(\epsilon_t\lambda)$ steps, so reusing Adam's much smaller weight decay
-(${\sim}10^{-6}$) leaves the chain effectively unconfined and numerically
-divergent over the sampling budget used here, which we verified empirically
-before fixing $\lambda$ at this value. Training starts from a fresh random
-initialisation (using the architecture and hyperparameters of the winning
-Optuna trial, not its trained weights) and runs under the SGLD update rule
-throughout; following a burn-in period of $T_\text{burn-in} = 50$ epochs
-(discarded, while the chain moves from its random initialisation toward the
-confined posterior regime), we collect $T = 10$ weight snapshots
-$\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval of $\Delta = 10$
-epochs, yielding an inexpensive approximate ensemble. The burn-in length is
-set relative to the deterministic training dynamics of these backbones,
-which reach their validation optimum within roughly ten epochs under Adam
-(Section~\ref{ssec:optuna}); fifty epochs therefore allow the noise-injected
-chain to reach and explore the confined posterior region well beyond the
-point where the underlying loss has plateaued, and the ten-epoch snapshot
-spacing decorrelates consecutive samples.
+where $\epsilon$ is the step size and the $\lambda\theta_t$ term is the
+gradient of the negative log-prior. Under suitable conditions the resulting
+Markov chain asymptotically samples from $p(\theta \mid \mathcal{D})$ without
+the computational overhead of full MCMC. Rather than start the chain from a
+fresh random initialisation, we \emph{warm-start} it from the Optuna-trained
+point estimate $\hat\theta$ (the maximum-a-posteriori solution of
+Sections~\ref{ssec:resnet}--\ref{ssec:mlp}) and sample the local posterior
+around it. This is both more efficient and more stable than a from-scratch
+chain: at the small step size required for a well-behaved sampler, plain
+SGLD updates cannot themselves train a network from random weights within any
+practical epoch budget, so a warm-started chain is what actually yields an
+ensemble whose mean matches the point-forecast accuracy while its spread
+reflects the local posterior curvature. Because the chain begins at
+$\hat\theta$ --- far from the origin --- the confinement is supplied by the
+data likelihood (any drift away from the trained solution raises the loss and
+is pulled back), so we set the Gaussian prior precision $\lambda$ to the same
+(weak) Adam weight decay under which $\hat\theta$ was trained, rather than an
+artificially strong zero-centred prior that would drag the weights back
+toward the origin and destroy the fit.
+
+The step size $\epsilon$ is the critical sampler hyperparameter and is
+calibrated on the full-resolution data: each epoch comprises ${\sim}3.4$k
+SGLD steps (54k training windows at batch size 16), so the per-step Langevin
+noise accumulates over many steps per epoch. A calibration sweep from a
+warm-started backbone (Uniandes ResNet-LSTM, 1-hour horizon) showed
+$\epsilon = 10^{-5}$ diverging within a few epochs (training loss growing by
+two orders of magnitude), $\epsilon = 10^{-6}$ degrading the fit toward the
+predict-the-mean floor, and $\epsilon = 10^{-7}$ keeping the training loss
+stable at the backbone level while producing an ensemble whose daytime skill
+matches the point estimate and whose posterior spread is non-degenerate; we
+therefore fix $\epsilon = 10^{-7}$. Following a burn-in of
+$T_\text{burn-in} = 20$ epochs (discarded, allowing the injected noise to
+equilibrate into the local posterior), we collect $T = 10$ weight snapshots
+$\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval of $\Delta = 5$ epochs,
+yielding an inexpensive approximate ensemble.
 
 \textbf{Ensemble point forecast and epistemic variance.}
 For a test input $x$, each posterior sample $\theta_t$ produces a point

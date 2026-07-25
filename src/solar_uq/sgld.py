@@ -31,8 +31,12 @@ class SGLD(torch.optim.Optimizer):
 
     Args:
         params:        model parameters (same interface as any torch Optimizer)
-        lr:            SGLD step size ε. Typically 1e-5 to 1e-4 — much smaller
-                       than Adam's LR. Rule of thumb: ε ≈ adam_lr * 0.01.
+        lr:            SGLD step size ε. Calibrated on full-resolution data to
+                       1e-7 (see scripts/08_sgld.py --sgld_lr): each epoch is
+                       ~3.4k steps, so the accumulated per-epoch Langevin noise
+                       is far larger than a small-/subsampled-setup heuristic
+                       (ε ≈ adam_lr*0.01 ≈ 1e-5) would suggest — 1e-5 diverges,
+                       1e-7 samples a stable warm-started local posterior.
         weight_decay:  L2 prior precision (NOT the Optuna-tuned Adam
                        weight_decay — see module docstring; default in
                        scripts/08_sgld.py is 100.0).
