@@ -214,15 +214,82 @@ reproducibilidad que El Paso quedará con una mezcla de \texttt{torch~2.11}
 que se reporta media$\pm$desviación.
 
 % ================================================================
-\section{Incidente 4 (abierto): SGLD no produce una posterior estable}
+\section{Cuantificación de incertidumbre: objetivo, avance y problema abierto}
 \label{sec:sgld}
 % ================================================================
 
-La cuantificación de incertidumbre epistémica vía SGLD --- la contribución
-metodológica central del artículo --- resultó ser la pieza menos madura del
-proyecto. Sus hiperparámetros venían de un montaje anterior mucho más barato
-y \emph{nunca se validaron en datos de resolución completa}. Al hacerlo,
-fallaron en cascada. En orden (todo verificado empíricamente sobre Uniandes):
+\subsection{Qué quiero hacer: desentrelazar incertidumbre aleatoria y epistémica}
+
+La meta no es solo dar un intervalo alrededor del pronóstico, sino
+\textbf{descomponer} la incertidumbre en sus dos fuentes, porque la respuesta
+operativa de un operador de red es distinta en cada caso:
+
+\begin{itemize}[leftmargin=1.5em, noitemsep]
+  \item \textbf{Incertidumbre aleatoria} $\sigma_a^2(x)$: el ruido
+        \emph{irreducible} del proceso físico --- la estocasticidad de la
+        formación de nubes. Aunque tuviéramos datos infinitos, seguiría ahí.
+        Ante ella, la respuesta es una reserva o un margen conservador.
+  \item \textbf{Incertidumbre epistémica} $\sigma_\text{epi}^2(x)$: la
+        incertidumbre \emph{reducible} del modelo, alta cuando pronostica
+        bajo condiciones que ha visto poco (datos escasos o atípicos). Ante
+        ella, la respuesta es distinta: recolectar más datos de esa condición
+        o reentrenar, no solo ampliar el margen.
+\end{itemize}
+
+El método que sigo es el propuesto por el asesor: la estrategia
+\emph{cooperativa} de Yi \& Bessa (2025), \emph{Cooperative Bayesian and
+Variance Networks Disentangle Aleatoric and Epistemic Uncertainties}
+(arXiv:2505.02743). Su idea central es entrenar las componentes en
+\textbf{secuencia, no en conjunto}: entrenar la media y la varianza a la vez
+(las redes MVE estándar) produce gradientes desbalanceados y varianza
+sobreconfiada. El método tiene tres pasos:
+
+\begin{enumerate}[leftmargin=1.6em, noitemsep]
+  \item \textbf{Red de media} --- el backbone de punto ya entrenado (Optuna),
+        congelado.
+  \item \textbf{Red de varianza (aleatoria)} --- con la media congelada,
+        entrena una red que predice el residuo al cuadrado
+        $r=(\mu(x)-y)^2$ vía verosimilitud Gamma, dando
+        $\sigma_a^2(x)=\alpha(x)/\lambda(x)$.
+  \item \textbf{Red bayesiana (epistémica)} --- muestrea la posterior de los
+        pesos (SGLD), \emph{arrancando desde la media} y usando una
+        verosimilitud ponderada por la $\sigma_a^2(x)$ fija del paso~2, para
+        que la dispersión resultante sea epistémica genuina, ya separada del
+        ruido aleatorio.
+\end{enumerate}
+
+\subsection{Lo que he hecho: pasos 1 y 2}
+
+\textbf{Paso 1 (media):} listo --- son los backbones de Optuna por
+sitio-horizonte, con sus checkpoints guardados.
+
+\textbf{Paso 2 (varianza aleatoria):} \textbf{implementado y validado}. Se
+programó la red de varianza con un truco limpio (reemplazar la última capa
+\texttt{Linear($\cdot$,1)} del backbone por \texttt{Linear($\cdot$,2)} para
+que emita los dos parámetros Gamma sin tocar el \texttt{forward} original) y
+la verosimilitud Gamma \emph{derivada desde cero} --- no transcrita de la
+Ec.~6 del paper, que se leyó de una imagen del PDF con posible error de OCR.
+La validación fue triple: (i)~recuperación sintética de parámetros Gamma
+conocidos; (ii)~validación cruzada (el residuo medio del test coincide con el
+\texttt{mae\_day} del checkpoint original, 199.51 vs 199.31~W/m²); y
+(iii)~estabilidad (15--30 épocas sin divergencia en las 3 arquitecturas). Se
+corrió sobre Uniandes (único sitio con backbones disponibles tras la
+reconstrucción de El Paso): ResNet 12/12, GraphSAGE 10/12, MLP 5/12
+combinaciones. \emph{Hallazgo a revisar antes de reportar:} GraphSAGE a 1h
+colapsa a varianza casi constante (homoscedástica) en 3 de 4 semillas --- el
+modo de fallo conocido de las redes de varianza, probablemente porque a ese
+horizonte el residuo de GraphSAGE tiene poca señal explotable (su skill de
+punto también es el más débil ahí). No bloquea, pero conviene mirarlo (¿lr o
+épocas distintas para la red de varianza?).
+
+\subsection{El problema abierto: paso 3 (red bayesiana / SGLD)}
+
+El paso~3 es donde el proyecto se atascó. La red bayesiana es el SGLD ya
+existente, pero requería adaptarse (warm-start desde la media +
+verosimilitud ponderada por $\sigma_a^2$). Al intentar validar SGLD sobre
+datos de resolución completa --- algo que \emph{nunca se había hecho}, sus
+hiperparámetros venían de un montaje anterior mucho más barato --- falló en
+cascada. En orden (todo verificado empíricamente sobre Uniandes):
 
 \begin{enumerate}[leftmargin=1.6em, noitemsep]
   \item \textbf{Presupuesto irreal.} El programa original (500~épocas de
@@ -259,19 +326,41 @@ sobre redes sobreparametrizadas no tiene una posterior estacionaria acotada
 función de pérdida y se aleja del modo. El prior lo bastante fuerte para
 acotar esa deriva es también lo bastante fuerte para distorsionar la
 solución. Es una tensión conocida y difícil en la literatura (``cold
-posterior'').
+posterior''). Todo esto quedó documentado en la metodología del artículo como
+\emph{problema abierto}, sin afirmar que el estimador esté validado, y los
+runs fallidos se archivaron como evidencia.
 
-\textbf{Decisión.} No seguir gastando cómputo en afinar SGLD sin definir el
-método. La Tabla de descomposición de incertidumbre queda como marcador
-declarado. Como SGLD/bayesiano fue la sugerencia del asesor, la elección del
-método se conversará con él. La alternativa más sólida disponible, que no
-requiere entrenamiento nuevo, son los \textbf{deep ensembles}: usar la
-dispersión de predicciones de las 4~semillas ya entrenadas por configuración
-como estimador de incertidumbre epistémica (Lakshminarayanan et~al., 2017),
-un estándar bien calibrado. Independientemente, el paso~2 de la estrategia
-cooperativa de Yi \& Bessa (red de varianza aleatoria por verosimilitud
-Gamma sobre los residuos del modelo medio congelado) sí quedó implementado y
-validado para Uniandes.
+\subsection{Lo que sigue}
+
+\begin{enumerate}[leftmargin=1.6em, noitemsep]
+  \item \textbf{Completar el paso~2} en las combinaciones de Uniandes que
+        faltan, y en El Paso una vez existan sus backbones corregidos.
+  \item \textbf{Definir la componente epistémica (paso~3) con el asesor.} Dado
+        que el SGLD tal cual no da una posterior estable, hay dos caminos y la
+        decisión es suya, ya que el método bayesiano fue su propuesta:
+        \begin{itemize}[leftmargin=1.3em, noitemsep]
+          \item \emph{Arreglar/reemplazar el muestreador} bayesiano (p.\,ej.\
+                un prior intermedio que acote las direcciones planas sin
+                distorsionar el modo, o un esquema tipo SGHMC con momento) ---
+                trabajo de investigación de resultado incierto.
+          \item \emph{Sustituir la red bayesiana por un deep ensemble}: usar
+                la dispersión de las 4~semillas ya entrenadas por
+                configuración como estimador epistémico
+                (Lakshminarayanan et~al., 2017), un estándar bien calibrado.
+                No requiere entrenamiento nuevo y \emph{preserva el objetivo
+                de desentrelazamiento}: el paso~2 (red de varianza) seguiría
+                dando la parte aleatoria $\sigma_a^2$, y el ensemble daría la
+                epistémica $\sigma_\text{epi}^2$ --- la misma descomposición
+                que buscaba Yi \& Bessa, con una componente epistémica más
+                robusta.
+        \end{itemize}
+  \item \textbf{Revisar el colapso homoscedástico} del paso~2 en GraphSAGE~a~1h
+        antes de reportar resultados finales.
+\end{enumerate}
+
+Mientras se decide, la Tabla de descomposición de incertidumbre queda como
+marcador declarado en el artículo, sin comprometer un método que no esté
+validado.
 
 % ================================================================
 \section{Estado actual}
