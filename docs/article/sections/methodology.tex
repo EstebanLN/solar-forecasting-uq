@@ -548,21 +548,30 @@ is pulled back), so we set the Gaussian prior precision $\lambda$ to the same
 artificially strong zero-centred prior that would drag the weights back
 toward the origin and destroy the fit.
 
-The step size $\epsilon$ is the critical sampler hyperparameter and is
-calibrated on the full-resolution data: each epoch comprises ${\sim}3.4$k
-SGLD steps (54k training windows at batch size 16), so the per-step Langevin
-noise accumulates over many steps per epoch. A calibration sweep from a
-warm-started backbone (Uniandes ResNet-LSTM, 1-hour horizon) showed
-$\epsilon = 10^{-5}$ diverging within a few epochs (training loss growing by
-two orders of magnitude), $\epsilon = 10^{-6}$ degrading the fit toward the
-predict-the-mean floor, and $\epsilon = 10^{-7}$ keeping the training loss
-stable at the backbone level while producing an ensemble whose daytime skill
-matches the point estimate and whose posterior spread is non-degenerate; we
-therefore fix $\epsilon = 10^{-7}$. Following a burn-in of
-$T_\text{burn-in} = 20$ epochs (discarded, allowing the injected noise to
-equilibrate into the local posterior), we collect $T = 10$ weight snapshots
-$\{\theta_t\}_{t=1}^{T}$ at a fixed sampling interval of $\Delta = 5$ epochs,
-yielding an inexpensive approximate ensemble.
+The step size $\epsilon$ is the critical sampler hyperparameter: each epoch
+comprises ${\sim}3.4$k SGLD steps (54k training windows at batch size 16), so
+the per-step Langevin noise accumulates over many steps per epoch. A
+calibration sweep from a warm-started backbone (Uniandes ResNet-LSTM, 1-hour
+horizon) showed $\epsilon = 10^{-5}$ diverging within a few epochs and
+$\epsilon = 10^{-6}$ degrading the fit toward the predict-the-mean floor,
+with $\epsilon = 10^{-7}$ the smallest step giving a stable chain over a
+short window.
+
+\emph{Open issue.} Over the full sampling budget, however, even
+$\epsilon = 10^{-7}$ exhibits a slow drift: the chain stays at the
+backbone-quality region for roughly ten epochs and then wanders along the
+flat directions of the loss landscape, so the late snapshots degrade and the
+ensemble spread inflates without reflecting a bounded stationary posterior.
+This is the well-documented difficulty of fixed-step SGLD on
+over-parameterised networks, where the prior precision strong enough to
+confine the flat directions also distorts the trained solution. We therefore
+regard the epistemic-uncertainty estimator as \textbf{not yet finalised}: the
+SGLD-based decomposition of Table~\ref{tab:decomposition} is reported as
+pending, and a deep-ensemble estimator over the independently-trained seeds
+(Section~\ref{sec:discussion}, Limitations) is under consideration as a
+better-behaved alternative. The remainder of this subsection describes the
+intended SGLD estimator; the schedule ($T_\text{burn-in} = 20$ epochs,
+$T = 10$ snapshots at interval $\Delta = 5$) is stated for completeness.
 
 \textbf{Ensemble point forecast and epistemic variance.}
 For a test input $x$, each posterior sample $\theta_t$ produces a point

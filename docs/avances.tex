@@ -3,7 +3,10 @@
 % ----- Encoding & language -----
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[spanish]{babel}
+% NOTE: babel[spanish] requires texlive-lang-spanish, absent on some build
+% machines; omitted so the report compiles anywhere. Content is Spanish; only
+% hyphenation falls back to default. Re-add \usepackage[spanish]{babel} where
+% the package is installed for proper Spanish hyphenation.
 
 % ----- Math -----
 \usepackage{amsmath,amssymb}
@@ -37,7 +40,7 @@
        \large Predicción de Irradiancia Solar (GHI) con Aprendizaje Profundo\\
        y Cuantificación de Incertidumbre}
 \author{Esteban Ladino Nieto}
-\date{18 de julio de 2026}
+\date{28 de julio de 2026}
 % ================================================================
 
 \begin{document}
@@ -52,15 +55,22 @@ global (GHI) a 1, 3 y 6~horas usando imágenes del satélite GOES-16 como
 entrada espacial, en dos sitios colombianos con regímenes climáticos
 contrastantes (El Paso, César --- tropical seco de baja elevación; Uniandes,
 Bogotá --- montaña ecuatorial con convección orográfica). El sistema además
-debe producir una capa de cuantificación de incertidumbre epistémica vía
-SGLD.
+debe producir una capa de cuantificación de incertidumbre \emph{epistémica}
+(inicialmente vía SGLD).
 
-Este informe es más corto que versiones anteriores a propósito: se
-concentra en (i) un incidente de datos serio encontrado y corregido esta
-semana, (ii) qué quedó listo tras corregirlo, y (iii) qué falta por correr.
+Este informe cubre varias semanas densas en incidentes. Se organiza por
+problema encontrado, en orden de gravedad para la validez de los resultados:
+(i)~un bug de datos que invalidó silenciosamente todo El Paso;
+(ii)~un error metodológico en el baseline SARIMA; (iii)~problemas de
+infraestructura de cómputo (errores de CUDA, reinicio y actualización del
+servidor); y (iv)~un problema de fondo, aún abierto, en el método de
+cuantificación de incertidumbre. Al final se resume el estado actual y lo
+pendiente. La política de trabajo adoptada en todo momento fue: \emph{ante
+datos o métodos con error, marcar y detener, nunca publicar un número que no
+se sostenga}.
 
 % ================================================================
-\section{Incidente: desalineación temporal en El Paso}
+\section{Incidente 1: desalineación temporal en El Paso}
 \label{sec:incidente}
 % ================================================================
 
@@ -89,44 +99,179 @@ que cada muestra de El Paso emparejara imágenes satelitales de un momento
 real distinto al de su etiqueta de GHI --- de forma silenciosa, sin generar
 ningún error ni muestra faltante.
 
-\subsection{Impacto}
+\subsection{Impacto y corrección}
 
 \textbf{Solo El Paso se vio afectado.} Uniandes estaba correcto desde el
-principio (verificado: su pico de GHI cae en la hora~16~UTC, consistente con
-el cálculo astronómico para su longitud). Persistencia y SARIMA de El Paso
-no se ven afectados en validez (solo comparan la serie de GHI contra sí
-misma, sin unir con satélite), pero \textbf{todo modelo de aprendizaje
-profundo entrenado con El Paso} --- baseline, Optuna v1 (los resultados que
-hasta ahora se citaban en este informe y en el artículo), Optuna v2, MLP,
-fusión, SGLD --- estaba construido sobre el manifest desalineado y debía
-tratarse como inválido.
+principio (su pico de GHI cae en la hora~16~UTC). Persistencia de El Paso
+depende de la consistencia interna de la propia serie terrestre, así que
+también cambió al corregir el archivo (204.4~$\to$~206.0~W/m² a 1h); las
+estadísticas puramente descriptivas de forma/distribución recomputadas hoy
+sobre el archivo corregido son válidas. Pero \textbf{todo modelo de
+aprendizaje profundo entrenado con El Paso} --- baseline, Optuna~v1 (los
+resultados insignia que se citaban, incluido $\text{Skill}_\text{day}=0.636$
+en 6h), Optuna~v2, MLP, fusión, SGLD --- estaba construido sobre el manifest
+desalineado y debía tratarse como inválido.
 
-\subsection{Corrección aplicada}
+La corrección: se arregló el notebook y se regeneró el archivo de referencia
+(pico ahora en 16~UTC, verificado); se reconstruyó el manifest de El Paso
+para los 3~horizontes y se completó el patch store; se recalcularon
+persistencia y SARIMA sobre datos corregidos; se \textbf{borraron todos los
+runs de El Paso} construidos sobre el manifest viejo (Uniandes intacto); y se
+relanzó el entrenamiento de El Paso desde cero. Un detalle operativo
+importante: \texttt{data/} está en \texttt{.gitignore}, así que la corrección
+no viajó al servidor por git y hubo que sincronizarla por \texttt{rsync}
+explícitamente; el primer relanzamiento en el servidor corrió $\sim$40~min
+sobre el manifest aún viejo antes de detectarlo.
 
-\begin{enumerate}[leftmargin=1.5em, noitemsep]
-  \item Se corrigió \texttt{01\_ground\_eda.ipynb} y se regeneró el archivo
-        de referencia de El Paso (pico ahora en 16~UTC, verificado contra
-        las imágenes satelitales).
-  \item Se reconstruyó el manifest de El Paso para los 3~horizontes y se
-        completó el patch store (faltaban 11--18 archivos de hora de
-        $\sim$17\,441, cobertura ya al día).
-  \item Se recalcularon persistencia y SARIMA de El Paso sobre los datos
-        corregidos.
-  \item Se \textbf{borraron todos los runs de El Paso} construidos sobre el
-        manifest viejo, incluyendo Optuna v1 y los baselines legacy (no solo
-        v2/MLP/fusión): estaban igual de inválidos, aunque el artículo ya no
-        vaya a citarlos. Uniandes no se tocó.
-  \item De paso se limpiaron archivos huérfanos sin relación con el bug:
-        manifests planos de un notebook ya reemplazado y dos checkpoints
-        sueltos mal ubicados.
-  \item Se relanzó el entrenamiento de El Paso desde cero (Sección~\ref{sec:estado}).
+\subsection{Cómo se refleja en el artículo (convención de la daga)}
+
+Semanas después se descubrió que el manuscrito \emph{todavía} citaba los
+números contaminados de El Paso en tablas, figuras y prosa. En vez de borrar
+o reestructurar esas secciones, se adoptó una convención de marcado: cada
+valor derivado de datos pre-corrección lleva una \textbf{daga}
+($^\dagger$) y una nota de ``pendiente de reconfirmar''; secciones,
+hipótesis y figuras se conservan íntegras. La figura de serie temporal de El
+Paso se dejó como recuadro-marcador (``pendiente de regeneración''); las
+figuras de barras muestran El Paso con solo las barras actualmente válidas
+(persistencia y SARIMA), sin ocultar el sitio.
+
+Esta decisión resultó crucial: el primer resultado corregido de El Paso
+(ResNet a 1h, ya con sus 2~semillas) da $\text{Skill}_\text{day} = +0.297
+\pm 0.028$, cuando el número contaminado era $-0.167^\dagger$
+(\emph{negativo}). El bug no desviaba el número: le \emph{invertía el signo}.
+La hipótesis actual del artículo de que ``el horizonte de 1h en El Paso es
+intratable'' tendrá que reescribirse, no solo actualizarse, cuando se
+des-dague esa celda. Haberlo marcado como pendiente evitó publicar una
+conclusión falsa.
+
+% ================================================================
+\section{Incidente 2: error metodológico en SARIMA}
+% ================================================================
+
+El baseline SARIMA producía un pronóstico estático: ajustaba el modelo una
+vez y luego generaba \emph{una sola trayectoria abierta} desde el fin del
+entrenamiento que cubría meses de validación y test. En consecuencia sus
+``pronósticos a 1h, 3h y 6h'' eran idénticos entre horizontes (solo cambiaba
+el subconjunto de test evaluado), y cada objetivo de test era en realidad una
+extrapolación a miles de pasos. Como benchmark por horizonte, era inválido.
+
+Se reescribió a \textbf{evaluación rolling-origin}: parámetros estimados una
+vez sobre el entrenamiento y luego fijos, con el filtro de Kalman avanzando
+observación por observación por validación y test, emitiendo en cada origen
+horario de test un pronóstico genuino a $H$~pasos desde el estado que
+incorpora la información hasta ese instante. Los nuevos valores hacen a
+SARIMA un baseline \emph{competitivo}: $\text{Skill}_\text{day}$ de
+$0.42/0.65/0.74$ (El Paso) y $0.33/0.41/0.48$ (Uniandes) a 1h/3h/6h. Se
+documentó explícitamente en la metodología que estos números \emph{no} son
+comparables directos con la tabla principal, porque SARIMA se evalúa sobre el
+subconjunto horario y contra un objetivo de media horaria (más suave que el
+instantáneo de 10~min que resuelven los modelos de aprendizaje profundo).
+
+% ================================================================
+\section{Incidente 3: infraestructura de cómputo (CUDA, reinicio, versiones)}
+% ================================================================
+
+\subsection{Error de CUDA por \texttt{fork} de workers}
+
+Al agregar procesos concurrentes en el servidor empezaron a aparecer fallos
+\texttt{CUDA error: initialization error}: el problema conocido de PyTorch en
+que un worker de \texttt{DataLoader} creado por \texttt{fork()} hereda un
+contexto CUDA ya inicializado por el proceso padre. Inicialmente pareció que
+2~procesos concurrentes eran estables, pero el fallo terminó apareciendo
+incluso con 2~vías tras acumular suficientes \texttt{fork}s de trials. La
+causa no es la concurrencia sino que la condición de carrera está presente en
+\emph{cada} trial (cada uno crea workers nuevos en un proceso cuyo contexto
+CUDA lleva vivo desde el trial~1). \textbf{Se corrigió en código}: se puso
+\texttt{num\_workers=0} en todos los scripts de entrenamiento y en SGLD
+(donde el riesgo es máximo por correr miles de épocas en un solo proceso).
+Sin \texttt{fork} no hay contexto heredado, así que la carrera desaparece de
+raíz; el costo es bajo porque el patch store ya se precarga completo en RAM.
+
+\subsection{Desincronización de driver en la máquina local}
+
+En la máquina local, \texttt{nvidia-smi} empezó a fallar con
+\emph{driver/library version mismatch} (el driver se actualizó en disco sin
+reiniciar). Se verificó que esto afecta solo a la interfaz de monitoreo
+(NVML): un proceso CUDA nuevo inicializa y corre sin problema, y los jobs ya
+vivos no se ven afectados. La única precaución operativa fue no reiniciar la
+máquina hasta que terminaran los trabajos en curso.
+
+\subsection{Reinicio y actualización del servidor}
+
+El servidor del asesor estuvo inalcanzable (pérdida total de red) y al volver
+había \textbf{reiniciado} --- por \texttt{unattended-upgrades} del sistema.
+Los runs en curso murieron (los estudios Optuna pierden su historial en
+memoria); lo ya completado sobrevivió en disco. El asesor confirmó que
+aprovechó el reinicio para actualizar el entorno. Se hizo un \emph{sanity
+check} antes de relanzar: el stack pasó de \texttt{torch~2.11} a
+\texttt{torch~2.14} (\texttt{pandas~3.0}, \texttt{numpy~2.4} y
+\texttt{optuna~4.7} coinciden con el local). Se comprobó con un smoke-test
+completo que el pipeline funciona en el stack nuevo y que los checkpoints
+viejos (entrenados en 2.11) cargan bien en 2.14. Queda como caveat menor de
+reproducibilidad que El Paso quedará con una mezcla de \texttt{torch~2.11}
+(lo completado antes del reinicio y lo que corre en local) y \texttt{2.14}
+(lo relanzado en el servidor), diferencia dentro del ruido entre semillas ya
+que se reporta media$\pm$desviación.
+
+% ================================================================
+\section{Incidente 4 (abierto): SGLD no produce una posterior estable}
+\label{sec:sgld}
+% ================================================================
+
+La cuantificación de incertidumbre epistémica vía SGLD --- la contribución
+metodológica central del artículo --- resultó ser la pieza menos madura del
+proyecto. Sus hiperparámetros venían de un montaje anterior mucho más barato
+y \emph{nunca se validaron en datos de resolución completa}. Al hacerlo,
+fallaron en cascada. En orden (todo verificado empíricamente sobre Uniandes):
+
+\begin{enumerate}[leftmargin=1.6em, noitemsep]
+  \item \textbf{Presupuesto irreal.} El programa original (500~épocas de
+        burn-in + 10~muestras cada 100 = 1500~épocas) asumía un costo por
+        época $\sim$30$\times$ menor del real ($\sim$450~s/época sobre 54k
+        muestras): implicaba $\sim$8~días por corrida.
+  \item \textbf{Init fresco no entrena.} Reducido el programa, con
+        inicialización aleatoria la red no aprende: al paso de muestreo
+        ($\varepsilon = 10^{-5}$) los updates tipo SGD no alcanzan a entrenar
+        desde cero; la pérdida se queda en el piso de ``predecir la media''.
+  \item \textbf{Warm-start + prior fuerte destruye el ajuste.} Arrancar desde
+        el checkpoint entrenado carga bien, pero el prior gaussiano centrado
+        en cero con precisión $\lambda=100$ (elegido para confinar la cadena)
+        arrastra los pesos entrenados de vuelta al origen y degrada el
+        ajuste.
+  \item \textbf{Warm-start + prior débil + paso grande diverge.} Con un prior
+        débil, a $\varepsilon = 10^{-5}$ la cadena diverge en pocas épocas
+        (pérdida $0.9\to78$): cada época son $\sim$3400~pasos SGLD, demasiado
+        ruido acumulado.
+  \item \textbf{El paso calibrado parecía funcionar\ldots\ y era un falso
+        positivo.} Un barrido dio $\varepsilon = 10^{-7}$ como estable en una
+        ventana corta (4~épocas): pérdida estable, skill del ensamble
+        $0.184$ ($\geq$ backbone $0.175$), $\sigma_\text{epi}$ razonable.
+        Pero sobre las 70~épocas reales la cadena \textbf{deriva lentamente}:
+        estable $\sim$10~épocas y luego la pérdida crece ($0.4\to1.7$) y el
+        val se degrada; los $\sigma_\text{epi}$ finales explotan
+        ($\sim$120--200 vs 17 en la ventana estable). Las 3~corridas dieron
+        skill negativo o degradado.
 \end{enumerate}
 
-\textbf{Consecuencia directa para este informe:} la tabla de resultados de
-El Paso que se citaba en versiones anteriores (Optuna v1, incluyendo el
-resultado insignia $\text{Skill}_\text{day}=0.636$ en 6h) ya no existe en el
-repositorio y no debe repetirse hasta que termine el relanzamiento. Los
-resultados de Uniandes de ese mismo estudio siguen vigentes.
+\textbf{Diagnóstico.} El problema es fundamental, no de ajuste fino: SGLD
+sobre redes sobreparametrizadas no tiene una posterior estacionaria acotada
+--- la cadena hace un paseo aleatorio por las direcciones planas de la
+función de pérdida y se aleja del modo. El prior lo bastante fuerte para
+acotar esa deriva es también lo bastante fuerte para distorsionar la
+solución. Es una tensión conocida y difícil en la literatura (``cold
+posterior'').
+
+\textbf{Decisión.} No seguir gastando cómputo en afinar SGLD sin definir el
+método. La Tabla de descomposición de incertidumbre queda como marcador
+declarado. Como SGLD/bayesiano fue la sugerencia del asesor, la elección del
+método se conversará con él. La alternativa más sólida disponible, que no
+requiere entrenamiento nuevo, son los \textbf{deep ensembles}: usar la
+dispersión de predicciones de las 4~semillas ya entrenadas por configuración
+como estimador de incertidumbre epistémica (Lakshminarayanan et~al., 2017),
+un estándar bien calibrado. Independientemente, el paso~2 de la estrategia
+cooperativa de Yi \& Bessa (red de varianza aleatoria por verosimilitud
+Gamma sobre los residuos del modelo medio congelado) sí quedó implementado y
+validado para Uniandes.
 
 % ================================================================
 \section{Estado actual}
@@ -136,113 +281,103 @@ resultados de Uniandes de ese mismo estudio siguen vigentes.
 \begin{table}[H]
   \centering
   \small
-  \caption{Estado por grupo de experimento al 18 de julio de 2026.
-           El Paso: todo en 0 tras el borrado del incidente, salvo lo ya
-           relanzado. Uniandes: intacto, sin cambios por el incidente.}
+  \caption{Estado por grupo de experimento al 28 de julio de 2026.
+           ``v2'' = espacio extendido, 2~semillas $\{42,1\}$, 75~trials.
+           Uniandes intacto desde el incidente; El Paso reconstruido y en
+           relanzamiento tras el reinicio del servidor.}
   \label{tab:estado}
-  \begin{tabular}{@{}lccp{6.3cm}@{}}
+  \begin{tabular}{@{}lccp{6.1cm}@{}}
     \toprule
     \textbf{Grupo} & \textbf{El Paso} & \textbf{Uniandes} & \textbf{Observación} \\
     \midrule
-    Baseline (legacy)        & 0/15 & 15/15 & Fuera de alcance del artículo; no se relanza \\
-    Optuna v1 (ResNet/GSAGE) & 0/24 & 24/24 & Fuera de alcance; el artículo pasa a usar v2 \\
-    SARIMA + persistencia    & \multicolumn{2}{c}{2/2} & Recalculado sobre datos corregidos \\
+    Optuna v1 (ResNet/GSAGE) & ---  & 24/24 & Base de la Tabla~2 de Uniandes (válida) \\
+    SARIMA + persistencia    & \multicolumn{2}{c}{ok} & Reescrito a rolling-origin \\
     \midrule
-    ResNet Optuna v2         & 0/12 & 10/12 & \textbf{Corriendo} en servidor (75 trials, 2 semillas) \\
-    GraphSAGE Optuna v2      & 0/12 & 1/12  & \textbf{Corriendo} en servidor; el más lento \\
-    FlatMLP Optuna           & 0/24 & 10/24 & Pausado tras crash-loop (ver abajo); retoma en cola tras ResNet v2 \\
-    Fusion ResNet+LSTM       & 0/12 & 2/12  & \textbf{Corriendo} localmente \\
-    Fusion GraphSAGE+LSTM    & 0/12 & 0/12  & En cola, tras GraphSAGE v2 \\
-    SGLD (Resnet/GSAGE/MLP)  & 0/72 & 0/72  & Bloqueado: requiere backbones v2 terminados \\
-    GraphSAGE $P=64$ (sonda) & --   & --    & Pausada; no es parte del artículo \\
+    ResNet Optuna v2         & h1 ok; h3/h6 corriendo & casi & Servidor (h3) + local (h6) \\
+    GraphSAGE Optuna v2      & h3(s42) ok; h1/resto corriendo & casi & Servidor (h1, el gap) + local (h6) \\
+    FlatMLP Optuna           & parcial & completo & Uniandes cerrado; El Paso en cola \\
+    Fusion ResNet+LSTM       & h6 ok & 2/6 & Local h6 completado \\
+    Fusion GraphSAGE+LSTM    & pendiente & pendiente & En cola \\
+    Red de varianza (aleat.) & --- & 33/36 & Paso 2 UQ implementado y validado \\
+    SGLD (epistémico)        & \multicolumn{2}{c}{en revisión} & Ver Sección~\ref{sec:sgld} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Ritmo real observado y expectativa de tiempo}
+\textbf{Primer resultado corregido de El Paso.} GraphSAGE~v2 a 3h (semilla 42)
+da $\text{Skill}_\text{day} = 0.585$ frente a $0.419^\dagger$ del número
+contaminado: la corrección \emph{fortalece} el resultado. Junto con
+ResNet~a~1h ($+0.297$ vs $-0.167^\dagger$), confirma que los números
+originales subestimaban o invertían el desempeño real.
 
-Verificado directamente en los logs (no estimado): ResNet v2
-$\sim$33~min/trial, GraphSAGE v2 $\sim$81~min/trial, Fusion-ResNet
-$\sim$41~min/trial. Con 75~trials por combinación (sitio $\times$
-horizonte $\times$ semilla) y 6~combinaciones de El Paso por grupo, esto
-implica \textbf{semanas, no días}, por grupo --- GraphSAGE v2 es el cuello
-de botella real del proyecto. Confirmado con el asesor: hay margen de
-tiempo suficiente, no se recortó el presupuesto de trials.
-
-\subsection{Segundo problema encontrado (no relacionado con el bug de UTC)}
-
-Al agregar \texttt{mlp\_optuna} como tercer proceso concurrente en el
-servidor para aprovechar margen de GPU libre, empezó a fallar
-sistemáticamente (\texttt{CUDA error: initialization error}, el problema
-conocido de PyTorch donde un worker de \texttt{DataLoader} creado por
-\texttt{fork()} hereda un contexto CUDA ya inicializado por el proceso
-padre). Los 2~procesos originales (ResNet~v2, GraphSAGE~v2) llevan más de
-11~horas sin un solo fallo de este tipo; el tercero falló las 3 veces que se
-intentó. Se optó por quedarse en 2~vías concurrentes (comprobadamente
-estable) en vez de arriesgar el fix de código, dado el margen de tiempo
-disponible.
+\textbf{Reparto de cómputo actual.} Servidor (la cadena \texttt{run\_sequential}):
+El Paso v2 sistemático empezando por el gap de GraphSAGE~a~1h y ResNet~a~3h.
+Local (GPU libre tras terminar fusión y pausar SGLD): El Paso~a~6h,
+que es la cola de la cadena del servidor, para paralelizar sin duplicar.
 
 % ================================================================
 \section{Progreso del artículo}
 % ================================================================
 
-Aparte de lo anterior, se hizo una revisión crítica del manuscrito
-(\texttt{docs/article/}) desde la perspectiva de un revisor de revista,
-y se aplicaron las correcciones que no dependen de experimentos pendientes:
+Se hizo una revisión crítica del manuscrito desde la perspectiva de un
+revisor de revista y se aplicaron las correcciones que no dependen de
+experimentos pendientes:
 
 \begin{itemize}[leftmargin=1.5em, noitemsep]
-  \item \textbf{Error numérico corregido en Tabla~2:} a 3h en El Paso, el
-        valor resaltado como "mejor" (GraphSAGE, 0.419) era en realidad
-        menor que el de ResNet (0.420) en la misma fila; se corrigió el
-        resaltado y la prosa que lo interpretaba.
-  \item \textbf{Sobre-afirmación sobre SGLD corregida en 3 lugares}
-        (abstract, introducción, trabajo relacionado): se presentaba la
-        capa de incertidumbre epistémica como una capacidad ya validada,
-        cuando la sección de Limitaciones la describe correctamente como
-        una hipótesis de diseño aún no verificada empíricamente. Se
-        uniformó el registro hacia el más cauteloso.
-  \item \textbf{Gap de motivación para UQ agregado a la introducción:} la
-        introducción desarrollaba en detalle el vacío de literatura para
-        GNN/clima tropical, pero no para incertidumbre epistémica, que
-        aparecía sin motivación previa.
-  \item \textbf{Transiciones agregadas en Trabajo Relacionado:} 4 de las 6
-        subsecciones no conectaban explícitamente con la siguiente.
+  \item Convención de la daga aplicada en todo El Paso (Sección~\ref{sec:incidente}):
+        el artículo es auto-consistente y honesto sobre qué está pendiente.
+  \item Metodología puesta al día con la implementación real: protocolo
+        Optuna~v2 (75~trials, 2~semillas), SARIMA rolling-origin, y el
+        muestreador de incertidumbre (marcado en revisión, no afirmado como
+        validado).
+  \item Correcciones editoriales previas: error numérico en el resaltado de
+        la Tabla~2, sobre-afirmación sobre SGLD atenuada, gap de motivación
+        para UQ agregado a la introducción, transiciones en Trabajo
+        Relacionado, y 4~figuras descriptivas del dataset integradas.
+  \item Extensión cooperativa de UQ (red de varianza aleatoria) descrita y
+        con su paso~2 implementado.
 \end{itemize}
 
-Las tres tablas del artículo que dependen de experimentos en curso (FlatMLP,
-ablación $k$-NN, descomposición SGLD) siguen vacías --- es cuestión de que
-terminen los experimentos, no de redacción.
+Uniandes queda con resultados finales y defendibles (4~semillas, auditado
+de punta a punta: sin fugas de información, normalizador consistente,
+persistencia evaluada sobre las mismas muestras que los modelos). El Paso
+queda honestamente marcado como pendiente. Las tablas que dependen de
+experimentos en curso (El Paso, ablación $k$-NN, descomposición de
+incertidumbre) se llenarán conforme terminen.
 
 % ================================================================
 \section{Trabajo pendiente --- priorizado}
 % ================================================================
 
 \begin{enumerate}[leftmargin=1.5em, noitemsep]
-  \item Dejar correr ResNet~v2 y GraphSAGE~v2 de El Paso (servidor) y
-        Fusion-ResNet (local) --- ya en marcha, sin acción adicional.
-  \item Retomar \texttt{mlp\_optuna} de El Paso cuando la cadena del
-        servidor llegue a ese paso (automático).
-  \item Una vez GraphSAGE~v2 complete El Paso: \texttt{fusion\_gsage} y los
-        backbones para SGLD.
-  \item Completar Uniandes en los grupos que aún les faltan combinaciones
-        (ResNet~v2: 2 de 12; GraphSAGE~v2: 11 de 12).
-  \item SGLD (ResNet, GraphSAGE, MLP) una vez existan backbones v2
-        definitivos por sitio-horizonte.
-  \item Llenar las tres tablas vacías del artículo conforme completen los
-        experimentos correspondientes.
+  \item \textbf{Definir el método de incertidumbre epistémica con el asesor}
+        (deep ensembles vs.\ seguir con SGLD): decisión que desbloquea la
+        Tabla de descomposición.
+  \item Dejar correr El Paso~v2 en servidor (h1, h3) y local (h6);
+        sincronizar las corridas locales antes de que la cadena del servidor
+        alcance h6.
+  \item Des-daguear cada columna de El Paso conforme tenga sus 2~arquitecturas
+        $\times$ 2~semillas, reescribiendo la narrativa asociada (empezando
+        por 1h, cuyo signo cambió).
+  \item Completar \texttt{fusion} y el FlatMLP de El Paso (en cola en la
+        cadena).
+  \item Vigilar posibles reinicios del servidor por \texttt{unattended-upgrades}.
 \end{enumerate}
 
 % ================================================================
 \section{Conclusión}
 % ================================================================
 
-El hallazgo principal de esta semana fue un bug de desalineación temporal
-que invalidaba silenciosamente todo el entrenamiento de El Paso desde su
-origen --- no solo los experimentos en curso, sino también los resultados
-de Optuna~v1 que hasta ahora se creían completos y correctos. Ya está
-corregido, verificado en ambas máquinas, y el relanzamiento está en marcha.
-El costo es tiempo: con el ritmo real observado, completar El Paso toma
-semanas, no días, pero hay margen suficiente para absorberlo sin recortar
-el alcance planeado.
+El periodo estuvo dominado por la depuración de errores que ponían en riesgo
+la validez de los resultados: un bug de datos que invertía el signo del
+desempeño de El Paso, un baseline SARIMA mal planteado, fallos de CUDA por
+\texttt{fork}, un reinicio con actualización del servidor, y --- lo más
+significativo y aún abierto --- que el método de incertidumbre epistémica
+elegido (SGLD) no produce una posterior estable sobre estas redes. Cada uno
+se detectó, aisló y documentó antes de que un número inválido llegara al
+artículo. La parte del trabajo que sí es sólida (Uniandes, SARIMA
+rolling-origin, el pipeline auditado, El Paso honestamente marcado) está
+intacta; el riesgo restante es de cronograma (El Paso toma semanas) y de una
+decisión metodológica pendiente sobre la cuantificación de incertidumbre.
 
 \end{document}
