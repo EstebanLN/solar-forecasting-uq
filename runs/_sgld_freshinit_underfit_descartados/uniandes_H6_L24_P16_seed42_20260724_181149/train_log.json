@@ -1,0 +1,1212 @@
+[
+  {
+    "epoch": 1,
+    "phase": "burn-in",
+    "train_mse_norm": 1.016831491984694,
+    "val_rmse": 254.24358168903652,
+    "val_rmse_day": 348.5250453261138,
+    "epoch_seconds": 416.78748416900635
+  },
+  {
+    "epoch": 2,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0207504551908022,
+    "val_rmse": 262.45865750377715,
+    "val_rmse_day": 315.3844454322836,
+    "epoch_seconds": 415.0680694580078
+  },
+  {
+    "epoch": 3,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0276113891130816,
+    "val_rmse": 272.2994805454398,
+    "val_rmse_day": 302.04252845511763,
+    "epoch_seconds": 412.7247145175934
+  },
+  {
+    "epoch": 4,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0077766337756262,
+    "val_rmse": 254.56620271405538,
+    "val_rmse_day": 348.2773294546504,
+    "epoch_seconds": 411.99527859687805
+  },
+  {
+    "epoch": 5,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0114988975283754,
+    "val_rmse": 254.65904509803718,
+    "val_rmse_day": 351.8368660406836,
+    "epoch_seconds": 414.56879448890686
+  },
+  {
+    "epoch": 6,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0115397415980827,
+    "val_rmse": 256.142917418428,
+    "val_rmse_day": 332.81327552757136,
+    "epoch_seconds": 410.83252000808716
+  },
+  {
+    "epoch": 7,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0078566902422652,
+    "val_rmse": 255.4134224956117,
+    "val_rmse_day": 360.67510357280736,
+    "epoch_seconds": 414.00131487846375
+  },
+  {
+    "epoch": 8,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0081849368097708,
+    "val_rmse": 257.2559491209483,
+    "val_rmse_day": 327.54795564380413,
+    "epoch_seconds": 414.74746584892273
+  },
+  {
+    "epoch": 9,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0223296328950335,
+    "val_rmse": 266.5620629929002,
+    "val_rmse_day": 308.8317609664987,
+    "epoch_seconds": 413.6155107021332
+  },
+  {
+    "epoch": 10,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0187081482766729,
+    "val_rmse": 260.19619417552434,
+    "val_rmse_day": 319.91702978991134,
+    "epoch_seconds": 415.3315806388855
+  },
+  {
+    "epoch": 11,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0251144909081709,
+    "val_rmse": 255.44300640586457,
+    "val_rmse_day": 335.16146894333383,
+    "epoch_seconds": 415.0674386024475
+  },
+  {
+    "epoch": 12,
+    "phase": "burn-in",
+    "train_mse_norm": 1.021965014224919,
+    "val_rmse": 254.58513726894643,
+    "val_rmse_day": 351.3852290447937,
+    "epoch_seconds": 412.9120421409607
+  },
+  {
+    "epoch": 13,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0112603406082232,
+    "val_rmse": 254.6535059517211,
+    "val_rmse_day": 341.2053013552656,
+    "epoch_seconds": 411.0156810283661
+  },
+  {
+    "epoch": 14,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0110501855463052,
+    "val_rmse": 267.24331567162824,
+    "val_rmse_day": 307.70365321324016,
+    "epoch_seconds": 417.84217715263367
+  },
+  {
+    "epoch": 15,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0323531549605494,
+    "val_rmse": 258.6759382320578,
+    "val_rmse_day": 323.0539769002285,
+    "epoch_seconds": 417.5230519771576
+  },
+  {
+    "epoch": 16,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0299141613796081,
+    "val_rmse": 254.44131249425263,
+    "val_rmse_day": 342.39276018775234,
+    "epoch_seconds": 416.1921787261963
+  },
+  {
+    "epoch": 17,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0091667650108889,
+    "val_rmse": 259.7649220422768,
+    "val_rmse_day": 320.6918839879483,
+    "epoch_seconds": 414.52462911605835
+  },
+  {
+    "epoch": 18,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0229618754489451,
+    "val_rmse": 254.87921416543995,
+    "val_rmse_day": 357.4465590909645,
+    "epoch_seconds": 415.6239264011383
+  },
+  {
+    "epoch": 19,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0161910754482464,
+    "val_rmse": 254.92358656645501,
+    "val_rmse_day": 338.41495037458805,
+    "epoch_seconds": 414.6854178905487
+  },
+  {
+    "epoch": 20,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0225441215479998,
+    "val_rmse": 254.40634784876698,
+    "val_rmse_day": 344.2061617774623,
+    "epoch_seconds": 414.84349608421326
+  },
+  {
+    "epoch": 21,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0292557500810289,
+    "val_rmse": 254.5412531405821,
+    "val_rmse_day": 350.8201663746067,
+    "epoch_seconds": 413.31839299201965
+  },
+  {
+    "epoch": 22,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0125735097434054,
+    "val_rmse": 254.6945916122336,
+    "val_rmse_day": 341.22624547485725,
+    "epoch_seconds": 412.5871181488037
+  },
+  {
+    "epoch": 23,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0239323667232527,
+    "val_rmse": 261.71359521277907,
+    "val_rmse_day": 316.41634057588027,
+    "epoch_seconds": 413.65350699424744
+  },
+  {
+    "epoch": 24,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0379431362641747,
+    "val_rmse": 264.6811345588707,
+    "val_rmse_day": 311.83423989580115,
+    "epoch_seconds": 415.31255292892456
+  },
+  {
+    "epoch": 25,
+    "phase": "burn-in",
+    "train_mse_norm": 1.013199922631435,
+    "val_rmse": 264.2989525375358,
+    "val_rmse_day": 311.871505494593,
+    "epoch_seconds": 413.8967127799988
+  },
+  {
+    "epoch": 26,
+    "phase": "burn-in",
+    "train_mse_norm": 1.026669757756778,
+    "val_rmse": 255.28071290165292,
+    "val_rmse_day": 361.23871808954914,
+    "epoch_seconds": 414.0145628452301
+  },
+  {
+    "epoch": 27,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0171488506661501,
+    "val_rmse": 257.36095763854894,
+    "val_rmse_day": 326.4971852910834,
+    "epoch_seconds": 415.8756124973297
+  },
+  {
+    "epoch": 28,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0125147603797828,
+    "val_rmse": 256.16342617948584,
+    "val_rmse_day": 332.35288150501816,
+    "epoch_seconds": 412.5547857284546
+  },
+  {
+    "epoch": 29,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0215841910998156,
+    "val_rmse": 254.54002244199484,
+    "val_rmse_day": 350.75244000883066,
+    "epoch_seconds": 412.20623993873596
+  },
+  {
+    "epoch": 30,
+    "phase": "burn-in",
+    "train_mse_norm": 1.017051628952123,
+    "val_rmse": 267.51221519716694,
+    "val_rmse_day": 307.69084900790745,
+    "epoch_seconds": 413.09666085243225
+  },
+  {
+    "epoch": 31,
+    "phase": "burn-in",
+    "train_mse_norm": 1.015701806639757,
+    "val_rmse": 265.9246449738638,
+    "val_rmse_day": 309.79349037310527,
+    "epoch_seconds": 414.29482102394104
+  },
+  {
+    "epoch": 32,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0128157503959787,
+    "val_rmse": 259.3287768238165,
+    "val_rmse_day": 321.21484779756395,
+    "epoch_seconds": 413.3313479423523
+  },
+  {
+    "epoch": 33,
+    "phase": "burn-in",
+    "train_mse_norm": 1.006877198281599,
+    "val_rmse": 260.1541775463116,
+    "val_rmse_day": 320.14613596737684,
+    "epoch_seconds": 413.9773817062378
+  },
+  {
+    "epoch": 34,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0125287764312516,
+    "val_rmse": 256.62401122523227,
+    "val_rmse_day": 329.6101239654808,
+    "epoch_seconds": 414.2202229499817
+  },
+  {
+    "epoch": 35,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0305290388985724,
+    "val_rmse": 258.80847993436134,
+    "val_rmse_day": 322.7402019108127,
+    "epoch_seconds": 416.3958806991577
+  },
+  {
+    "epoch": 36,
+    "phase": "burn-in",
+    "train_mse_norm": 1.023893841275977,
+    "val_rmse": 265.13554026153855,
+    "val_rmse_day": 311.07263129079337,
+    "epoch_seconds": 416.6418161392212
+  },
+  {
+    "epoch": 37,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0106786940765256,
+    "val_rmse": 255.32198584298663,
+    "val_rmse_day": 336.4093384221695,
+    "epoch_seconds": 417.12146496772766
+  },
+  {
+    "epoch": 38,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0136045929453545,
+    "val_rmse": 257.552147640999,
+    "val_rmse_day": 326.87104338833035,
+    "epoch_seconds": 414.7344958782196
+  },
+  {
+    "epoch": 39,
+    "phase": "burn-in",
+    "train_mse_norm": 1.011171956540589,
+    "val_rmse": 254.8142232929462,
+    "val_rmse_day": 356.1146716463908,
+    "epoch_seconds": 411.9758982658386
+  },
+  {
+    "epoch": 40,
+    "phase": "burn-in",
+    "train_mse_norm": 1.01249951845187,
+    "val_rmse": 257.06327645241635,
+    "val_rmse_day": 327.63924477967146,
+    "epoch_seconds": 412.46299028396606
+  },
+  {
+    "epoch": 41,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0164359294739949,
+    "val_rmse": 273.33937460054204,
+    "val_rmse_day": 301.5719855444495,
+    "epoch_seconds": 412.10573506355286
+  },
+  {
+    "epoch": 42,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0212778383871421,
+    "val_rmse": 256.09074775339315,
+    "val_rmse_day": 332.1492247990356,
+    "epoch_seconds": 410.86090421676636
+  },
+  {
+    "epoch": 43,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0063938776964099,
+    "val_rmse": 254.51991955142162,
+    "val_rmse_day": 344.42653166848334,
+    "epoch_seconds": 413.3118495941162
+  },
+  {
+    "epoch": 44,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0138902008222854,
+    "val_rmse": 256.6926279429653,
+    "val_rmse_day": 368.4579772130578,
+    "epoch_seconds": 412.26558470726013
+  },
+  {
+    "epoch": 45,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0186161727054428,
+    "val_rmse": 255.92114479312258,
+    "val_rmse_day": 331.9686955759814,
+    "epoch_seconds": 412.56842255592346
+  },
+  {
+    "epoch": 46,
+    "phase": "burn-in",
+    "train_mse_norm": 1.022426613012063,
+    "val_rmse": 261.88845883236684,
+    "val_rmse_day": 316.44466313110115,
+    "epoch_seconds": 412.25891399383545
+  },
+  {
+    "epoch": 47,
+    "phase": "burn-in",
+    "train_mse_norm": 1.014629904484826,
+    "val_rmse": 262.880562494287,
+    "val_rmse_day": 314.75604749045806,
+    "epoch_seconds": 411.6666395664215
+  },
+  {
+    "epoch": 48,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0193417632686552,
+    "val_rmse": 254.60776674002395,
+    "val_rmse_day": 341.42228387116927,
+    "epoch_seconds": 409.4084584712982
+  },
+  {
+    "epoch": 49,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0161694917462534,
+    "val_rmse": 264.84109607565625,
+    "val_rmse_day": 311.36508125670105,
+    "epoch_seconds": 412.11609840393066
+  },
+  {
+    "epoch": 50,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0130716058099123,
+    "val_rmse": 254.52944144405026,
+    "val_rmse_day": 344.754436789024,
+    "epoch_seconds": 412.7618181705475
+  },
+  {
+    "epoch": 51,
+    "phase": "sample",
+    "train_mse_norm": 1.0280660424541181,
+    "val_rmse": 254.8482172707853,
+    "val_rmse_day": 341.5285089933351,
+    "epoch_seconds": 413.51301980018616
+  },
+  {
+    "epoch": 52,
+    "phase": "sample",
+    "train_mse_norm": 1.010999166026615,
+    "val_rmse": 255.86001848143863,
+    "val_rmse_day": 364.29984584688964,
+    "epoch_seconds": 414.1693079471588
+  },
+  {
+    "epoch": 53,
+    "phase": "sample",
+    "train_mse_norm": 1.032425904901358,
+    "val_rmse": 258.8929648429558,
+    "val_rmse_day": 322.7975838182171,
+    "epoch_seconds": 412.63176012039185
+  },
+  {
+    "epoch": 54,
+    "phase": "sample",
+    "train_mse_norm": 1.0188814840217724,
+    "val_rmse": 257.021596244887,
+    "val_rmse_day": 328.42034612533337,
+    "epoch_seconds": 411.3264832496643
+  },
+  {
+    "epoch": 55,
+    "phase": "sample",
+    "train_mse_norm": 1.0116447717590116,
+    "val_rmse": 258.59512026696086,
+    "val_rmse_day": 323.8678983082486,
+    "epoch_seconds": 412.81565499305725
+  },
+  {
+    "epoch": 56,
+    "phase": "sample",
+    "train_mse_norm": 1.016440270270625,
+    "val_rmse": 257.3256389462703,
+    "val_rmse_day": 327.4581703902964,
+    "epoch_seconds": 410.8914649486542
+  },
+  {
+    "epoch": 57,
+    "phase": "sample",
+    "train_mse_norm": 1.0096286285845797,
+    "val_rmse": 255.87543732629925,
+    "val_rmse_day": 364.2564969303466,
+    "epoch_seconds": 410.3739204406738
+  },
+  {
+    "epoch": 58,
+    "phase": "sample",
+    "train_mse_norm": 1.0180015365209778,
+    "val_rmse": 254.78223389584218,
+    "val_rmse_day": 341.9301192397527,
+    "epoch_seconds": 411.9907019138336
+  },
+  {
+    "epoch": 59,
+    "phase": "sample",
+    "train_mse_norm": 1.0466898507578053,
+    "val_rmse": 265.9158618846884,
+    "val_rmse_day": 309.7913945333452,
+    "epoch_seconds": 411.62034344673157
+  },
+  {
+    "epoch": 60,
+    "phase": "sample",
+    "train_mse_norm": 1.0381258155360897,
+    "val_rmse": 259.3796821814069,
+    "val_rmse_day": 321.1029254772079,
+    "epoch_seconds": 415.6380732059479,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0060.pt"
+  },
+  {
+    "epoch": 61,
+    "phase": "sample",
+    "train_mse_norm": 1.0092604813492445,
+    "val_rmse": 262.1011047727228,
+    "val_rmse_day": 315.59702922748596,
+    "epoch_seconds": 412.0004267692566
+  },
+  {
+    "epoch": 62,
+    "phase": "sample",
+    "train_mse_norm": 1.0079586139923324,
+    "val_rmse": 255.15459552469218,
+    "val_rmse_day": 338.4260268859808,
+    "epoch_seconds": 409.2822234630585
+  },
+  {
+    "epoch": 63,
+    "phase": "sample",
+    "train_mse_norm": 1.0216980039662147,
+    "val_rmse": 257.40181027461267,
+    "val_rmse_day": 326.8518084754541,
+    "epoch_seconds": 408.85532236099243
+  },
+  {
+    "epoch": 64,
+    "phase": "sample",
+    "train_mse_norm": 1.0142948157293477,
+    "val_rmse": 254.49965222305875,
+    "val_rmse_day": 352.11887404203077,
+    "epoch_seconds": 408.28708696365356
+  },
+  {
+    "epoch": 65,
+    "phase": "sample",
+    "train_mse_norm": 1.009731573667935,
+    "val_rmse": 255.91499166309183,
+    "val_rmse_day": 332.89698787752405,
+    "epoch_seconds": 408.94565320014954
+  },
+  {
+    "epoch": 66,
+    "phase": "sample",
+    "train_mse_norm": 1.0190571759090798,
+    "val_rmse": 254.3642445032253,
+    "val_rmse_day": 341.66159367618195,
+    "epoch_seconds": 409.2904198169708
+  },
+  {
+    "epoch": 67,
+    "phase": "sample",
+    "train_mse_norm": 1.0163225801995202,
+    "val_rmse": 255.3759305151343,
+    "val_rmse_day": 359.95662539978446,
+    "epoch_seconds": 408.8293261528015
+  },
+  {
+    "epoch": 68,
+    "phase": "sample",
+    "train_mse_norm": 1.013374147423736,
+    "val_rmse": 259.405713395406,
+    "val_rmse_day": 321.61323870727847,
+    "epoch_seconds": 409.6249928474426
+  },
+  {
+    "epoch": 69,
+    "phase": "sample",
+    "train_mse_norm": 1.017234699526081,
+    "val_rmse": 256.19094215321223,
+    "val_rmse_day": 331.3039642409117,
+    "epoch_seconds": 409.8715581893921
+  },
+  {
+    "epoch": 70,
+    "phase": "sample",
+    "train_mse_norm": 1.0075691894694279,
+    "val_rmse": 256.957668939271,
+    "val_rmse_day": 328.968530966327,
+    "epoch_seconds": 411.45274472236633,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0070.pt"
+  },
+  {
+    "epoch": 71,
+    "phase": "sample",
+    "train_mse_norm": 1.0127931437813318,
+    "val_rmse": 261.03567482312036,
+    "val_rmse_day": 317.78756427606754,
+    "epoch_seconds": 410.79903531074524
+  },
+  {
+    "epoch": 72,
+    "phase": "sample",
+    "train_mse_norm": 1.0121121990264197,
+    "val_rmse": 254.39747787659056,
+    "val_rmse_day": 349.0532086965998,
+    "epoch_seconds": 409.8506007194519
+  },
+  {
+    "epoch": 73,
+    "phase": "sample",
+    "train_mse_norm": 1.017432276901083,
+    "val_rmse": 258.75522470984555,
+    "val_rmse_day": 322.96125886050186,
+    "epoch_seconds": 407.77767515182495
+  },
+  {
+    "epoch": 74,
+    "phase": "sample",
+    "train_mse_norm": 1.010606645811535,
+    "val_rmse": 256.25321115804786,
+    "val_rmse_day": 330.8676586750842,
+    "epoch_seconds": 408.4866843223572
+  },
+  {
+    "epoch": 75,
+    "phase": "sample",
+    "train_mse_norm": 1.0191757693751133,
+    "val_rmse": 255.34787244302746,
+    "val_rmse_day": 360.95291441622976,
+    "epoch_seconds": 408.33173394203186
+  },
+  {
+    "epoch": 76,
+    "phase": "sample",
+    "train_mse_norm": 1.0180948690734957,
+    "val_rmse": 259.54869517207084,
+    "val_rmse_day": 379.9669804866821,
+    "epoch_seconds": 407.65953063964844
+  },
+  {
+    "epoch": 77,
+    "phase": "sample",
+    "train_mse_norm": 1.0171032544757013,
+    "val_rmse": 272.14133719025597,
+    "val_rmse_day": 302.9030082934849,
+    "epoch_seconds": 410.68851947784424
+  },
+  {
+    "epoch": 78,
+    "phase": "sample",
+    "train_mse_norm": 1.0404896722998223,
+    "val_rmse": 261.3727261136376,
+    "val_rmse_day": 385.722251391487,
+    "epoch_seconds": 411.4158947467804
+  },
+  {
+    "epoch": 79,
+    "phase": "sample",
+    "train_mse_norm": 1.0189279862211966,
+    "val_rmse": 263.3024941911223,
+    "val_rmse_day": 313.42855174899796,
+    "epoch_seconds": 411.6297504901886
+  },
+  {
+    "epoch": 80,
+    "phase": "sample",
+    "train_mse_norm": 1.0233454452045547,
+    "val_rmse": 254.5141941832777,
+    "val_rmse_day": 353.2203144085965,
+    "epoch_seconds": 411.38765358924866,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0080.pt"
+  },
+  {
+    "epoch": 81,
+    "phase": "sample",
+    "train_mse_norm": 1.0081514808066578,
+    "val_rmse": 254.79148217190615,
+    "val_rmse_day": 355.17729851552815,
+    "epoch_seconds": 412.85603284835815
+  },
+  {
+    "epoch": 82,
+    "phase": "sample",
+    "train_mse_norm": 1.0061990307645103,
+    "val_rmse": 258.58433762800036,
+    "val_rmse_day": 323.811274000461,
+    "epoch_seconds": 413.2424371242523
+  },
+  {
+    "epoch": 83,
+    "phase": "sample",
+    "train_mse_norm": 1.017085404334895,
+    "val_rmse": 255.48616093166066,
+    "val_rmse_day": 362.34043388767964,
+    "epoch_seconds": 412.90728545188904
+  },
+  {
+    "epoch": 84,
+    "phase": "sample",
+    "train_mse_norm": 1.0308374237056976,
+    "val_rmse": 260.52123690897645,
+    "val_rmse_day": 383.30062949951906,
+    "epoch_seconds": 409.9808671474457
+  },
+  {
+    "epoch": 85,
+    "phase": "sample",
+    "train_mse_norm": 1.0234527035506418,
+    "val_rmse": 255.36977234777214,
+    "val_rmse_day": 336.53592374972993,
+    "epoch_seconds": 409.9422914981842
+  },
+  {
+    "epoch": 86,
+    "phase": "sample",
+    "train_mse_norm": 1.0072374467202585,
+    "val_rmse": 275.6645941881894,
+    "val_rmse_day": 299.3396233517831,
+    "epoch_seconds": 412.5164120197296
+  },
+  {
+    "epoch": 87,
+    "phase": "sample",
+    "train_mse_norm": 1.0192339841234845,
+    "val_rmse": 254.6303540282005,
+    "val_rmse_day": 347.6719691608571,
+    "epoch_seconds": 413.943683385849
+  },
+  {
+    "epoch": 88,
+    "phase": "sample",
+    "train_mse_norm": 1.0455293065955271,
+    "val_rmse": 263.02730285097687,
+    "val_rmse_day": 313.90414652282936,
+    "epoch_seconds": 410.7892692089081
+  },
+  {
+    "epoch": 89,
+    "phase": "sample",
+    "train_mse_norm": 1.0153126792650817,
+    "val_rmse": 254.56826061841556,
+    "val_rmse_day": 343.78987573394096,
+    "epoch_seconds": 411.19902658462524
+  },
+  {
+    "epoch": 90,
+    "phase": "sample",
+    "train_mse_norm": 1.0063874761251863,
+    "val_rmse": 255.74327190864622,
+    "val_rmse_day": 334.527365844841,
+    "epoch_seconds": 412.3907389640808,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0090.pt"
+  },
+  {
+    "epoch": 91,
+    "phase": "sample",
+    "train_mse_norm": 1.0162217098731752,
+    "val_rmse": 254.50271151671822,
+    "val_rmse_day": 347.41061075184604,
+    "epoch_seconds": 412.1810300350189
+  },
+  {
+    "epoch": 92,
+    "phase": "sample",
+    "train_mse_norm": 1.0395278274111726,
+    "val_rmse": 254.89635374480014,
+    "val_rmse_day": 338.7464021725212,
+    "epoch_seconds": 412.12499022483826
+  },
+  {
+    "epoch": 93,
+    "phase": "sample",
+    "train_mse_norm": 1.0173095630605433,
+    "val_rmse": 254.76727357148636,
+    "val_rmse_day": 341.653915318065,
+    "epoch_seconds": 410.4540591239929
+  },
+  {
+    "epoch": 94,
+    "phase": "sample",
+    "train_mse_norm": 1.0121307718538566,
+    "val_rmse": 255.49693262084585,
+    "val_rmse_day": 334.927748858152,
+    "epoch_seconds": 413.0250515937805
+  },
+  {
+    "epoch": 95,
+    "phase": "sample",
+    "train_mse_norm": 1.017827014037951,
+    "val_rmse": 254.6087575495227,
+    "val_rmse_day": 340.84118449161764,
+    "epoch_seconds": 413.8280563354492
+  },
+  {
+    "epoch": 96,
+    "phase": "sample",
+    "train_mse_norm": 1.022534738082047,
+    "val_rmse": 255.32817659202686,
+    "val_rmse_day": 360.412621487073,
+    "epoch_seconds": 412.6404013633728
+  },
+  {
+    "epoch": 97,
+    "phase": "sample",
+    "train_mse_norm": 1.0134349498510606,
+    "val_rmse": 254.41695519027584,
+    "val_rmse_day": 347.71888740488765,
+    "epoch_seconds": 410.7264013290405
+  },
+  {
+    "epoch": 98,
+    "phase": "sample",
+    "train_mse_norm": 1.0188671947575567,
+    "val_rmse": 256.29995659540145,
+    "val_rmse_day": 331.3013007421309,
+    "epoch_seconds": 412.6117436885834
+  },
+  {
+    "epoch": 99,
+    "phase": "sample",
+    "train_mse_norm": 1.022801171684188,
+    "val_rmse": 254.48709277877253,
+    "val_rmse_day": 345.67558019227636,
+    "epoch_seconds": 412.19472217559814
+  },
+  {
+    "epoch": 100,
+    "phase": "sample",
+    "train_mse_norm": 1.0109188656989294,
+    "val_rmse": 254.45341010204044,
+    "val_rmse_day": 345.7375981953908,
+    "epoch_seconds": 412.12758231163025,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0100.pt"
+  },
+  {
+    "epoch": 101,
+    "phase": "sample",
+    "train_mse_norm": 1.009123645727241,
+    "val_rmse": 257.2977020946094,
+    "val_rmse_day": 327.5550219428859,
+    "epoch_seconds": 411.3444492816925
+  },
+  {
+    "epoch": 102,
+    "phase": "sample",
+    "train_mse_norm": 1.0093572372357353,
+    "val_rmse": 255.6120562464885,
+    "val_rmse_day": 362.47535575057583,
+    "epoch_seconds": 412.10423135757446
+  },
+  {
+    "epoch": 103,
+    "phase": "sample",
+    "train_mse_norm": 1.0264591002991041,
+    "val_rmse": 256.820115947692,
+    "val_rmse_day": 369.2945947065391,
+    "epoch_seconds": 411.56732964515686
+  },
+  {
+    "epoch": 104,
+    "phase": "sample",
+    "train_mse_norm": 1.0219255439626491,
+    "val_rmse": 257.9547624812911,
+    "val_rmse_day": 374.24617954594476,
+    "epoch_seconds": 413.17705368995667
+  },
+  {
+    "epoch": 105,
+    "phase": "sample",
+    "train_mse_norm": 1.0358889828503342,
+    "val_rmse": 255.00177602665786,
+    "val_rmse_day": 337.70184139481404,
+    "epoch_seconds": 413.34832310676575
+  },
+  {
+    "epoch": 106,
+    "phase": "sample",
+    "train_mse_norm": 1.0068379323043617,
+    "val_rmse": 254.48380633707896,
+    "val_rmse_day": 345.18770191076203,
+    "epoch_seconds": 412.51197504997253
+  },
+  {
+    "epoch": 107,
+    "phase": "sample",
+    "train_mse_norm": 1.0117257702756615,
+    "val_rmse": 255.290574627734,
+    "val_rmse_day": 336.50533834139,
+    "epoch_seconds": 410.1481091976166
+  },
+  {
+    "epoch": 108,
+    "phase": "sample",
+    "train_mse_norm": 1.029007862310548,
+    "val_rmse": 259.26636001075354,
+    "val_rmse_day": 321.43787525272734,
+    "epoch_seconds": 411.79461431503296
+  },
+  {
+    "epoch": 109,
+    "phase": "sample",
+    "train_mse_norm": 1.0312060400082375,
+    "val_rmse": 254.48367704607097,
+    "val_rmse_day": 347.8224799765472,
+    "epoch_seconds": 409.9335560798645
+  },
+  {
+    "epoch": 110,
+    "phase": "sample",
+    "train_mse_norm": 1.021722144971717,
+    "val_rmse": 254.54122271680438,
+    "val_rmse_day": 351.7457188213309,
+    "epoch_seconds": 412.00653529167175,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0110.pt"
+  },
+  {
+    "epoch": 111,
+    "phase": "sample",
+    "train_mse_norm": 1.005506010066567,
+    "val_rmse": 258.56276553702287,
+    "val_rmse_day": 322.9964296358674,
+    "epoch_seconds": 412.46526646614075
+  },
+  {
+    "epoch": 112,
+    "phase": "sample",
+    "train_mse_norm": 1.0169215429611438,
+    "val_rmse": 255.7019565264186,
+    "val_rmse_day": 333.69097636107034,
+    "epoch_seconds": 413.05671668052673
+  },
+  {
+    "epoch": 113,
+    "phase": "sample",
+    "train_mse_norm": 1.009421771133009,
+    "val_rmse": 257.6164180003325,
+    "val_rmse_day": 326.13700828675996,
+    "epoch_seconds": 413.38270115852356
+  },
+  {
+    "epoch": 114,
+    "phase": "sample",
+    "train_mse_norm": 1.0238585569362604,
+    "val_rmse": 264.41087762894426,
+    "val_rmse_day": 312.5105629121587,
+    "epoch_seconds": 414.2235686779022
+  },
+  {
+    "epoch": 115,
+    "phase": "sample",
+    "train_mse_norm": 1.0072947809679398,
+    "val_rmse": 256.63293863352504,
+    "val_rmse_day": 328.992399168001,
+    "epoch_seconds": 411.335480928421
+  },
+  {
+    "epoch": 116,
+    "phase": "sample",
+    "train_mse_norm": 1.0088642686474205,
+    "val_rmse": 262.946626043737,
+    "val_rmse_day": 314.09537713595563,
+    "epoch_seconds": 412.0562229156494
+  },
+  {
+    "epoch": 117,
+    "phase": "sample",
+    "train_mse_norm": 1.0103336311417401,
+    "val_rmse": 254.51411188356062,
+    "val_rmse_day": 350.44280411336126,
+    "epoch_seconds": 410.18773078918457
+  },
+  {
+    "epoch": 118,
+    "phase": "sample",
+    "train_mse_norm": 1.010878473997151,
+    "val_rmse": 257.40749948173175,
+    "val_rmse_day": 326.99870027816445,
+    "epoch_seconds": 412.71912956237793
+  },
+  {
+    "epoch": 119,
+    "phase": "sample",
+    "train_mse_norm": 1.0188145747652175,
+    "val_rmse": 255.056915307239,
+    "val_rmse_day": 338.1318172594728,
+    "epoch_seconds": 411.6296741962433
+  },
+  {
+    "epoch": 120,
+    "phase": "sample",
+    "train_mse_norm": 1.0178469356173498,
+    "val_rmse": 254.95718235938782,
+    "val_rmse_day": 357.1840048335539,
+    "epoch_seconds": 412.46602487564087,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0120.pt"
+  },
+  {
+    "epoch": 121,
+    "phase": "sample",
+    "train_mse_norm": 1.0396473300974123,
+    "val_rmse": 255.87110928335284,
+    "val_rmse_day": 363.70263020520065,
+    "epoch_seconds": 417.4649360179901
+  },
+  {
+    "epoch": 122,
+    "phase": "sample",
+    "train_mse_norm": 1.0251047253932453,
+    "val_rmse": 260.70641888213237,
+    "val_rmse_day": 318.50624801572417,
+    "epoch_seconds": 415.4401504993439
+  },
+  {
+    "epoch": 123,
+    "phase": "sample",
+    "train_mse_norm": 1.011032609967925,
+    "val_rmse": 268.63469644497724,
+    "val_rmse_day": 306.49903778218,
+    "epoch_seconds": 412.4284653663635
+  },
+  {
+    "epoch": 124,
+    "phase": "sample",
+    "train_mse_norm": 1.0259020712578815,
+    "val_rmse": 260.21850019403655,
+    "val_rmse_day": 319.22141816800286,
+    "epoch_seconds": 411.39479970932007
+  },
+  {
+    "epoch": 125,
+    "phase": "sample",
+    "train_mse_norm": 1.0287197439620164,
+    "val_rmse": 256.3643312034419,
+    "val_rmse_day": 330.9209088095937,
+    "epoch_seconds": 412.2813386917114
+  },
+  {
+    "epoch": 126,
+    "phase": "sample",
+    "train_mse_norm": 1.0238897248980092,
+    "val_rmse": 257.087263271676,
+    "val_rmse_day": 370.30936369494066,
+    "epoch_seconds": 412.84632873535156
+  },
+  {
+    "epoch": 127,
+    "phase": "sample",
+    "train_mse_norm": 1.0163350069367107,
+    "val_rmse": 254.90206148072667,
+    "val_rmse_day": 339.75200355038476,
+    "epoch_seconds": 411.9876561164856
+  },
+  {
+    "epoch": 128,
+    "phase": "sample",
+    "train_mse_norm": 1.0082919604275693,
+    "val_rmse": 254.65071853358225,
+    "val_rmse_day": 340.07876648629616,
+    "epoch_seconds": 410.8718981742859
+  },
+  {
+    "epoch": 129,
+    "phase": "sample",
+    "train_mse_norm": 1.012962509543841,
+    "val_rmse": 254.91674767332907,
+    "val_rmse_day": 340.5836576265363,
+    "epoch_seconds": 412.12864899635315
+  },
+  {
+    "epoch": 130,
+    "phase": "sample",
+    "train_mse_norm": 1.008506389257142,
+    "val_rmse": 255.75978133286145,
+    "val_rmse_day": 333.8612225296939,
+    "epoch_seconds": 413.8004024028778,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0130.pt"
+  },
+  {
+    "epoch": 131,
+    "phase": "sample",
+    "train_mse_norm": 1.0064386469883493,
+    "val_rmse": 255.1220558920228,
+    "val_rmse_day": 338.45586564489616,
+    "epoch_seconds": 416.3686945438385
+  },
+  {
+    "epoch": 132,
+    "phase": "sample",
+    "train_mse_norm": 1.0168301838762397,
+    "val_rmse": 257.8317878566608,
+    "val_rmse_day": 325.4371562651861,
+    "epoch_seconds": 411.4695692062378
+  },
+  {
+    "epoch": 133,
+    "phase": "sample",
+    "train_mse_norm": 1.0125954286865255,
+    "val_rmse": 256.0393255915773,
+    "val_rmse_day": 331.3289845571133,
+    "epoch_seconds": 412.0696110725403
+  },
+  {
+    "epoch": 134,
+    "phase": "sample",
+    "train_mse_norm": 1.0241351660627585,
+    "val_rmse": 254.6233041375011,
+    "val_rmse_day": 342.84414282632656,
+    "epoch_seconds": 411.5717017650604
+  },
+  {
+    "epoch": 135,
+    "phase": "sample",
+    "train_mse_norm": 1.0133397863807043,
+    "val_rmse": 262.0177215250123,
+    "val_rmse_day": 315.7552969595046,
+    "epoch_seconds": 412.97356605529785
+  },
+  {
+    "epoch": 136,
+    "phase": "sample",
+    "train_mse_norm": 1.0103643939765286,
+    "val_rmse": 256.38043273732103,
+    "val_rmse_day": 331.27822662384784,
+    "epoch_seconds": 413.20313143730164
+  },
+  {
+    "epoch": 137,
+    "phase": "sample",
+    "train_mse_norm": 1.014570966402328,
+    "val_rmse": 254.7761943933502,
+    "val_rmse_day": 352.57917002538915,
+    "epoch_seconds": 413.0167381763458
+  },
+  {
+    "epoch": 138,
+    "phase": "sample",
+    "train_mse_norm": 1.081776906592368,
+    "val_rmse": 255.25192081426968,
+    "val_rmse_day": 362.9461786361682,
+    "epoch_seconds": 413.1162259578705
+  },
+  {
+    "epoch": 139,
+    "phase": "sample",
+    "train_mse_norm": 1.0222926599597553,
+    "val_rmse": 254.89509077076596,
+    "val_rmse_day": 340.0051412238348,
+    "epoch_seconds": 413.96982884407043
+  },
+  {
+    "epoch": 140,
+    "phase": "sample",
+    "train_mse_norm": 1.0129293734388216,
+    "val_rmse": 254.41702137705911,
+    "val_rmse_day": 349.1084443481724,
+    "epoch_seconds": 411.78554821014404,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0140.pt"
+  },
+  {
+    "epoch": 141,
+    "phase": "sample",
+    "train_mse_norm": 1.0098560673747423,
+    "val_rmse": 264.90182794084194,
+    "val_rmse_day": 311.01817683328755,
+    "epoch_seconds": 413.9097592830658
+  },
+  {
+    "epoch": 142,
+    "phase": "sample",
+    "train_mse_norm": 1.029343251316112,
+    "val_rmse": 254.40846861732697,
+    "val_rmse_day": 349.74051957289134,
+    "epoch_seconds": 414.93693375587463
+  },
+  {
+    "epoch": 143,
+    "phase": "sample",
+    "train_mse_norm": 1.0121829110824985,
+    "val_rmse": 256.9688789055717,
+    "val_rmse_day": 328.82042292631417,
+    "epoch_seconds": 412.84171986579895
+  },
+  {
+    "epoch": 144,
+    "phase": "sample",
+    "train_mse_norm": 1.0193784893810294,
+    "val_rmse": 281.6835050309817,
+    "val_rmse_day": 294.930559083954,
+    "epoch_seconds": 411.500937461853
+  },
+  {
+    "epoch": 145,
+    "phase": "sample",
+    "train_mse_norm": 1.0109558340754847,
+    "val_rmse": 257.09542996487545,
+    "val_rmse_day": 328.0328123383786,
+    "epoch_seconds": 412.30857253074646
+  },
+  {
+    "epoch": 146,
+    "phase": "sample",
+    "train_mse_norm": 1.0179791638711866,
+    "val_rmse": 254.41416717217655,
+    "val_rmse_day": 346.0559502812131,
+    "epoch_seconds": 413.1440484523773
+  },
+  {
+    "epoch": 147,
+    "phase": "sample",
+    "train_mse_norm": 1.0157540635464475,
+    "val_rmse": 254.49288064505512,
+    "val_rmse_day": 348.33169634538115,
+    "epoch_seconds": 412.7845501899719
+  },
+  {
+    "epoch": 148,
+    "phase": "sample",
+    "train_mse_norm": 1.012399579616536,
+    "val_rmse": 254.4271488151201,
+    "val_rmse_day": 349.3506684103825,
+    "epoch_seconds": 412.37503123283386
+  },
+  {
+    "epoch": 149,
+    "phase": "sample",
+    "train_mse_norm": 1.0089781310975867,
+    "val_rmse": 254.44070605064584,
+    "val_rmse_day": 347.99143081347233,
+    "epoch_seconds": 413.21591353416443
+  },
+  {
+    "epoch": 150,
+    "phase": "sample",
+    "train_mse_norm": 1.0093023456366217,
+    "val_rmse": 262.98302101067844,
+    "val_rmse_day": 314.5159552091745,
+    "epoch_seconds": 412.17069840431213,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260724_181149/checkpoint_e0150.pt"
+  }
+]

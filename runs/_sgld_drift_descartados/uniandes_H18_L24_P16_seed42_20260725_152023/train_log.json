@@ -1,0 +1,572 @@
+[
+  {
+    "epoch": 1,
+    "phase": "burn-in",
+    "train_mse_norm": 0.40431439825198306,
+    "val_rmse": 175.37999659679653,
+    "val_rmse_day": 260.14483687618093,
+    "epoch_seconds": 456.25562596321106
+  },
+  {
+    "epoch": 2,
+    "phase": "burn-in",
+    "train_mse_norm": 0.4238708708001901,
+    "val_rmse": 176.11500099160367,
+    "val_rmse_day": 254.70190789910464,
+    "epoch_seconds": 447.16994428634644
+  },
+  {
+    "epoch": 3,
+    "phase": "burn-in",
+    "train_mse_norm": 0.4804389868866755,
+    "val_rmse": 195.40173308882376,
+    "val_rmse_day": 265.5244279837949,
+    "epoch_seconds": 449.6926579475403
+  },
+  {
+    "epoch": 4,
+    "phase": "burn-in",
+    "train_mse_norm": 0.5366801373147598,
+    "val_rmse": 208.69796781857679,
+    "val_rmse_day": 252.66874871921942,
+    "epoch_seconds": 448.25291991233826
+  },
+  {
+    "epoch": 5,
+    "phase": "burn-in",
+    "train_mse_norm": 0.5793090128392874,
+    "val_rmse": 247.5829240546705,
+    "val_rmse_day": 261.5950069695405,
+    "epoch_seconds": 446.7680525779724
+  },
+  {
+    "epoch": 6,
+    "phase": "burn-in",
+    "train_mse_norm": 0.78946039930896,
+    "val_rmse": 282.41350728117135,
+    "val_rmse_day": 265.7019221713352,
+    "epoch_seconds": 447.3866698741913
+  },
+  {
+    "epoch": 7,
+    "phase": "burn-in",
+    "train_mse_norm": 0.991102769028087,
+    "val_rmse": 269.56840855315824,
+    "val_rmse_day": 261.4451821089432,
+    "epoch_seconds": 448.0271294116974
+  },
+  {
+    "epoch": 8,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0658673649840822,
+    "val_rmse": 301.2378241524934,
+    "val_rmse_day": 268.19350363895745,
+    "epoch_seconds": 447.19053649902344
+  },
+  {
+    "epoch": 9,
+    "phase": "burn-in",
+    "train_mse_norm": 1.1575385024634377,
+    "val_rmse": 319.3993690376733,
+    "val_rmse_day": 279.4588891197162,
+    "epoch_seconds": 447.39450097084045
+  },
+  {
+    "epoch": 10,
+    "phase": "burn-in",
+    "train_mse_norm": 1.3800650778818817,
+    "val_rmse": 342.3849434779538,
+    "val_rmse_day": 289.3855718643242,
+    "epoch_seconds": 447.67788076400757
+  },
+  {
+    "epoch": 11,
+    "phase": "burn-in",
+    "train_mse_norm": 1.432887450683068,
+    "val_rmse": 344.67026492564736,
+    "val_rmse_day": 290.60498800073856,
+    "epoch_seconds": 447.79098749160767
+  },
+  {
+    "epoch": 12,
+    "phase": "burn-in",
+    "train_mse_norm": 1.3176571855116996,
+    "val_rmse": 316.6045664106332,
+    "val_rmse_day": 277.8820473602485,
+    "epoch_seconds": 447.8422088623047
+  },
+  {
+    "epoch": 13,
+    "phase": "burn-in",
+    "train_mse_norm": 1.2630144105507777,
+    "val_rmse": 318.80425423168026,
+    "val_rmse_day": 282.3925194649067,
+    "epoch_seconds": 445.99543356895447
+  },
+  {
+    "epoch": 14,
+    "phase": "burn-in",
+    "train_mse_norm": 1.293521797637763,
+    "val_rmse": 316.9429621096476,
+    "val_rmse_day": 280.00485968224234,
+    "epoch_seconds": 448.60677218437195
+  },
+  {
+    "epoch": 15,
+    "phase": "burn-in",
+    "train_mse_norm": 1.182539316435649,
+    "val_rmse": 296.4606600708409,
+    "val_rmse_day": 277.2339494051499,
+    "epoch_seconds": 448.71782875061035
+  },
+  {
+    "epoch": 16,
+    "phase": "burn-in",
+    "train_mse_norm": 1.227363529334559,
+    "val_rmse": 338.9908673289,
+    "val_rmse_day": 285.9523593306131,
+    "epoch_seconds": 446.0687131881714
+  },
+  {
+    "epoch": 17,
+    "phase": "burn-in",
+    "train_mse_norm": 1.3391211546751869,
+    "val_rmse": 328.0393210984514,
+    "val_rmse_day": 281.88487508721124,
+    "epoch_seconds": 449.6958923339844
+  },
+  {
+    "epoch": 18,
+    "phase": "burn-in",
+    "train_mse_norm": 1.4302857619258003,
+    "val_rmse": 355.8373381613954,
+    "val_rmse_day": 286.87145191032477,
+    "epoch_seconds": 447.72741079330444
+  },
+  {
+    "epoch": 19,
+    "phase": "burn-in",
+    "train_mse_norm": 1.6688568638446257,
+    "val_rmse": 382.4252826422718,
+    "val_rmse_day": 296.15124167265066,
+    "epoch_seconds": 448.4657692909241
+  },
+  {
+    "epoch": 20,
+    "phase": "burn-in",
+    "train_mse_norm": 1.8373556287584063,
+    "val_rmse": 383.177542498511,
+    "val_rmse_day": 296.38016722813796,
+    "epoch_seconds": 448.1788263320923
+  },
+  {
+    "epoch": 21,
+    "phase": "sample",
+    "train_mse_norm": 1.8838820750144252,
+    "val_rmse": 373.9306878562839,
+    "val_rmse_day": 293.32225214073554,
+    "epoch_seconds": 447.0703966617584
+  },
+  {
+    "epoch": 22,
+    "phase": "sample",
+    "train_mse_norm": 1.73154901605946,
+    "val_rmse": 371.4612462611695,
+    "val_rmse_day": 297.8589335974089,
+    "epoch_seconds": 448.3617424964905
+  },
+  {
+    "epoch": 23,
+    "phase": "sample",
+    "train_mse_norm": 1.7347976369930938,
+    "val_rmse": 363.05757248777553,
+    "val_rmse_day": 292.8692958093929,
+    "epoch_seconds": 447.40920758247375
+  },
+  {
+    "epoch": 24,
+    "phase": "sample",
+    "train_mse_norm": 1.8325097987180028,
+    "val_rmse": 404.8029400628559,
+    "val_rmse_day": 311.96157120685814,
+    "epoch_seconds": 447.44567823410034
+  },
+  {
+    "epoch": 25,
+    "phase": "sample",
+    "train_mse_norm": 2.2420703410988545,
+    "val_rmse": 426.23505849354524,
+    "val_rmse_day": 326.9483666953529,
+    "epoch_seconds": 448.08348774909973,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0025.pt"
+  },
+  {
+    "epoch": 26,
+    "phase": "sample",
+    "train_mse_norm": 2.6185069816188116,
+    "val_rmse": 474.75002780394976,
+    "val_rmse_day": 362.6141084264918,
+    "epoch_seconds": 447.5084009170532
+  },
+  {
+    "epoch": 27,
+    "phase": "sample",
+    "train_mse_norm": 2.6908798800957463,
+    "val_rmse": 470.87711208457836,
+    "val_rmse_day": 371.559467741582,
+    "epoch_seconds": 448.3160226345062
+  },
+  {
+    "epoch": 28,
+    "phase": "sample",
+    "train_mse_norm": 2.971131037078531,
+    "val_rmse": 466.0712052071825,
+    "val_rmse_day": 369.1487586823557,
+    "epoch_seconds": 447.15529227256775
+  },
+  {
+    "epoch": 29,
+    "phase": "sample",
+    "train_mse_norm": 2.793299465234043,
+    "val_rmse": 464.03123661898223,
+    "val_rmse_day": 352.8701032447729,
+    "epoch_seconds": 448.2648375034332
+  },
+  {
+    "epoch": 30,
+    "phase": "sample",
+    "train_mse_norm": 2.670708592418916,
+    "val_rmse": 425.4931901996677,
+    "val_rmse_day": 332.10209926635304,
+    "epoch_seconds": 449.1604278087616,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0030.pt"
+  },
+  {
+    "epoch": 31,
+    "phase": "sample",
+    "train_mse_norm": 2.083837700849131,
+    "val_rmse": 396.11279325776644,
+    "val_rmse_day": 323.89684271478006,
+    "epoch_seconds": 448.56292700767517
+  },
+  {
+    "epoch": 32,
+    "phase": "sample",
+    "train_mse_norm": 1.9295259899975479,
+    "val_rmse": 376.93956928369556,
+    "val_rmse_day": 296.3376076184059,
+    "epoch_seconds": 447.1516852378845
+  },
+  {
+    "epoch": 33,
+    "phase": "sample",
+    "train_mse_norm": 1.9324075490831278,
+    "val_rmse": 345.82882856103316,
+    "val_rmse_day": 295.41965365585395,
+    "epoch_seconds": 449.6873269081116
+  },
+  {
+    "epoch": 34,
+    "phase": "sample",
+    "train_mse_norm": 1.7361064101369745,
+    "val_rmse": 369.82294842818254,
+    "val_rmse_day": 315.4516680049508,
+    "epoch_seconds": 448.1098783016205
+  },
+  {
+    "epoch": 35,
+    "phase": "sample",
+    "train_mse_norm": 1.9650480112195434,
+    "val_rmse": 405.539547063152,
+    "val_rmse_day": 306.42984945971585,
+    "epoch_seconds": 448.05594992637634,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0035.pt"
+  },
+  {
+    "epoch": 36,
+    "phase": "sample",
+    "train_mse_norm": 2.4355760272800118,
+    "val_rmse": 434.81799748527294,
+    "val_rmse_day": 332.94302608274484,
+    "epoch_seconds": 446.9585602283478
+  },
+  {
+    "epoch": 37,
+    "phase": "sample",
+    "train_mse_norm": 2.653258926164593,
+    "val_rmse": 444.13875609620806,
+    "val_rmse_day": 334.87419577019557,
+    "epoch_seconds": 448.0861585140228
+  },
+  {
+    "epoch": 38,
+    "phase": "sample",
+    "train_mse_norm": 2.584424148118468,
+    "val_rmse": 426.1856271035801,
+    "val_rmse_day": 331.0642076825772,
+    "epoch_seconds": 446.31476521492004
+  },
+  {
+    "epoch": 39,
+    "phase": "sample",
+    "train_mse_norm": 2.6772171434931593,
+    "val_rmse": 492.76568780360634,
+    "val_rmse_day": 358.9443914154328,
+    "epoch_seconds": 445.39950227737427
+  },
+  {
+    "epoch": 40,
+    "phase": "sample",
+    "train_mse_norm": 3.1094801177610316,
+    "val_rmse": 535.2168545482041,
+    "val_rmse_day": 397.892447124442,
+    "epoch_seconds": 448.28583216667175,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0040.pt"
+  },
+  {
+    "epoch": 41,
+    "phase": "sample",
+    "train_mse_norm": 3.249497000007719,
+    "val_rmse": 490.9019624493385,
+    "val_rmse_day": 353.6997728180537,
+    "epoch_seconds": 446.9851131439209
+  },
+  {
+    "epoch": 42,
+    "phase": "sample",
+    "train_mse_norm": 3.207309006581535,
+    "val_rmse": 503.764051404832,
+    "val_rmse_day": 369.04326179811505,
+    "epoch_seconds": 447.1776661872864
+  },
+  {
+    "epoch": 43,
+    "phase": "sample",
+    "train_mse_norm": 3.8043751663939083,
+    "val_rmse": 510.9631742392034,
+    "val_rmse_day": 387.75491434165536,
+    "epoch_seconds": 448.8428089618683
+  },
+  {
+    "epoch": 44,
+    "phase": "sample",
+    "train_mse_norm": 4.258844970046809,
+    "val_rmse": 574.8484274273732,
+    "val_rmse_day": 429.4578611062863,
+    "epoch_seconds": 446.46531867980957
+  },
+  {
+    "epoch": 45,
+    "phase": "sample",
+    "train_mse_norm": 4.825343782735165,
+    "val_rmse": 634.4788418720466,
+    "val_rmse_day": 486.9376741450624,
+    "epoch_seconds": 447.31748843193054,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0045.pt"
+  },
+  {
+    "epoch": 46,
+    "phase": "sample",
+    "train_mse_norm": 5.109783917192984,
+    "val_rmse": 650.3932154964062,
+    "val_rmse_day": 507.7045920508333,
+    "epoch_seconds": 447.7673442363739
+  },
+  {
+    "epoch": 47,
+    "phase": "sample",
+    "train_mse_norm": 6.0609715629414955,
+    "val_rmse": 659.5757887366611,
+    "val_rmse_day": 504.9550086409336,
+    "epoch_seconds": 449.85844349861145
+  },
+  {
+    "epoch": 48,
+    "phase": "sample",
+    "train_mse_norm": 5.8560699801093605,
+    "val_rmse": 628.9024111990569,
+    "val_rmse_day": 466.0143515929544,
+    "epoch_seconds": 448.76523876190186
+  },
+  {
+    "epoch": 49,
+    "phase": "sample",
+    "train_mse_norm": 5.840820823146957,
+    "val_rmse": 678.1649344116389,
+    "val_rmse_day": 531.5194295278033,
+    "epoch_seconds": 447.5429470539093
+  },
+  {
+    "epoch": 50,
+    "phase": "sample",
+    "train_mse_norm": 6.333780427662961,
+    "val_rmse": 833.6209805281027,
+    "val_rmse_day": 701.9503962022459,
+    "epoch_seconds": 446.8309018611908,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0050.pt"
+  },
+  {
+    "epoch": 51,
+    "phase": "sample",
+    "train_mse_norm": 7.583415049737996,
+    "val_rmse": 757.6950875696614,
+    "val_rmse_day": 595.6168553239406,
+    "epoch_seconds": 448.42587399482727
+  },
+  {
+    "epoch": 52,
+    "phase": "sample",
+    "train_mse_norm": 7.83970168710665,
+    "val_rmse": 718.619253143816,
+    "val_rmse_day": 574.0806093263037,
+    "epoch_seconds": 447.09197449684143
+  },
+  {
+    "epoch": 53,
+    "phase": "sample",
+    "train_mse_norm": 7.689791872896171,
+    "val_rmse": 734.574497850859,
+    "val_rmse_day": 586.1741372949316,
+    "epoch_seconds": 446.1779820919037
+  },
+  {
+    "epoch": 54,
+    "phase": "sample",
+    "train_mse_norm": 8.288108424165987,
+    "val_rmse": 903.5568237826585,
+    "val_rmse_day": 724.3269595217349,
+    "epoch_seconds": 449.5670030117035
+  },
+  {
+    "epoch": 55,
+    "phase": "sample",
+    "train_mse_norm": 8.542584119337276,
+    "val_rmse": 769.648577207507,
+    "val_rmse_day": 594.2669928316647,
+    "epoch_seconds": 448.27055835723877,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0055.pt"
+  },
+  {
+    "epoch": 56,
+    "phase": "sample",
+    "train_mse_norm": 6.7388374836950256,
+    "val_rmse": 675.3185549258203,
+    "val_rmse_day": 513.8542121166382,
+    "epoch_seconds": 448.1200461387634
+  },
+  {
+    "epoch": 57,
+    "phase": "sample",
+    "train_mse_norm": 6.975185236928048,
+    "val_rmse": 697.2159859618614,
+    "val_rmse_day": 528.7604803581817,
+    "epoch_seconds": 444.8600356578827
+  },
+  {
+    "epoch": 58,
+    "phase": "sample",
+    "train_mse_norm": 5.705847353478144,
+    "val_rmse": 645.1375747340022,
+    "val_rmse_day": 513.0517727164155,
+    "epoch_seconds": 448.26039600372314
+  },
+  {
+    "epoch": 59,
+    "phase": "sample",
+    "train_mse_norm": 5.289977619386181,
+    "val_rmse": 618.1856098425416,
+    "val_rmse_day": 480.27650485659467,
+    "epoch_seconds": 449.62863278388977
+  },
+  {
+    "epoch": 60,
+    "phase": "sample",
+    "train_mse_norm": 5.008101673649118,
+    "val_rmse": 617.243789483071,
+    "val_rmse_day": 481.23626109308225,
+    "epoch_seconds": 448.1209354400635,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0060.pt"
+  },
+  {
+    "epoch": 61,
+    "phase": "sample",
+    "train_mse_norm": 5.642862352583594,
+    "val_rmse": 623.2406923010816,
+    "val_rmse_day": 491.37414026610725,
+    "epoch_seconds": 447.22916054725647
+  },
+  {
+    "epoch": 62,
+    "phase": "sample",
+    "train_mse_norm": 5.575699943010064,
+    "val_rmse": 612.2240829993698,
+    "val_rmse_day": 487.870589113713,
+    "epoch_seconds": 445.6252632141113
+  },
+  {
+    "epoch": 63,
+    "phase": "sample",
+    "train_mse_norm": 5.852785273625161,
+    "val_rmse": 624.1596246989394,
+    "val_rmse_day": 484.13693078179523,
+    "epoch_seconds": 449.16819047927856
+  },
+  {
+    "epoch": 64,
+    "phase": "sample",
+    "train_mse_norm": 5.642545068134508,
+    "val_rmse": 633.1286505188426,
+    "val_rmse_day": 496.19291614314744,
+    "epoch_seconds": 448.2542679309845
+  },
+  {
+    "epoch": 65,
+    "phase": "sample",
+    "train_mse_norm": 5.14486475289743,
+    "val_rmse": 633.8419384791995,
+    "val_rmse_day": 480.120656225524,
+    "epoch_seconds": 443.76903915405273,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0065.pt"
+  },
+  {
+    "epoch": 66,
+    "phase": "sample",
+    "train_mse_norm": 4.65804884833444,
+    "val_rmse": 574.7222303080979,
+    "val_rmse_day": 426.3136273839186,
+    "epoch_seconds": 441.1921365261078
+  },
+  {
+    "epoch": 67,
+    "phase": "sample",
+    "train_mse_norm": 4.594714194151211,
+    "val_rmse": 634.7619988159096,
+    "val_rmse_day": 487.84221680902965,
+    "epoch_seconds": 419.32046699523926
+  },
+  {
+    "epoch": 68,
+    "phase": "sample",
+    "train_mse_norm": 5.5456889581134305,
+    "val_rmse": 726.5472668340752,
+    "val_rmse_day": 549.3550018108451,
+    "epoch_seconds": 419.2240569591522
+  },
+  {
+    "epoch": 69,
+    "phase": "sample",
+    "train_mse_norm": 6.931722971091744,
+    "val_rmse": 775.7648712113214,
+    "val_rmse_day": 596.7972735908854,
+    "epoch_seconds": 420.0707354545593
+  },
+  {
+    "epoch": 70,
+    "phase": "sample",
+    "train_mse_norm": 7.627233777792399,
+    "val_rmse": 773.4239970655861,
+    "val_rmse_day": 636.2990794698945,
+    "epoch_seconds": 421.97891497612,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/graphsage_lstm_sgld/uniandes_H18_L24_P16_seed42_20260725_152023/checkpoint_e0070.pt"
+  }
+]
