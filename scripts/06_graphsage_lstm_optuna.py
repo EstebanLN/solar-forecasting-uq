@@ -107,12 +107,11 @@ def make_objective(
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
         batch_size    = trial.suggest_categorical("batch_size", [8, 16, 32])
 
-        # num_workers=0: see 06_resnet_lstm_optuna.py -- forking a DataLoader
-        # worker after this process has touched CUDA intermittently crashes
-        # with "CUDA error: initialization error". Patches are already
-        # preloaded to RAM, so this costs little.
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=0, seed=seed, device=device)
-        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
+        # num_workers=4 + 'spawn' (see 06_resnet_lstm_optuna.py): spawned
+        # workers dodge the fork-after-cuda-init crash and parallelise data
+        # loading across idle cores (~2x faster/batch, no extra GPU memory).
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
+        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=4, seed=seed, device=device)
 
         edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)
 

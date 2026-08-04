@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import random
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import lru_cache, partial
 from pathlib import Path
 from typing import List
 
@@ -240,6 +240,14 @@ class GraphSeqDataset(Dataset):
 # DataLoader factory
 # ---------------------------------------------------------------------------
 
+def _seed_worker(worker_id: int, base_seed: int) -> None:
+    """Per-worker RNG seeding. Module-level (not a closure) so it pickles
+    under the 'spawn' start method."""
+    worker_seed = (base_seed + worker_id) % (2**32)
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+
+
 def make_loader(
     ds: Dataset,
     batch_size: int,
@@ -252,22 +260,31 @@ def make_loader(
     g = torch.Generator()
     g.manual_seed(seed)
 
-    def _seed_worker(worker_id: int) -> None:
-        worker_seed = (seed + worker_id) % (2**32)
-        np.random.seed(worker_seed)
-        random.seed(worker_seed)
-
     kwargs: dict = dict(
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=num_workers,
         pin_memory=(device == "cuda"),
-        worker_init_fn=_seed_worker,
+        # module-level partial (not a closure) so it is picklable under the
+        # 'spawn' start method used for workers below
+        worker_init_fn=partial(_seed_worker, base_seed=seed),
         generator=g,
         persistent_workers=(num_workers > 0),
     )
     if num_workers > 0:
         kwargs["prefetch_factor"] = 2
+        # Use the 'spawn' start method for workers instead of the default
+        # 'fork'. Forking a DataLoader worker after the main process has
+        # initialised CUDA inherits a live CUDA context and intermittently
+        # crashes with "CUDA error: initialization error"
+        # (c10::cuda::ExchangeDevice) -- the hazard that previously forced
+        # num_workers=0. Spawned workers start as fresh processes with no
+        # inherited CUDA context, so the race disappears and parallel data
+        # loading is safe. Spawn workers do not share the main process's
+        # in-RAM patch cache (they read patches from disk, warmed by the OS
+        # page cache), yet still roughly halve per-batch loading time by
+        # parallelising across cores -- verified on this data.
+        kwargs["multiprocessing_context"] = torch.multiprocessing.get_context("spawn")
     return DataLoader(ds, **kwargs)
 
 

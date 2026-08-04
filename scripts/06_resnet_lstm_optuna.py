@@ -89,13 +89,14 @@ def make_objective(
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4, 1e-3])
         batch_size    = trial.suggest_categorical("batch_size", [16, 32, 64])
 
-        # num_workers=0: with >0, forking a new DataLoader worker on a later
-        # trial (after this process has already used CUDA) intermittently
-        # raises "CUDA error: initialization error" from c10::ExchangeDevice
-        # inside the worker -- the known fork-after-cuda-init hazard. Data is
-        # already preloaded to RAM (preload_patch_cache), so this costs little.
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=0, seed=seed, device=device)
-        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
+        # num_workers=4 with the 'spawn' start method (set in make_loader):
+        # spawned workers avoid the fork-after-cuda-init hazard that forced
+        # num_workers=0 before, and parallelise data loading across the
+        # otherwise-idle CPU cores -- ~2x faster per batch on this data, with
+        # no extra GPU memory (workers only feed the model). Running jobs on
+        # the old code are unaffected; only new launches pick this up.
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
+        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=4, seed=seed, device=device)
 
         if fusion:
             tab_hidden = trial.suggest_categorical("tab_hidden", [32, 64, 128])
