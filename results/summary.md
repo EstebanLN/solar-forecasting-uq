@@ -10,6 +10,7 @@
 |---|---|---|---|
 | Persistence | 206.0 | 0.000 | — |
 | SARIMA | 117.4 | 0.425 | — |
+| MLP (Optuna) | 169.4 | 0.178 | 1/4 |
 | ResNet+LSTM (Optuna v2) | 140.8 | 0.317 | 1/2 |
 | Fusion ResNet+LSTM | 117.0 | 0.432 | 1/2 |
 
@@ -23,7 +24,9 @@
 
 | Model | RMSE_day (W/m²) | Skill_day | Seeds |
 |---|---|---|---|
+| Persistence | 566.4 | 0.000 | — |
 | SARIMA | 145.6 | 0.743 | — |
+| Fusion ResNet+LSTM | 155.5 | 0.725 | 1/2 |
 
 ## UNIANDES
 

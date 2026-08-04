@@ -50,6 +50,18 @@ absolute difficulty (565.3$^\dagger$ vs.\ 470.9~W/m²).
 Table~\ref{tab:main} reports $\rmseday$ and $\skillday$ for all models on the
 test set. Deep-learning results are mean~$\pm$~std over four seeds.
 
+A notable observation from the FlatMLP spatial-ablation baseline (which
+average-pools each satellite patch and so discards all within-patch spatial
+structure) is that at Uniandes it is competitive with the spatially-aware
+models at the longer horizons: at 6~hours FlatMLP reaches
+$\skillday = 0.401$, above ResNet-LSTM ($0.368$) and just below
+GraphSAGE-LSTM ($0.417$), and at 3~hours it is within a few points of both.
+Only at 1~hour does a clear gap open ($0.077$ vs.\ ${\sim}0.15$). In other
+words, at this tropical mountain site most of the achievable skill is
+recoverable without any spatial encoding at all --- direct evidence for the
+limited marginal value of satellite spatial features at Uniandes that we
+analyse in Section~\ref{sec:discussion}.
+
 \begin{table*}[t]
   \centering
   \caption{Test-set results. $\rmseday$ in W/m². $\skillday$ relative to persistence
@@ -86,19 +98,19 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
                     & $+0.147 \pm 0.017$ & $\mathbf{+0.376} \pm 0.004$ & $\mathbf{+0.417} \pm 0.008$ \\
     \midrule
     \multirow{2}{*}{FlatMLP}
-      & $\rmseday$ & --- & --- & --- & --- & --- & --- \\
-      & $\skillday$ & --- & --- & --- & --- & --- & --- \\
+      & $\rmseday$ & --- & --- & --- & $271.2 \pm 13.0$ & $275.5 \pm 5.6$ & $282.0 \pm 2.0$ \\
+      & $\skillday$ & --- & --- & --- & $+0.077 \pm 0.044$ & $+0.320 \pm 0.014$ & $+0.401 \pm 0.004$ \\
     \bottomrule
   \end{tabular}}
   \par\smallskip
   \textit{\footnotesize GraphSAGE-LSTM rows use the \textbf{fixed unweighted
   graph} variant (Section~\ref{ssec:gsage}); results for the tuned weighted
   $k$-NN variant are in progress and reported separately in
-  Table~\ref{tab:ablation}. FlatMLP results are pending completion of
-  the four-seed sweep (Section~\ref{sec:discussion}, Limitations) and will be
-  populated prior to submission; this row quantifies what fraction of
-  deep-learning skill arises from spatial encoding versus temporal dynamics
-  alone.}
+  Table~\ref{tab:ablation}. FlatMLP --- the spatial-ablation baseline
+  (spatial average-pool, no spatial structure) --- is populated for Uniandes
+  (four seeds at 1h/3h, three at 6h); its El~Paso row awaits the corrected
+  retraining. This row quantifies what fraction of deep-learning skill arises
+  from spatial encoding versus temporal dynamics alone.}
 \end{table*}
 
 \begin{figure*}[t]
@@ -113,8 +125,8 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
            are evaluated on a coarser, on-the-hour subset of the test set
            against a smoother hourly-mean target, with their own recomputed
            persistence reference, and are \textbf{not directly comparable}
-           to the other bars; FlatMLP is omitted pending completion of its
-           Optuna sweep (Section~\ref{sec:discussion}, Limitations). El~Paso's
+           to the other bars; FlatMLP (the spatial-ablation baseline) is
+           reported in Table~\ref{tab:main} rather than plotted here. El~Paso's
            ResNet-LSTM/GraphSAGE-LSTM bars are not shown here: their pre-fix
            values were invalidated by the satellite-timestamp bug (note at
            the start of this section) and are not reproduced in this figure,
@@ -134,8 +146,9 @@ test set. Deep-learning results are mean~$\pm$~std over four seeds.
            persistence reference for each horizon group. The hatched SARIMA
            bars use a coarser on-the-hour test subset and are
            \textbf{not directly comparable} to the other bars
-           (Section~\ref{ssec:sarima}); FlatMLP is omitted pending completion
-           of its Optuna sweep. As in Figure~\ref{fig:skill}, El~Paso's
+           (Section~\ref{ssec:sarima}); FlatMLP (spatial-ablation baseline) is
+           reported in Table~\ref{tab:main} rather than plotted here. As in
+           Figure~\ref{fig:skill}, El~Paso's
            ResNet-LSTM/GraphSAGE-LSTM bars are withheld pending corrected
            retraining (note at the start of this section); only Persistence
            and SARIMA are currently valid for that site. At Uniandes, both
