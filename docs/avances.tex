@@ -40,7 +40,7 @@
        \large Predicción de Irradiancia Solar (GHI) con Aprendizaje Profundo\\
        y Cuantificación de Incertidumbre}
 \author{Esteban Ladino Nieto}
-\date{28 de julio de 2026}
+\date{5 de agosto de 2026}
 % ================================================================
 
 \begin{document}
@@ -181,11 +181,26 @@ contexto CUDA ya inicializado por el proceso padre. Inicialmente pareció que
 incluso con 2~vías tras acumular suficientes \texttt{fork}s de trials. La
 causa no es la concurrencia sino que la condición de carrera está presente en
 \emph{cada} trial (cada uno crea workers nuevos en un proceso cuyo contexto
-CUDA lleva vivo desde el trial~1). \textbf{Se corrigió en código}: se puso
-\texttt{num\_workers=0} en todos los scripts de entrenamiento y en SGLD
-(donde el riesgo es máximo por correr miles de épocas en un solo proceso).
+CUDA lleva vivo desde el trial~1). \textbf{Primer arreglo}: se puso
+\texttt{num\_workers=0} en todos los scripts de entrenamiento y en SGLD.
 Sin \texttt{fork} no hay contexto heredado, así que la carrera desaparece de
-raíz; el costo es bajo porque el patch store ya se precarga completo en RAM.
+raíz.
+
+\subsection{Optimización: carga de datos paralela con \texttt{spawn}}
+
+El arreglo \texttt{num\_workers=0} era seguro pero dejaba la carga de datos en
+un solo hilo, así que los trabajos quedaban limitados por CPU y \textbf{la GPU
+trabajaba al 13--21\%} con la mayoría de los núcleos ociosos. Se resolvió de
+raíz cambiando el \emph{start method} de los workers de \texttt{fork} a
+\texttt{spawn}: los procesos \texttt{spawn} arrancan sin heredar contexto CUDA
+(la carrera desaparece igual) y permiten \texttt{num\_workers>0} sin riesgo.
+Medido: \textbf{$\sim$2$\times$ más rápido por batch} y, en la práctica, la
+\textbf{GPU pasó de $\sim$20\% a 99\% de uso} (los trabajos ya no la dejan
+esperando), sin costo de memoria GPU (los workers solo alimentan el modelo).
+Se validó de punta a punta antes de aplicarlo y se propagó a ambas máquinas.
+Un detalle atrapado por la prueba end-to-end (no por el microbenchmark): bajo
+\texttt{spawn} la función de \emph{seeding} de workers debía ser picklable, lo
+que exigió moverla a nivel de módulo.
 
 \subsection{Desincronización de driver en la máquina local}
 
@@ -212,6 +227,15 @@ reproducibilidad que El Paso quedará con una mezcla de \texttt{torch~2.11}
 (lo completado antes del reinicio y lo que corre en local) y \texttt{2.14}
 (lo relanzado en el servidor), diferencia dentro del ruido entre semillas ya
 que se reporta media$\pm$desviación.
+
+\textbf{Costo real: reinicios inesperados en máquinas compartidas.} Tanto el
+servidor como la máquina local son equipos compartidos, y ambos han
+reiniciado sin aviso (por \texttt{unattended-upgrades} u otros usuarios). Cada
+reinicio mata los estudios Optuna en curso, que pierden su historial en
+memoria y deben relanzarse desde cero. Un reinicio local costó
+$\sim$6.5~días de cómputo de El Paso. Esto es la principal fuente de
+resbalón en el cronograma --- más que la velocidad de cómputo --- y conviene
+coordinar los reinicios para no perder semanas.
 
 % ================================================================
 \section{Cuantificación de incertidumbre: objetivo, avance y problema abierto}
@@ -274,13 +298,22 @@ conocidos; (ii)~validación cruzada (el residuo medio del test coincide con el
 \texttt{mae\_day} del checkpoint original, 199.51 vs 199.31~W/m²); y
 (iii)~estabilidad (15--30 épocas sin divergencia en las 3 arquitecturas). Se
 corrió sobre Uniandes (único sitio con backbones disponibles tras la
-reconstrucción de El Paso): ResNet 12/12, GraphSAGE 10/12, MLP 5/12
-combinaciones. \emph{Hallazgo a revisar antes de reportar:} GraphSAGE a 1h
-colapsa a varianza casi constante (homoscedástica) en 3 de 4 semillas --- el
-modo de fallo conocido de las redes de varianza, probablemente porque a ese
-horizonte el residuo de GraphSAGE tiene poca señal explotable (su skill de
-punto también es el más débil ahí). No bloquea, pero conviene mirarlo (¿lr o
-épocas distintas para la red de varianza?).
+reconstrucción de El Paso): 33/36 combinaciones (ResNet 12/12, GraphSAGE
+12/12, MLP 9/12).
+
+\emph{Evidencia de que la parte aleatoria funciona.} Midiendo la correlación
+entre la $\sigma_a$ estimada y el error real $|\mu(x)-y|$ (una $\sigma_a$
+útil debe ser \emph{heteroscedástica}, es decir, mayor donde el error es
+mayor), la mayoría de combinaciones dan estimaciones significativas: ResNet a
+1h alcanza correlación $0.53$, y GraphSAGE/ResNet a 3h y 6h están en
+$0.33$--$0.41$. \emph{El colapso homoscedástico se concentra a 1h} (GraphSAGE
+y FlatMLP colapsan a varianza casi constante en 3 de 4 semillas), un modo de
+fallo conocido de las redes de varianza, coherente porque a ese horizonte el
+residuo del modelo de punto tiene poca señal explotable (su skill también es
+el más débil ahí). Conclusión operativa: la mitad aleatoria del
+desentrelazamiento \textbf{ya funciona} para reportar, exceptuando o notando
+el caso de 1h; conviene revisar ese colapso (¿lr o épocas distintas para la
+red de varianza?) antes de los resultados finales.
 
 \subsection{El problema abierto: paso 3 (red bayesiana / SGLD)}
 
@@ -370,39 +403,46 @@ validado.
 \begin{table}[H]
   \centering
   \small
-  \caption{Estado por grupo de experimento al 28 de julio de 2026.
+  \caption{Estado por grupo de experimento al 5 de agosto de 2026.
            ``v2'' = espacio extendido, 2~semillas $\{42,1\}$, 75~trials.
-           Uniandes intacto desde el incidente; El Paso reconstruido y en
-           relanzamiento tras el reinicio del servidor.}
+           Uniandes intacto desde el incidente; El Paso reconstruyéndose en
+           paralelo (servidor + local).}
   \label{tab:estado}
-  \begin{tabular}{@{}lccp{6.1cm}@{}}
+  \footnotesize
+  \begin{tabular}{@{}lp{4.2cm}cp{3.9cm}@{}}
     \toprule
     \textbf{Grupo} & \textbf{El Paso} & \textbf{Uniandes} & \textbf{Observación} \\
     \midrule
-    Optuna v1 (ResNet/GSAGE) & ---  & 24/24 & Base de la Tabla~2 de Uniandes (válida) \\
+    Optuna v1 (ResNet/GSAGE) & ---  & 24/24 & Base Tabla~2 Uniandes (válida) \\
     SARIMA + persistencia    & \multicolumn{2}{c}{ok} & Reescrito a rolling-origin \\
     \midrule
-    ResNet Optuna v2         & h1 ok; h3/h6 corriendo & casi & Servidor (h3) + local (h6) \\
-    GraphSAGE Optuna v2      & h3(s42) ok; h1/resto corriendo & casi & Servidor (h1, el gap) + local (h6) \\
-    FlatMLP Optuna           & parcial & completo & Uniandes cerrado; El Paso en cola \\
-    Fusion ResNet+LSTM       & h6 ok & 2/6 & Local h6 completado \\
-    Fusion GraphSAGE+LSTM    & pendiente & pendiente & En cola \\
-    Red de varianza (aleat.) & --- & 33/36 & Paso 2 UQ implementado y validado \\
-    SGLD (epistémico)        & \multicolumn{2}{c}{en revisión} & Ver Sección~\ref{sec:sgld} \\
+    ResNet Optuna v2    & h1 ok; h3, h6 corren & casi & Servidor + local \\
+    GraphSAGE Optuna v2 & h1, h3 (s42 ok); resto corre & casi & Servidor + local \\
+    FlatMLP Optuna      & 1 semilla & completo & \textbf{Uniandes ya en Tabla~2} \\
+    Fusion ResNet+LSTM  & h6 ok & 2/6 & En cola el resto \\
+    Fusion GraphSAGE    & pendiente & pendiente & En cola \\
+    Red de varianza     & --- & 33/36 & Paso 2 UQ validado \\
+    SGLD (epistémico)   & \multicolumn{2}{c}{en revisión} & Ver Sección~\ref{sec:sgld} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\textbf{Primer resultado corregido de El Paso.} GraphSAGE~v2 a 3h (semilla 42)
-da $\text{Skill}_\text{day} = 0.585$ frente a $0.419^\dagger$ del número
-contaminado: la corrección \emph{fortalece} el resultado. Junto con
-ResNet~a~1h ($+0.297$ vs $-0.167^\dagger$), confirma que los números
-originales subestimaban o invertían el desempeño real.
+\textbf{Resultados corregidos de El Paso (fortalecen el paper).} Los primeros
+números con datos corregidos superan a los contaminados: GraphSAGE~v2 a 3h da
+$\text{Skill}_\text{day} = 0.585$ (vs $0.419^\dagger$), y ResNet~a~1h da
+$+0.297 \pm 0.028$ (vs $-0.167^\dagger$, que era negativo). La corrección no
+solo no daña El Paso: lo mejora. \textbf{La columna de 1h está por completarse}
+--- ResNet ya tiene sus 2 semillas y GraphSAGE~a~1h va en $\sim$43/75 trials
+de su segunda semilla; al terminar será la primera columna des-dagueable, y
+obligará a reescribir la hipótesis de que ``1h es intratable''.
 
-\textbf{Reparto de cómputo actual.} Servidor (la cadena \texttt{run\_sequential}):
-El Paso v2 sistemático empezando por el gap de GraphSAGE~a~1h y ResNet~a~3h.
-Local (GPU libre tras terminar fusión y pausar SGLD): El Paso~a~6h,
-que es la cola de la cadena del servidor, para paralelizar sin duplicar.
+\textbf{Reparto de cómputo y eficiencia.} Servidor (cadena
+\texttt{run\_sequential}): El Paso~v2 sistemático (h1, h3). Local: El Paso~a~6h
+(la cola de la cadena, para paralelizar sin duplicar). Tras la optimización de
+\texttt{spawn}, ambas máquinas ahora saturan su GPU ($\sim$99\% local) en vez
+de dejarla ociosa; el cuello de botella pasó a ser la memoria GPU (los trials
+de GraphSAGE con vecindario y ancho grandes usan hasta $\sim$9~GB), no la CPU,
+lo que limita cuántos trabajos caben en paralelo.
 
 % ================================================================
 \section{Progreso del artículo}
@@ -425,6 +465,16 @@ experimentos pendientes:
         Relacionado, y 4~figuras descriptivas del dataset integradas.
   \item Extensión cooperativa de UQ (red de varianza aleatoria) descrita y
         con su paso~2 implementado.
+  \item \textbf{Fila de FlatMLP (ablación espacial) llenada para Uniandes} en
+        la Tabla~2, con un resultado que \emph{refuerza la narrativa del
+        paper}: FlatMLP (que hace \emph{average-pool} del parche y descarta
+        toda estructura espacial) es competitivo con los modelos espaciales a
+        horizontes largos en Uniandes ---a 6h da $\text{Skill}_\text{day} =
+        0.401$, por encima de ResNet ($0.368$) y casi igual a GraphSAGE
+        ($0.417$)--- y solo se abre una brecha clara a 1h. Es evidencia
+        directa de que en este sitio de montaña tropical las features
+        espaciales del satélite aportan poco valor marginal, justo lo que la
+        discusión hipotetiza.
 \end{itemize}
 
 Uniandes queda con resultados finales y defendibles (4~semillas, auditado
@@ -435,22 +485,66 @@ experimentos en curso (El Paso, ablación $k$-NN, descomposición de
 incertidumbre) se llenarán conforme terminen.
 
 % ================================================================
+\section{Decisiones}
+% ================================================================
+
+\textbf{Tomadas} (ya aplicadas en el código y/o el artículo):
+
+\begin{itemize}[leftmargin=1.5em, noitemsep]
+  \item \textbf{Convención de la daga} para datos con error: marcar y notar
+        como pendiente, nunca borrar secciones/hipótesis/figuras. Evitó
+        publicar una conclusión falsa (el caso de 1h en El Paso).
+  \item \textbf{SARIMA a rolling-origin}, y documentar que no es comparable
+        directo con la tabla principal (subconjunto horario, objetivo de
+        media horaria).
+  \item \textbf{El Paso usará solo el grafo $k$-NN tuneado} (v2) para
+        GraphSAGE; \emph{no} se resucita el código del grafo fijo ya
+        discontinuado --- El Paso no tendrá su propia ablación fijo-vs-tuneado.
+  \item \textbf{Carga de datos con \texttt{spawn}} en vez de
+        \texttt{num\_workers=0} (2$\times$, GPU al 99\%).
+  \item \textbf{SGLD marcado como problema abierto} en la metodología del
+        artículo, sin afirmarlo como validado; Tabla de descomposición como
+        marcador declarado.
+\end{itemize}
+
+\textbf{Por tomar} (idealmente en la reunión con el asesor):
+
+\begin{enumerate}[leftmargin=1.6em, noitemsep]
+  \item \textbf{Método de incertidumbre epistémica (la decisión principal).}
+        Como el SGLD no da una posterior estable, elegir entre: (a)~invertir
+        en arreglar el muestreador bayesiano (resultado incierto), o
+        (b)~usar \emph{deep ensembles} sobre las 4~semillas ya entrenadas
+        (inmediato, robusto, preserva el desentrelazamiento con el paso~2).
+        Esta decisión desbloquea la Tabla de descomposición.
+  \item \textbf{Colapso homoscedástico de la red de varianza a 1h}: ¿reajustar
+        (lr/épocas) o reportarlo como limitación?
+  \item \textbf{Comparación SARIMA vs.\ aprendizaje profundo en base horaria}
+        (posible pedido de un revisor): ¿hacerla antes de someter o dejarla
+        como trabajo futuro declarado?
+  \item \textbf{Infraestructura}: coordinar reinicios de las máquinas
+        compartidas para no perder cómputo; reconciliar el historial de git
+        divergente del servidor (pendiente menor).
+\end{enumerate}
+
+% ================================================================
 \section{Trabajo pendiente --- priorizado}
 % ================================================================
 
 \begin{enumerate}[leftmargin=1.5em, noitemsep]
-  \item \textbf{Definir el método de incertidumbre epistémica con el asesor}
-        (deep ensembles vs.\ seguir con SGLD): decisión que desbloquea la
-        Tabla de descomposición.
-  \item Dejar correr El Paso~v2 en servidor (h1, h3) y local (h6);
-        sincronizar las corridas locales antes de que la cadena del servidor
-        alcance h6.
-  \item Des-daguear cada columna de El Paso conforme tenga sus 2~arquitecturas
-        $\times$ 2~semillas, reescribiendo la narrativa asociada (empezando
-        por 1h, cuyo signo cambió).
-  \item Completar \texttt{fusion} y el FlatMLP de El Paso (en cola en la
-        cadena).
-  \item Vigilar posibles reinicios del servidor por \texttt{unattended-upgrades}.
+  \item Dejar correr El Paso~v2 en servidor (h1, h3) y local (h6). Las
+        corridas ya completadas en el servidor se sincronizaron al local
+        (por \texttt{rsync}, solo los \texttt{summary.json}) para que la
+        agregación las vea.
+  \item \textbf{Des-daguear cada columna de El Paso} conforme tenga sus
+        2~arquitecturas $\times$ 2~semillas, reescribiendo la narrativa
+        asociada. La columna de 1h es la más cercana (falta una semilla) y
+        será la primera; su signo cambió, así que implica reescribir, no solo
+        actualizar.
+  \item Completar \texttt{fusion} y el FlatMLP de El Paso (en cola).
+  \item Aplicar la decisión de incertidumbre epistémica (Sección~Decisiones)
+        y llenar la Tabla de descomposición.
+  \item Ejecutar las decisiones de infraestructura (coordinar reinicios;
+        reconciliar el git del servidor).
 \end{enumerate}
 
 % ================================================================
