@@ -54,7 +54,7 @@ A notable observation from the FlatMLP spatial-ablation baseline (which
 average-pools each satellite patch and so discards all within-patch spatial
 structure) is that at Uniandes it is competitive with the spatially-aware
 models at the longer horizons: at 6~hours FlatMLP reaches
-$\skillday = 0.401$, above ResNet-LSTM ($0.368$) and just below
+$\skillday = 0.400$, above ResNet-LSTM ($0.368$) and just below
 GraphSAGE-LSTM ($0.417$), and at 3~hours it is within a few points of both.
 Only at 1~hour does a clear gap open ($0.077$ vs.\ ${\sim}0.15$). In other
 words, at this tropical mountain site most of the achievable skill is
@@ -98,8 +98,8 @@ analyse in Section~\ref{sec:discussion}.
                     & $+0.147 \pm 0.017$ & $\mathbf{+0.376} \pm 0.004$ & $\mathbf{+0.417} \pm 0.008$ \\
     \midrule
     \multirow{2}{*}{FlatMLP}
-      & $\rmseday$ & --- & --- & --- & $271.2 \pm 13.0$ & $275.5 \pm 5.6$ & $282.0 \pm 2.0$ \\
-      & $\skillday$ & --- & --- & --- & $+0.077 \pm 0.044$ & $+0.320 \pm 0.014$ & $+0.401 \pm 0.004$ \\
+      & $\rmseday$ & --- & --- & --- & $271.2 \pm 13.0$ & $275.5 \pm 5.6$ & $282.6 \pm 2.1$ \\
+      & $\skillday$ & --- & --- & --- & $+0.077 \pm 0.044$ & $+0.320 \pm 0.014$ & $+0.400 \pm 0.004$ \\
     \bottomrule
   \end{tabular}}
   \par\smallskip
@@ -107,8 +107,8 @@ analyse in Section~\ref{sec:discussion}.
   graph} variant (Section~\ref{ssec:gsage}); results for the tuned weighted
   $k$-NN variant are in progress and reported separately in
   Table~\ref{tab:ablation}. FlatMLP --- the spatial-ablation baseline
-  (spatial average-pool, no spatial structure) --- is populated for Uniandes
-  (four seeds at 1h/3h, three at 6h); its El~Paso row awaits the corrected
+  (spatial average-pool, no spatial structure) --- is complete for Uniandes
+  (four seeds at every horizon); its El~Paso row awaits the corrected
   retraining. This row quantifies what fraction of deep-learning skill arises
   from spatial encoding versus temporal dynamics alone.}
 \end{table*}
@@ -334,13 +334,15 @@ weighted $k$-NN variant supersedes the fixed-graph baseline used here.
 
 \begin{table*}[t]
   \centering
-  \caption{SGLD-based epistemic uncertainty. $\sigma_\text{epi}$ in W/m²
+  \caption{Epistemic uncertainty. $\sigma_\text{epi}$ in W/m²
            (Eq.~\ref{eq:epistemic}); $\hat{\text{cov}}_\text{day}$: empirical
            daytime coverage of the interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}$
            on the test set. Backbone: GraphSAGE-LSTM for El~Paso; best-per-horizon
            deep-learning backbone for Uniandes (ResNet-LSTM at 1h, GraphSAGE-LSTM
-           at 3h and 6h). \textit{[SGLD sampling in progress; values to be
-           populated as runs complete.]}}
+           at 3h and 6h). \textit{[Pending: the epistemic estimator is not yet
+           finalised --- a fixed-step SGLD chain drifts over the full sampling
+           budget (Section~\ref{ssec:uq}, Open issue). Values will be populated
+           once the estimator is settled.]}}
   \label{tab:decomposition}
   \setlength{\tabcolsep}{4pt}
   \resizebox{0.6\textwidth}{!}{%

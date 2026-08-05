@@ -66,35 +66,39 @@ independently of the \dag ed model results. Modest positive skill ($\approx 0.15
 is achieved at Uniandes, where frequent cloud passages create exploitable structure.
 
 \textbf{Toward robust, uncertainty-aware forecasting.} The SGLD
-posterior-sampling pipeline (Section~\ref{ssec:uq}) is implemented; remaining
-work is to complete sampling across all site-horizon backbones and
-empirically evaluate the resulting epistemic-uncertainty estimates
-(Table~\ref{tab:decomposition}) against the hypothesis motivating its design
-(Section~\ref{ssec:uq_discussion}): that $\sigma_\text{epi}$ tracks data
-scarcity. A natural extension is to use $\sigma_\text{epi}$ as an
-active-learning signal --- prioritising under-represented conditions for
-future data collection --- closing the loop between uncertainty
-quantification and dataset improvement. Complementing this epistemic
-estimate with an explicit aleatoric component is a natural direction for
-future work, now partly underway. Following \citet{yi2025cooperative}'s
-cooperative, sequential strategy --- rather than the naive approach of
-training a heteroscedastic variance head jointly with the point-forecast
-backbone, known to produce imbalanced gradients and overconfident variance
-estimates --- we have implemented and begun training the second of its
-three components (Section~\ref{ssec:variance}): with the existing
-Optuna-tuned backbone serving as the fixed mean network, a separate
-variance network is trained on the frozen mean's squared residuals via a
-Gamma-likelihood loss to obtain the aleatoric variance $\sigma^2_\text{a}(x)$.
-Remaining work is to warm-start the SGLD sampler of Section~\ref{ssec:uq}
-from the mean network's weights and re-run it under a Gaussian likelihood
-that uses this fixed $\sigma^2_\text{a}(x)$, so that the resulting posterior
-spread yields an epistemic variance $\sigma^2_\text{epi}(x)$ genuinely
-disentangled from aleatoric noise.
+posterior-sampling pipeline (Section~\ref{ssec:uq}) is implemented, but the
+epistemic estimator is not yet finalised: on full-resolution data the
+fixed-step chain drifts along the flat directions of the loss landscape
+(Section~\ref{ssec:uq}, Open issue), so Table~\ref{tab:decomposition}
+remains pending while the estimator is settled --- either a better-behaved
+sampler or a deep-ensemble alternative over the independently-trained
+seeds. Once settled, the resulting $\sigma_\text{epi}$ will be evaluated
+against the hypothesis motivating the design
+(Section~\ref{ssec:uq_discussion}): that it tracks data scarcity. A natural
+extension is then to use $\sigma_\text{epi}$ as an active-learning signal
+--- prioritising under-represented conditions for future data collection ---
+closing the loop between uncertainty quantification and dataset improvement.
+The complementary aleatoric component is further along. Following
+\citet{yi2025cooperative}'s cooperative, sequential strategy --- rather than
+the naive approach of training a heteroscedastic variance head jointly with
+the point-forecast backbone, known to produce imbalanced gradients and
+overconfident variance estimates --- we have implemented, validated, and
+trained the second of its three components across the Uniandes backbones
+(Section~\ref{ssec:variance}): with the existing Optuna-tuned backbone
+serving as the fixed mean network, a separate variance network is trained on
+the frozen mean's squared residuals via a Gamma-likelihood loss to obtain
+the aleatoric variance $\sigma^2_\text{a}(x)$, whose estimates are
+meaningfully heteroscedastic in most configurations
+(Section~\ref{sec:discussion}, Limitations). Remaining work is to
+warm-start the (settled) epistemic sampler from the mean network's weights
+under a likelihood that uses this fixed $\sigma^2_\text{a}(x)$, so that the
+resulting spread yields an epistemic variance $\sigma^2_\text{epi}(x)$
+genuinely disentangled from aleatoric noise.
 
-\textbf{Additional planned work} includes completing the FlatMLP
-spatial-ablation sweep and the weighted $k$-NN graph-construction ablation
-(Table~\ref{tab:ablation}) across the full seed budget, multi-step
-joint-horizon outputs, and extension to further Latin American sites to
-build a broader tropical solar forecasting benchmark with epistemic ---
-and, eventually, fully disentangled aleatoric/epistemic --- operationally
-actionable uncertainty quantification.
+\textbf{Additional planned work} includes completing the El~Paso
+configurations of the FlatMLP spatial ablation (Uniandes is complete,
+Table~\ref{tab:main}), the weighted $k$-NN graph-construction ablation
+(Table~\ref{tab:ablation}), multi-step joint-horizon outputs, and extension
+to further Latin American sites to build a broader tropical solar
+forecasting benchmark with epistemic --- and, eventually, fully disentangled
+aleatoric/epistemic --- operationally actionable uncertainty quantification.

@@ -249,11 +249,11 @@ the corrected data and are unaffected.
 two tropical climate sub-types. Generalisation to other tropical or subtropical
 regions requires additional validation.
 
-\textbf{FlatMLP ablation in progress.} The FlatMLP experiments are currently
-completing their Optuna runs (10 of the 24 site $\times$ horizon $\times$ seed
-configurations evaluated at the time of writing). Final results will be
-incorporated to quantify what fraction of deep-learning skill arises from
-spatial encoding versus temporal dynamics alone.
+\textbf{FlatMLP ablation complete only at Uniandes.} The FlatMLP
+spatial-ablation sweep is complete for Uniandes (four seeds at every horizon,
+reported in Table~\ref{tab:main}); its El~Paso configurations await the
+corrected retraining, so the spatial-encoding contribution can currently be
+quantified at one site only.
 
 \textbf{FlatMLP is not a pure spatial ablation.} Because FlatMLP also
 replaces the shared LSTM with a feed-forward network over the concatenated
@@ -270,13 +270,15 @@ Section~\ref{ssec:optuna}. This narrower seed budget should be kept in mind
 when comparing its mean skill against the four-seed fixed-graph baseline;
 the comparison should be treated as indicative pending a larger seed budget.
 
-\textbf{Epistemic uncertainty has not yet been empirically validated across
-all backbones.} The SGLD sampling pipeline (Section~\ref{ssec:uq}) is
-implemented but has not yet been run to completion across all site-horizon
-backbones (Table~\ref{tab:decomposition}). The claim that $\sigma_\text{epi}$
-tracks data scarcity (Section~\ref{ssec:uq_discussion}) is currently a
-hypothesis motivating the design, not yet an empirical finding; it will be
-assessed quantitatively once sampling completes.
+\textbf{The epistemic-uncertainty estimator is not yet finalised.} The SGLD
+sampling pipeline (Section~\ref{ssec:uq}) is implemented, but on the
+full-resolution data the fixed-step chain exhibits the slow drift described
+in Section~\ref{ssec:uq} (Open issue), so Table~\ref{tab:decomposition}
+remains pending while the estimator is settled --- either a better-behaved
+sampler or a deep-ensemble alternative over the independently-trained seeds.
+The claim that $\sigma_\text{epi}$ tracks data scarcity
+(Section~\ref{ssec:uq_discussion}) is therefore still a hypothesis motivating
+the design, not yet an empirical finding.
 
 \textbf{No separate aleatoric uncertainty estimate yet integrated.} The
 results reported here quantify only the epistemic (reducible,
@@ -285,10 +287,18 @@ consequently, the reported interval $\bar\mu \pm z_{1-\alpha/2}\sigma_\text{epi}
 should be read as a lower bound on total predictive uncertainty rather than
 a fully calibrated interval. An aleatoric variance network
 (Section~\ref{ssec:variance}), following \citet{yi2025cooperative}'s
-cooperative strategy, is being trained separately across the available
-backbones, but its output is not yet integrated into the SGLD sampler or
-the reported interval; completing this integration to obtain a full
-aleatoric/epistemic decomposition is ongoing work (Section~\ref{sec:conclusion}).
+cooperative strategy, has been trained across the Uniandes backbones (33 of
+36 architecture--horizon--seed combinations). Its estimates are meaningfully
+heteroscedastic in most configurations --- the predicted $\sigma_\text{a}$
+correlates with the realised absolute residual up to $0.53$ (ResNet-LSTM,
+1h), and between $0.33$ and $0.41$ for both spatial architectures at 3h and
+6h --- but at the 1-hour horizon GraphSAGE-LSTM and FlatMLP collapse to a
+near-constant (homoscedastic) variance in three of four seeds, the known
+failure mode of variance networks, plausibly because the point model's
+residual carries little exploitable signal at that horizon. The variance
+output is not yet integrated into the epistemic sampler or the reported
+interval; completing this integration to obtain a full aleatoric/epistemic
+decomposition is ongoing work (Section~\ref{sec:conclusion}).
 
 \textbf{Single-step output.} Current models produce a single-step forecast at
 horizon $H$. Simultaneous multi-step output (forecasts for all three horizons

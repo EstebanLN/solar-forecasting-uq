@@ -50,40 +50,41 @@
 % ABSTRACT
 % =========================
 \begin{abstract}
-Solar photovoltaic (PV) generation is expanding rapidly across tropical Latin
+Solar photovoltaic generation is expanding rapidly across tropical Latin
 America: Colombia alone has surpassed 1~GW of installed capacity and targets
-9~GW by 2030 under its National Energy Plan \citep{upme2023}. Reliable
-short-term forecasts of global horizontal irradiance (GHI) are essential for
-risk-aware reserve scheduling in PV-integrated power systems, yet a point
-forecast alone cannot signal whether it was produced under conditions the
-model has genuinely learned from or under atypical, data-scarce conditions
---- a distinction that determines whether the forecast should be trusted or
-flagged for a conservative fallback. In tropical countries such as Colombia,
-forecasting is further complicated by frequent, heterogeneous convective
-cloud systems that can reduce surface irradiance by more than 80\% within
-minutes and are poorly captured by coarse-resolution numerical weather
-prediction. This paper proposes a graph neural network
+9~GW by 2030 \citep{upme2023}. Reliable short-term forecasts of global
+horizontal irradiance (GHI) are essential for risk-aware reserve scheduling,
+yet a point forecast alone cannot signal whether it was produced under
+conditions the model has genuinely learned from or under atypical,
+data-scarce ones. Forecasting in the tropics is further complicated by
+frequent convective cloud systems that can cut surface irradiance by more
+than 80\% within minutes and are poorly captured by coarse-resolution
+numerical weather prediction. This paper proposes a graph neural network
 framework for short-term GHI forecasting from GOES-16 geostationary imagery,
 coupled with an \textbf{epistemic uncertainty-quantification layer} based on
-Stochastic Gradient Langevin Dynamics (SGLD) posterior weight sampling that
-flags forecasts made under data-scarce or atypical conditions. We introduce
+Stochastic Gradient Langevin Dynamics (SGLD) posterior weight sampling,
+intended to flag forecasts made under data-scarce conditions. We introduce
 \textbf{GraphSAGE-LSTM}, which treats each satellite patch as a graph of
 spatially connected pixels, aggregates neighbourhoods via GraphSAGE, and
 passes the resulting embedding sequence through an LSTM, comparing a fixed
 unweighted nearest-neighbour graph against a tuned, distance-weighted
-variant with a tunable neighbourhood size. The model is evaluated against
-ResNet-LSTM, FlatMLP, and persistence baselines at two climatically
-contrasting Colombian sites --- El~Paso (C{\'e}sar), a high-irradiance
-lowland site, and Universidad de los Andes (Bogot{\'a}), a high-altitude
-equatorial mountain station --- across 1-, 3-, and 6-hour horizons. Four-seed
-comparisons show graph-based encoders are competitive with or superior to
-convolutional baselines at multi-hour horizons, while absolute skill is
-markedly lower at the mountain site, indicating that model selection should
-be climate-aware; the FlatMLP, weighted-graph, and SGLD results are in
-progress. This work contributes a
+variant. The model is evaluated against ResNet-LSTM, FlatMLP, SARIMA, and
+persistence baselines at two climatically contrasting Colombian sites ---
+El~Paso (C{\'e}sar), a high-irradiance lowland site, and Universidad de los
+Andes (Bogot{\'a}), an equatorial mountain station --- across 1-, 3-, and
+6-hour horizons. Four-seed comparisons show graph-based encoders are
+competitive with or superior to convolutional baselines at multi-hour
+horizons, while absolute skill is markedly lower at the mountain site,
+indicating that model selection should be climate-aware. There, a
+spatial-ablation baseline discarding all within-patch structure proves
+surprisingly competitive, quantifying how little of the achievable skill is
+attributable to spatial encoding. The weighted-graph ablation and the
+uncertainty decomposition remain in progress: the epistemic estimator is not
+yet finalised, as a fixed-step SGLD chain drifts over the full sampling
+budget on these over-parameterised networks. This work contributes a
 reproducible GOES-16 benchmark for the underrepresented tropical Andean
-climate and one of the first applications of SGLD-based epistemic
-uncertainty quantification to satellite-based solar forecasting.
+climate and a posterior-sampling approach to epistemic uncertainty
+quantification for satellite-based solar forecasting.
 \end{abstract}
 
 % =========================
@@ -92,10 +93,12 @@ uncertainty quantification to satellite-based solar forecasting.
 \begin{highlights}
 \item GraphSAGE-LSTM for GHI forecasting, with a fixed vs.\ tuned $k$-NN
       graph ablation.
-\item Compared against ResNet-LSTM, FlatMLP, and persistence at two
+\item Compared against ResNet-LSTM, FlatMLP, SARIMA, and persistence at two
       Colombian sites.
-\item An SGLD-based epistemic uncertainty layer flags data-scarce forecast
-      conditions.
+\item Spatial ablation shows limited marginal value of satellite spatial
+      features at the mountain site.
+\item A posterior-sampling layer designed to flag data-scarce forecast
+      conditions; estimator not yet finalised.
 \item A reproducible GOES-16 benchmark for underrepresented tropical Andean
       climates.
 \end{highlights}

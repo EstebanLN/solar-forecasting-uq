@@ -608,8 +608,9 @@ a mean network, a variance network, and a Bayesian network in strict
 sequence rather than jointly. The mean network of this strategy is already
 the Optuna-tuned backbone of Sections~\ref{ssec:resnet}--\ref{ssec:mlp};
 here we describe the second component, an aleatoric variance network,
-currently being trained across the site-horizon-seed combinations for
-which a mean-network checkpoint is available.
+trained across the site-horizon-seed combinations for which a mean-network
+checkpoint is available (currently the Uniandes backbones; El~Paso follows
+its corrected retraining).
 
 \begin{figure}[t]
   \centering
@@ -617,8 +618,8 @@ which a mean-network checkpoint is available.
   \caption{Cooperative aleatoric/epistemic uncertainty pipeline. Step~1
            (mean network) is the already-trained, frozen backbone of
            Sections~\ref{ssec:resnet}--\ref{ssec:mlp}. Step~2 (variance
-           network, this section) is implemented and currently being
-           trained across the available backbones. Step~3 reuses the SGLD
+           network, this section) is implemented and trained across the
+           available (Uniandes) backbones. Step~3 reuses the SGLD
            sampler of Section~\ref{ssec:uq}, but warm-started from the mean
            network's weights and re-weighted by the fixed $\sigma^2_\text{a}(x)$
            from Step~2 rather than the plain-MSE likelihood currently
@@ -647,11 +648,12 @@ samples ($\text{GHI} \geq 20$~W/m²) keeps the variance network's target
 consistent with the daytime evaluation convention used throughout this
 paper. This component has been implemented and validated --- synthetic
 recovery of known Gamma parameters, and cross-checked residual statistics
-against the frozen backbone's own reported error --- and is currently being
-trained across the available backbones; integrating its output into a
-warm-started, variance-weighted SGLD sampler, completing the third
-component of the cooperative strategy, is ongoing work
-(Section~\ref{sec:conclusion}).
+against the frozen backbone's own reported error --- and has been trained
+across the available (Uniandes) backbones, where its estimates are
+meaningfully heteroscedastic in most configurations
+(Section~\ref{sec:discussion}, Limitations); integrating its output into a
+warm-started, variance-weighted sampler, completing the third component of
+the cooperative strategy, is ongoing work (Section~\ref{sec:conclusion}).
 
 \subsection{Evaluation metrics}
 
