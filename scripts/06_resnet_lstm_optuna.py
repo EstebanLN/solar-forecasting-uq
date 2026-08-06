@@ -95,8 +95,13 @@ def make_objective(
         # otherwise-idle CPU cores -- ~2x faster per batch on this data, with
         # no extra GPU memory (workers only feed the model). Running jobs on
         # the old code are unaffected; only new launches pick this up.
+        # val_loader uses 0 workers ON PURPOSE: validation runs once per epoch
+        # over a smaller split, so extra processes buy little speed but each
+        # costs ~0.7 GB of RAM. With persistent_workers, giving both loaders 4
+        # workers pinned ~8 processes per job and drove the machine into swap
+        # when several jobs ran concurrently.
         train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
-        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=4, seed=seed, device=device)
+        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         if fusion:
             tab_hidden = trial.suggest_categorical("tab_hidden", [32, 64, 128])

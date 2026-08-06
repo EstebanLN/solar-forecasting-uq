@@ -89,9 +89,10 @@ def make_objective(
 
         # num_workers=4 + 'spawn' (see 06_resnet_lstm_optuna.py): parallel
         # data loading across idle cores without the fork-after-cuda crash
-        # (~2x faster/batch, no extra GPU memory).
+        # (~2x faster/batch, no extra GPU memory). val_loader uses 0 workers
+        # on purpose -- see the note in 06_resnet_lstm_optuna.py (RAM).
         train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
-        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=4, seed=seed, device=device)
+        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         model = FlatMLP(
             L=L, C=16,

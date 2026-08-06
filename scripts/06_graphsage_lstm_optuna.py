@@ -110,8 +110,13 @@ def make_objective(
         # num_workers=4 + 'spawn' (see 06_resnet_lstm_optuna.py): spawned
         # workers dodge the fork-after-cuda-init crash and parallelise data
         # loading across idle cores (~2x faster/batch, no extra GPU memory).
+        # val_loader uses 0 workers ON PURPOSE: validation runs once per epoch
+        # over a smaller split, so extra processes buy little speed but each
+        # costs ~0.7 GB of RAM. With persistent_workers, giving both loaders 4
+        # workers pinned ~8 processes per job and drove the machine into swap
+        # when several jobs ran concurrently.
         train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
-        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=4, seed=seed, device=device)
+        val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)
 
