@@ -1,0 +1,600 @@
+\documentclass[10pt,aspectratio=169]{beamer}
+
+% ----- Encoding -----
+% NOTE: babel[spanish] requiere texlive-lang-spanish (ausente en esta máquina);
+% se omite para que compile en cualquier parte. El contenido es en español.
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% ----- Tema -----
+\usetheme{Madrid}
+\usecolortheme{whale}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{caption}[numbered]
+\setbeamerfont{frametitle}{size=\large}
+\setbeamertemplate{itemize items}[circle]
+
+% ----- Paquetes -----
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{awsorange}{RGB}{255,153,0}
+\definecolor{darkblue}{RGB}{20,60,110}
+\definecolor{softgray}{RGB}{245,245,245}
+\definecolor{okgreen}{RGB}{0,120,60}
+\definecolor{warnred}{RGB}{170,30,30}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{softgray},
+  frame=single,
+  framerule=0pt,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  aboveskip=4pt,
+  belowskip=4pt,
+}
+
+% ----- Título -----
+\title[Ingesta GOES en AWS]{Descarga y procesamiento automatizado de datos GOES en AWS}
+\subtitle{Metodología, recomendaciones y trabajo actual}
+\author{Esteban Ladino Nieto}
+\institute[Uniandes]{Universidad de los Andes \\ \small Ing.\ Industrial \& Ing.\ Mecánica}
+\date{Agosto de 2026}
+
+\begin{document}
+
+% ================================================================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ================================================================
+\begin{frame}{Contexto: de dónde sale este flujo}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Dos proyectos de grado (2025--2026)}
+      \begin{itemize}
+        \item \textbf{Ing.\ Mecánica} --- Dir.\ Andrés González Mancera\\
+              \small Pronóstico multifuente de irradiancia (GHI) a 60~min,
+              estación en Bogotá.
+        \item \textbf{Ing.\ Industrial} --- Dir.\ Alejandra Tabares\\
+              \small Comparación de arquitecturas para pronóstico solar,
+              planta FV en El~Paso (César).
+      \end{itemize}
+      \vspace{0.4em}
+      \textbf{Ambos necesitaban lo mismo:} miles de horas de imágenes
+      GOES, de forma reproducible y sin descargar a mano.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Productos GOES usados}
+        \begin{itemize}
+          \item \texttt{ABI-L2-MCMIPF}\\
+                \small 16 canales espectrales, hasta 6 fotogramas/hora
+          \item \texttt{ABI-L2-DSRF}\\
+                \small Irradiancia de onda corta en superficie, 1/hora
+        \end{itemize}
+      \end{block}
+      \begin{alertblock}{Escala del problema}
+        \small Rango ingerido: \textbf{feb 2022 -- abr 2025}\\
+        $\approx$ 27.000 horas $\times$ 2 productos.\\
+        Inviable manualmente.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{El problema de fondo}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{Lo que \emph{no} funciona}
+      \begin{itemize}
+        \item Descargar NetCDF full-disk a mano\\
+              \small ($\sim$400~MB por archivo, 6 por hora)
+        \item Bajar todo a un disco local\\
+              \small (decenas de TB para el rango completo)
+        \item Scripts sin control de reintentos\\
+              \small (se cae en la hora 3.000 y no sabes dónde ibas)
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{La idea clave}
+      \begin{block}{Procesar \emph{donde viven} los datos}
+        Los datos ya están en S3 (AWS Open Data).\\[0.3em]
+        En vez de traerlos, se lleva el cómputo allá:
+        \textbf{recortar, submuestrear y guardar solo lo útil}.
+      \end{block}
+      \vspace{0.3em}
+      Resultado: de $\sim$400~MB/archivo full-disk a
+      \textbf{un \texttt{.npz} compacto por hora} ya recortado sobre Colombia.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Arquitectura implementada}
+  \begin{center}
+  \begin{tikzpicture}[
+      node distance=1.1cm and 1.5cm,
+      box/.style={rectangle, rounded corners=3pt, draw=darkblue, thick,
+                  fill=blue!5, align=center, minimum height=1.0cm,
+                  text width=2.7cm, font=\footnotesize},
+      awsbox/.style={rectangle, rounded corners=3pt, draw=awsorange, very thick,
+                  fill=orange!8, align=center, minimum height=1.0cm,
+                  text width=2.7cm, font=\footnotesize},
+      arr/.style={-{Stealth[length=2.5mm]}, thick, draw=darkblue}
+    ]
+    \node[box] (noaa) {\textbf{AWS Open Data}\\ \texttt{s3://noaa-goes16}\\ \tiny (Requester Pays)};
+    \node[awsbox, right=of noaa] (lambda) {\textbf{AWS Lambda}\\ imagen Docker\\ \tiny \texttt{process\_goes\_granule}};
+    \node[box, right=of lambda] (s3) {\textbf{S3 del proyecto}\\ \texttt{goes-data-...}\\ \tiny \texttt{.npz} procesados};
+    \node[box, below=0.9cm of lambda] (cli) {\textbf{Backfill (AWS CLI)}\\ \tiny recorre el rango de horas\\ \tiny e invoca Lambda};
+    \node[box, right=of s3, text width=2.5cm] (local) {\textbf{Modelado}\\ \tiny parches por sitio\\ \tiny + entrenamiento};
+
+    \draw[arr] (noaa) -- node[above,font=\tiny]{NetCDF} (lambda);
+    \draw[arr] (lambda) -- node[above,font=\tiny]{recorte+resample} (s3);
+    \draw[arr] (cli) -- (lambda);
+    \draw[arr] (s3) -- (local);
+  \end{tikzpicture}
+  \end{center}
+
+  \vspace{-0.2em}
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \footnotesize
+      \textbf{Solo 3 servicios}
+      \begin{itemize}\footnotesize
+        \item S3 (almacenamiento)
+        \item Lambda (cómputo)
+        \item CLI o Step Functions
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \footnotesize
+      \textbf{Sin servidores}\\
+      No hay EC2 que administrar ni apagar. Se paga por invocación.
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \footnotesize
+      \textbf{Región \texttt{us-east-1}}\\
+      Misma región del bucket público $\Rightarrow$ sin costo de transferencia.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}[fragile]{Cómo están organizados los datos en AWS Open Data}
+  El bucket público sigue una convención estricta que hay que reproducir
+  para construir el \emph{prefix}:
+
+\begin{lstlisting}
+s3://noaa-goes16/ABI-L2-<PRODUCTO>/<YYYY>/<DOY>/<HH>/
+    OR_ABI-L2-<PRODUCTO>-M6_G16_s<YYYYDOYHHMM...>.nc
+\end{lstlisting}
+
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Detalle que cuesta tiempo}
+        \small
+        \texttt{DOY} = \textbf{día juliano} (001--366), no el mes.\\
+        Hay que convertir la fecha antes de armar el prefijo.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Satélite operativo}
+        \small
+        \textbf{GOES-16} $\to$ histórico (hasta abr.\ 2025)\\
+        \textbf{GOES-19} $\to$ GOES-East desde abr.\ 2025\\[0.2em]
+        Mismo flujo, solo cambia el bucket:
+        \texttt{noaa-goes16} / \texttt{noaa-goes19}.
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.3em}
+  \footnotesize
+  \textbf{Requester Pays:} el bucket es público pero hay que pasar el flag
+  explícitamente (\texttt{--request-payer requester} en CLI, o
+  \texttt{RequestPayer='requester'} en \texttt{boto3}); si no, la petición
+  falla con \texttt{AccessDenied}.
+\end{frame}
+
+% ================================================================
+\begin{frame}[fragile]{La función Lambda: qué hace exactamente}
+  Recibe un timestamp y devuelve un \texttt{.npz} ya listo para modelar:
+
+\begin{lstlisting}
+{ "timestamp": "2024-03-15T14:00:00Z",
+  "products": ["MCMIPF", "DSRF"],
+  "target_s3_bucket": "...", "target_prefix": "processed" }
+\end{lstlisting}
+
+  \begin{enumerate}\small
+    \item Construye el prefijo NOAA (año / día juliano / hora).
+    \item Descarga los NetCDF de la hora a \texttt{/tmp}.
+    \item Lee las variables con \texttt{xarray}:
+          \textbf{MCMIPF} $\to$ canales \texttt{CMI\_C01\dots CMI\_C16};
+          \textbf{DSRF} $\to$ banda de radiación en superficie.
+    \item \textbf{Recorte espacial} sobre Colombia (full disk $\to$ región):
+          \texttt{X:[2550,3650]}, \texttt{Y:[1800,2850]}.
+    \item \textbf{Downsampling determinístico} a $256\times256$.
+    \item Empaqueta y sube a S3.
+  \end{enumerate}
+
+  \vspace{0.2em}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Formas de salida}
+      \begin{itemize}\footnotesize
+        \item MCMIPF: \texttt{(N, 16, 256, 256)}, $N\le 6$
+        \item DSRF: \texttt{(1, 256, 256)} por hora
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize
+      \textbf{Configuración que funcionó}
+      \begin{itemize}\footnotesize
+        \item Python 3.12, \textbf{imagen Docker} (no ZIP)
+        \item 2048~MB RAM, 4096~MB \texttt{/tmp}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}[fragile]{¿Por qué imagen Docker y no un ZIP/Layer?}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \texttt{netCDF4} y \texttt{xarray} traen \textbf{binarios nativos}
+      (HDF5, libnetcdf). Empaquetarlos como \emph{layer} de Lambda es frágil
+      y choca con el límite de tamaño.\\[0.4em]
+      Con imagen Docker se construye el entorno completo y se despliega tal cual.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+\begin{lstlisting}
+FROM public.ecr.aws/lambda/python:3.12
+COPY requirements.txt .
+RUN pip install --no-cache-dir \
+    -r requirements.txt
+COPY goes_processing_core.py \
+     lambda_function.py ./
+CMD ["lambda_function.lambda_handler"]
+\end{lstlisting}
+      \footnotesize
+      \texttt{requirements}: \texttt{boto3}, \texttt{numpy},
+      \texttt{xarray}, \texttt{netCDF4}
+    \end{column}
+  \end{columns}
+  \vspace{0.3em}
+  \begin{block}{Flujo de despliegue}
+    \small
+    Construir imagen $\to$ publicar en \textbf{ECR} $\to$ crear la Lambda con
+    \texttt{--package-type Image} $\to$ invocar desde CLI.
+  \end{block}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Ingesta masiva: \emph{backfill} idempotente}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{El principio más importante del flujo}
+      \begin{block}{Idempotencia}
+        \small
+        El script se puede volver a correr \textbf{las veces que sea}:
+        \begin{itemize}\small
+          \item si la hora ya existe en S3, se sobrescribe igual (sin daño);
+          \item si NOAA no tiene datos para esa hora, no sube nada;
+          \item no hay estado que se corrompa a medio camino.
+        \end{itemize}
+      \end{block}
+      \small
+      Se invoca de forma asíncrona (\texttt{InvocationType='Event'}), así
+      miles de horas se lanzan sin esperar respuesta una por una.
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \textbf{Scripts de control}
+      \begin{itemize}
+        \item \texttt{verify\_full\_s3.py}\\
+              \small compara horas \emph{esperadas} vs.\ \emph{presentes}
+              y reporta huecos
+        \item \texttt{replay\_missing\_hours.py}\\
+              \small relanza \textbf{solo} las horas faltantes
+      \end{itemize}
+      \vspace{0.5em}
+      \begin{alertblock}{Hallazgo útil}
+        \small
+        Varios huecos persistentes \textbf{no eran fallos del pipeline}:
+        son ausencias reales del dataset público de NOAA. Hay que
+        verificarlo antes de perseguir un bug inexistente.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}[fragile]{Verificación y costos}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{Conteo rápido de lo ingerido}
+\begin{lstlisting}
+aws s3api list-objects-v2 \
+  --bucket <mi-bucket> \
+  --prefix processed/MCMIPF/2023/05/ \
+  --query "length(Contents[])" \
+  --output text
+\end{lstlisting}
+      \small
+      Conviene contar por mes: detecta huecos sin listar decenas de miles
+      de objetos.
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{block}{Costo estimado}
+        \small
+        \textbf{USD 15--50} para el proceso completo, según rango de fechas
+        y paralelismo.\\[0.3em]
+        Referencia: una semana de prueba (7 días $\times$ 24 h)
+        $\approx$ 168 invocaciones.
+      \end{block}
+      \begin{block}{Dónde se va el costo}
+        \small
+        Solicitudes S3 + almacenamiento + ejecuciones Lambda.
+        \textbf{No} en transferencia, si se trabaja en \texttt{us-east-1}.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Recomendaciones para empezar}
+  \begin{enumerate}
+    \item \textbf{Empiecen por una semana, no por tres años.}\\
+          \small Validen el flujo completo end-to-end con $\sim$168 horas antes de
+          lanzar la ingesta masiva. Es barato y revela el 90\% de los problemas.
+    \item \textbf{Trabajen en \texttt{us-east-1}.}\\
+          \small Es donde vive el bucket público; fuera de ahí se paga transferencia.
+    \item \textbf{Decidan temprano el recorte y la resolución.}\\
+          \small Es lo que define el tamaño del dataset final. Reprocesar 27.000
+          horas porque el recorte quedó corto es caro en tiempo.
+    \item \textbf{Hagan el proceso idempotente desde el día uno.}\\
+          \small Van a tener que reintentar; que reintentar sea seguro y barato.
+    \item \textbf{Separen ingesta de modelado.}\\
+          \small S3 guarda el producto crudo-procesado ($256\times256$); los recortes
+          por sitio se hacen después, localmente. Así no se re-ingesta al cambiar de sitio.
+    \item \textbf{Guarden metadatos de georreferenciación.}\\
+          \small Los límites del recorte y el mapeo (lat,lon)$\to$(fila,col) deben quedar
+          versionados en un archivo, no en la cabeza de quien lo corrió.
+  \end{enumerate}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Lecciones aprendidas (lo que me costó tiempo)}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{alertblock}{1. Zonas horarias: el error más caro}
+        \small
+        Las imágenes GOES están en \textbf{UTC real}. Los datos de estación
+        suelen venir en hora local --- a veces \textbf{mal etiquetados como UTC}.\\[0.3em]
+        En mi caso un archivo traía sufijo \texttt{+00:00} siendo hora local:
+        \textbf{5 horas de desfase} que emparejaban cada imagen con la
+        irradiancia equivocada, \emph{sin generar ningún error}.
+      \end{alertblock}
+      \footnotesize
+      \textbf{Cómo detectarlo:} el pico diario de irradiancia debe caer cerca
+      del mediodía solar ($\approx$ 16--17~UTC para Colombia). Si aparece a
+      otra hora, hay desfase.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{2. Verificar cobertura $\ne$ confiar}
+        \small
+        Contrastar horas esperadas vs.\ presentes, y confirmar en el bucket
+        de NOAA si un hueco es real.
+      \end{block}
+      \begin{block}{3. Los binarios nativos mandan}
+        \small
+        \texttt{netCDF4}/\texttt{xarray} $\Rightarrow$ imagen Docker.
+        Ahorra días de pelea con \emph{layers}.
+      \end{block}
+      \begin{block}{4. \texttt{/tmp} y memoria de Lambda}
+        \small
+        Un full-disk pesa cientos de MB: 2~GB de RAM y 4~GB de \texttt{/tmp}
+        fue la configuración estable.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Del pipeline a los datos de modelado}
+  \begin{center}
+  \begin{tikzpicture}[
+      node distance=0.9cm,
+      st/.style={rectangle, rounded corners=3pt, draw=darkblue, thick,
+                 fill=blue!5, align=center, font=\scriptsize,
+                 text width=2.45cm, minimum height=0.95cm},
+      arr/.style={-{Stealth[length=2.5mm]}, thick, draw=darkblue}
+    ]
+    \node[st] (a) {\textbf{S3}\\ \texttt{.npz} $256\times256$\\ región Colombia};
+    \node[st, right=of a] (b) {\textbf{Georreferenciación}\\ (lat,lon) $\to$ (fila,col)\\ \tiny por sitio};
+    \node[st, right=of b] (c) {\textbf{Parches}\\ $16\times16$ px\\ \tiny centrados en el sitio};
+    \node[st, right=of c] (d) {\textbf{Manifiestos}\\ \tiny ventanas causales\\ \tiny (historia, objetivo)};
+    \draw[arr] (a) -- (b); \draw[arr] (b) -- (c); \draw[arr] (c) -- (d);
+  \end{tikzpicture}
+  \end{center}
+
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \textbf{Por qué parches pequeños}\\
+      Para pronóstico puntual no se necesita todo el país: basta la vecindad
+      del sitio. Un parche de $16\times16$ px sobre la grilla procesada captura
+      la nubosidad que llega al punto de interés.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \small
+      \textbf{Ventanas estrictamente causales}\\
+      Cada muestra usa solo historia pasada ($L$ pasos de 10~min) para
+      predecir $t+H$. Nunca se usa información futura --- es la fuente más
+      común de resultados demasiado buenos para ser ciertos.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{En qué estoy trabajando ahora}
+  \textbf{Tesis actual} (Dir.\ Alejandra Tabares): pronóstico de GHI a 1, 3 y 6~horas
+  con \textbf{cuantificación de incertidumbre}, en dos sitios de clima contrastante.
+
+  \vspace{0.4em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Del ConvLSTM a los grafos}
+        \small
+        \textbf{ResNet-LSTM}: trata cada parche como imagen (convolución +
+        submuestreo) y una LSTM sobre la secuencia.\\[0.35em]
+        \textbf{GraphSAGE-LSTM} (lo nuevo): trata el parche como un
+        \textbf{grafo de píxeles}. Cada píxel agrega información de sus
+        vecinos con pesos por distancia, \emph{sin} reducir resolución.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Por qué un grafo}
+        \small
+        Una convolución desliza el \emph{mismo} filtro por toda la imagen.
+        El grafo permite que el centro del parche (donde está la estación) y
+        la periferia (por donde entran las nubes) se traten distinto, y que
+        el tamaño del vecindario sea un hiperparámetro.
+      \end{block}
+      \begin{alertblock}{Ablación honesta}
+        \small
+        Comparo contra un \textbf{FlatMLP} que promedia el parche y descarta
+        toda estructura espacial: mide cuánto aporta realmente lo espacial.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Cuantificación de incertidumbre: la parte nueva}
+  \textbf{La idea:} un pronóstico puntual no dice \emph{si se puede confiar en él}.
+  No basta un intervalo: hay que saber \textbf{por qué} es incierto.
+
+  \vspace{0.5em}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Incertidumbre aleatoria $\sigma_a^2$}
+        \small
+        Ruido \textbf{irreducible} del proceso físico (la nube es
+        intrínsecamente impredecible).\\[0.2em]
+        \textcolor{darkblue}{$\Rightarrow$ Respuesta: margen de reserva.}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Incertidumbre epistémica $\sigma_\text{epi}^2$}
+        \small
+        Ignorancia \textbf{reducible} del modelo: condiciones que ha visto poco.\\[0.2em]
+        \textcolor{darkblue}{$\Rightarrow$ Respuesta: recolectar datos, reentrenar.}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.5em}
+  \begin{block}{Enfoque: entrenamiento cooperativo secuencial (Yi \& Bessa, 2025)}
+    \small
+    En vez de entrenar media y varianza juntas (lo que produce varianzas
+    sobreconfiadas), se entrenan \textbf{en secuencia}:
+    \textbf{(1)} red de media (congelada) $\to$
+    \textbf{(2)} red de varianza sobre los residuos $\to$
+    \textbf{(3)} muestreo de la posterior de pesos para lo epistémico.
+    \\[0.3em]
+    \footnotesize
+    \textcolor{warnred}{Estado real:} pasos 1--2 funcionando y validados; el paso 3
+    (muestreo bayesiano) es un problema abierto --- la cadena no converge a una
+    posterior estable en redes sobreparametrizadas.
+  \end{block}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Qué muestran los resultados hasta ahora}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \begin{block}{El clima cambia la respuesta}
+        \small
+        En el sitio de \textbf{montaña} (Bogotá), un modelo \emph{sin ninguna}
+        estructura espacial alcanza casi el mismo desempeño que los modelos
+        espaciales a 6~horas.\\[0.3em]
+        $\Rightarrow$ El ciclo diurno regular y la convección local dejan poco
+        margen a la información espacial del satélite.\\[0.3em]
+        En el sitio de \textbf{tierra caliente} (El~Paso) el aporte satelital
+        es sustancialmente mayor.
+      \end{block}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{alertblock}{Lección transferible}
+        \small
+        \textbf{No asuman que más datos satelitales $=$ mejor pronóstico.}
+        Conviene medir contra una línea base sin información espacial
+        \emph{antes} de invertir en arquitecturas complejas.
+      \end{alertblock}
+      \footnotesize
+      También: siempre comparar contra \textbf{persistencia}
+      ($\hat{y}_{t+H} = y_t$). Es sorprendentemente difícil de superar a
+      horizontes cortos.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}{Resumen}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{El flujo, en una frase}
+      \begin{block}{}
+        \small
+        Procesar los GOES \textbf{dentro de AWS} (Lambda sobre el bucket
+        público), guardar solo el recorte útil en S3, y hacer la ingesta con un
+        script \textbf{idempotente} que se pueda reintentar sin miedo.
+      \end{block}
+      \vspace{0.3em}
+      \textbf{Lo que más ahorra tiempo}
+      \begin{itemize}\small
+        \item Validar con una semana antes de escalar
+        \item Verificar alineación temporal (UTC)
+        \item Separar ingesta de modelado
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Con gusto puedo compartir}
+      \begin{itemize}\small
+        \item Los instructivos completos (anexos de ambas tesis), con
+              el código de la Lambda y la configuración paso a paso
+        \item Los repositorios de los dos proyectos
+        \item Acompañarlos en el montaje inicial
+      \end{itemize}
+      \vspace{0.6em}
+      \begin{block}{Contacto}
+        \small
+        Esteban Ladino Nieto\\
+        \texttt{<correo>}\hfill{\tiny\textcolor{warnred}{[completar]}}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================
+\begin{frame}
+  \begin{center}
+    {\Huge \textcolor{darkblue}{¿Preguntas?}}\\[1.2em]
+    {\large Gracias}\\[0.6em]
+    \small Esteban Ladino Nieto \\
+    \footnotesize Universidad de los Andes
+  \end{center}
+\end{frame}
+
+\end{document}
