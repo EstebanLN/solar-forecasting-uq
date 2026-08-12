@@ -189,16 +189,24 @@ haya fusion en AIA, o (b) en Daniel cuando se libere una ventana, o (c) con
 - Al terminar h3 s1: sync + encadenar el siguiente seed1 de fusion pendiente
   (`elpaso h1 s1`) mientras AIA blanco lleva los seed42.
 
-### CAMINO CRÍTICO (plan 11-ago): acelerar gsage_v2 Uniandes
-Cerrar gsage_v2 Uniandes (4 combos) desbloquea fusion_gsage (12 combos). Es el
-cuello para el paper. Solo se puede paralelizar con 2 workers (AIA + Daniel[1]);
-Daniel NO puede correr 2 gsage (OOM). Decisión del usuario: **sin desperdicio** —
-dejar que AIA termine el fusion h3 s42 (33/75, ETA ~28h) y RECIÉN ahí pasarlo a
-gsage. Partición para no colisionar:
-- **Daniel[1]**: gsage `uni h3 s42` (corriendo) → `uni h3 s1`. STOP antes de h6
-  (matar el bash de run_sequential tras arrancar h3 s1, para que no avance a h6).
-- **AIA blanco** (cuando libere el fusion): gsage `uni h6 s42` → `uni h6 s1`.
-Monitor `bw5xqcl69` avisa cuando el fusion de AIA termine para hacer el handoff.
+### CAMINO CRÍTICO (plan 11-ago, ejecutado 12-ago con watchers tmux)
+Cerrar gsage_v2 Uniandes (4 combos) desbloquea fusion_gsage (12). Solo se
+paraleliza con 2 workers (AIA + Daniel); Daniel NO corre 2 gsage (OOM).
+Partición **sin colisión**: Daniel = {h3 s42, h3 s1}, AIA = {h6 s42, h6 s1}.
+
+**Implementado con watchers auto-encadenados en tmux (sobreviven desconexión),
+en vez de monitores frágiles que morían al cerrar sesión:**
+- **Daniel**: se mató el bash de run_sequential (PID 207105) para cortar la
+  cadena en h3; el python h3 s42 (316973) sobrevivió reparentado. Ventana tmux
+  `solar_runs:gs_h3s1` espera a 316973 y corre `gsage uni h3 s1`, luego para.
+- **Daniel `solar_runs:fus_next`**: espera al fusion h3 s1 (238428) y encadena
+  `fusion_resnet elpaso h1 s1` (para no dejar Daniel[0] ocioso; no colisiona).
+- **AIA `solar_local:gs_h6`**: espera al fusion h3 s42 (29237), hace sync pull,
+  corre `gsage uni h6 s42` → push → `gsage uni h6 s1` → push.
+
+Logs de los watchers: `logs/gsage_watch_*.log`, `logs/fusion_watch_*.log`.
+Progreso al 12-ago: AIA fusion h3 s42 41/75 (ETA ~16h); Daniel fusion h3 s1
+53/75; gsage h3 s42 12/75. Estado combinado gsage uni: 2/6 (h1 s42, h1 s1).
 
 ### Cola C — Daniel ventana [1] (vacía tras kill del duplicado)
 Lanzar en orden (uno a la vez, se encadenan solos con `run_sequential.sh`):
