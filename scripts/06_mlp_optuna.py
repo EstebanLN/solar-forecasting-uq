@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -91,7 +92,11 @@ def make_objective(
         # data loading across idle cores without the fork-after-cuda crash
         # (~2x faster/batch, no extra GPU memory). val_loader uses 0 workers
         # on purpose -- see the note in 06_resnet_lstm_optuna.py (RAM).
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
+        # TRAIN_NUM_WORKERS env overrides (default 4); set 0 when co-running
+        # with another spawn-worker job to avoid the CPU-contention deadlock
+        # observed 2026-08-11 (mlp hung 2h at 0 epochs, starving the fusion).
+        _train_nw = int(os.environ.get("TRAIN_NUM_WORKERS", "4"))
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=_train_nw, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         model = FlatMLP(
