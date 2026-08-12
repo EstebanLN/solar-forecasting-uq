@@ -1,0 +1,123 @@
+{
+  "run_name": "elpaso_H18_L24_P16_seed1_20260809_211332",
+  "study_name": "graphsage_lstm_elpaso_P16",
+  "site": "elpaso",
+  "device": "cuda",
+  "seed": 1,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/home/estebanladino/Documents/solar-forecasting-uq/data/datasets/manifest_v1/elpaso/h3",
+    "patches_root": "/home/estebanladino/Documents/solar-forecasting-uq/data/patches_v1/elpaso/P16",
+    "ground_path": "/home/estebanladino/Documents/solar-forecasting-uq/data/ground_aligned/ground_10min_utc_elpaso.parquet",
+    "run_dir": "runs/graphsage_lstm_optuna_v2/elpaso_H18_L24_P16_seed1_20260809_211332"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 91,
+      "col": 53
+    },
+    "n_nodes": 256,
+    "n_edges": 4096,
+    "channels": 16,
+    "graph_type": "knn weighted (1/distance)",
+    "k_neighbors": 16
+  },
+  "target_norm": {
+    "y_mean_train": 249.3215610018153,
+    "y_std_train": 328.35273081445825,
+    "y_percentiles_train": [
+      0.0,
+      38.8848,
+      814.5668600000001,
+      930.4496399999998,
+      1056.4468600000005
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 67757,
+      "rmse": 306.7099757436928,
+      "mae": 192.30243141372847,
+      "n_day": 36657,
+      "rmse_day": 385.3087776024662,
+      "mae_day": 297.8185196251739,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 16980,
+      "rmse": 325.4034371329444,
+      "mae": 211.58502326855125,
+      "n_day": 8270,
+      "rmse_day": 429.60580713678365,
+      "mae_day": 359.99160275695283,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17447,
+      "rmse": 314.8944902387177,
+      "mae": 206.87813718117727,
+      "n_day": 8657,
+      "rmse_day": 412.39159651553086,
+      "mae_day": 345.75723107312,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_trial_number": 72,
+    "best_value_val_rmse_day": 182.04028796411566,
+    "best_params": {
+      "hidden_g": 128,
+      "n_sage_layers": 3,
+      "hidden_t": 128,
+      "n_lstm_layers": 2,
+      "input_bn": true,
+      "concat_agg": true,
+      "dropout_head": 0.1,
+      "k_neighbors": 16,
+      "lr": 0.001493046219203184,
+      "weight_decay": 0.0004496621164684183,
+      "l1_reg": 1e-05,
+      "batch_size": 16
+    }
+  },
+  "best_model": {
+    "arch": "GraphSAGE_LSTM (improved)",
+    "best_epoch": 13,
+    "train_seconds_total": 13596.79414510727,
+    "n_params": 351137,
+    "best_ckpt_path": "runs/graphsage_lstm_optuna_v2/elpaso_H18_L24_P16_seed1_20260809_211332/best_model.pt",
+    "final_val": {
+      "n": 16980,
+      "rmse": 147.08453408315847,
+      "mae": 115.18299889311774,
+      "n_day": 8270,
+      "rmse_day": 186.60332747738715,
+      "mae_day": 152.59403671024788,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.5479932990902421,
+      "skill_day_vs_persistence": 0.5656405840483123
+    },
+    "final_test": {
+      "n": 17447,
+      "rmse": 136.19152528281134,
+      "mae": 101.97435653886802,
+      "n_day": 8657,
+      "rmse_day": 166.2990579074893,
+      "mae_day": 117.51770131191674,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.5675010852696541,
+      "skill_day_vs_persistence": 0.5967447947227363
+    }
+  }
+}
