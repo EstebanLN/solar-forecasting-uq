@@ -102,6 +102,12 @@ def train_sgld(
     checkpoint_paths: List[str] = []
     train_log: List[dict] = []
 
+    # Running ensemble on val: track the MEAN converging while individual
+    # weight samples wander (SGLD does not converge parameters, only the mean).
+    run_val_sum: np.ndarray | None = None
+    run_val_y: np.ndarray | None = None
+    n_ens = 0
+
     t_total = time.time()
 
     for epoch in range(1, total_epochs + 1):
@@ -155,9 +161,27 @@ def train_sgld(
             checkpoint_paths.append(str(ckpt_path))
             entry["checkpoint_saved"] = str(ckpt_path)
 
+            # Running ensemble mean on val. Individual samples (val_rmse_day)
+            # wander; the ensemble mean (ens_val_rmse_day) is what should
+            # converge — this is the criterion to judge the chain by.
+            yhat_v, y_v = _predict_phys(model, val_loader, normalizer, device)
+            if run_val_sum is None:
+                run_val_sum, run_val_y = yhat_v.copy(), y_v
+            else:
+                run_val_sum += yhat_v
+            n_ens += 1
+            ens_val_m = metrics_from_arrays(
+                run_val_y, run_val_sum / n_ens, day_threshold=day_threshold
+            )
+            entry["ens_val_rmse_day"] = float(ens_val_m["rmse_day"])
+            entry["n_ens"] = n_ens
+
         train_log.append(entry)
 
-        ckpt_tag = f" | CKPT #{(epoch - burn_in) // sample_every}" if is_save else ""
+        ckpt_tag = (
+            f" | CKPT #{n_ens} | ens_val_rmse_day={entry['ens_val_rmse_day']:.2f}"
+            if is_save else ""
+        )
         print(
             f"[{phase}] {epoch:04d}/{total_epochs} | "
             f"train={entry['train_mse_norm']:.5f} | "
@@ -196,6 +220,34 @@ def train_sgld(
 # ---------------------------------------------------------------------------
 # Ensemble helpers
 # ---------------------------------------------------------------------------
+
+@torch.no_grad()
+def _predict_phys(
+    model: nn.Module,
+    loader: DataLoader,
+    normalizer: TargetNormalizer,
+    device: str,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Predict with the CURRENT model on a loader, in physical units (W/m²).
+
+    Used to accumulate a running ensemble mean during the sampling phase, so we
+    can watch the *ensemble mean* converge even while individual weight samples
+    wander (SGLD samples the posterior; the parameters are not expected to
+    converge, only the predictive mean).
+    """
+    model.eval()
+    ys: List[np.ndarray] = []
+    yhats: List[np.ndarray] = []
+    for x_seq, y in loader:
+        x_seq = x_seq.to(device, non_blocking=True)
+        yhat  = model(x_seq)
+        ys.append(y.numpy())
+        yhats.append(yhat.detach().cpu().numpy())
+    return (
+        normalizer.denormalize(np.concatenate(yhats)),
+        normalizer.denormalize(np.concatenate(ys)),
+    )
+
 
 @torch.no_grad()
 def _ensemble_predict(
@@ -260,5 +312,22 @@ def _ensemble_metrics(
         float(std_pred[day_mask].mean()) if day_mask.any() else None
     )
     metrics["n_checkpoints"] = int(ensemble_preds.shape[0])
+
+    # ------------------------------------------------------------------
+    # Predictive-band coverage: the SGLD ensemble turns the point forecast
+    # into an interval  mean +/- z_{1-alpha/2} * sigma_epi.  We report the
+    # empirical coverage (fraction of targets inside the band) at nominal
+    # 80/90/95%, overall and daytime-only.  These fill the epistemic-UQ
+    # decomposition table (sigma_epi + coverage) in the paper.
+    # ------------------------------------------------------------------
+    Z = {"80": 1.281552, "90": 1.644854, "95": 1.959964}  # z_{1-alpha/2}
+    for lvl, z in Z.items():
+        lo = mean_pred - z * std_pred
+        hi = mean_pred + z * std_pred
+        inside = (y_true >= lo) & (y_true <= hi)
+        metrics[f"coverage_{lvl}"] = float(inside.mean())
+        metrics[f"coverage_day_{lvl}"] = (
+            float(inside[day_mask].mean()) if day_mask.any() else None
+        )
 
     return metrics
