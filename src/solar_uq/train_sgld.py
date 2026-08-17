@@ -27,6 +27,7 @@ incorrectly scaled posteriors.
 from __future__ import annotations
 
 import json
+import math
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
@@ -107,6 +108,8 @@ def train_sgld(
     run_val_sum: np.ndarray | None = None
     run_val_y: np.ndarray | None = None
     n_ens = 0
+    # Previous posterior sample, flattened, for inter-sample distance.
+    prev_sample_flat: np.ndarray | None = None
 
     t_total = time.time()
 
@@ -114,6 +117,7 @@ def train_sgld(
         t0 = time.time()
         model.train()
         tr_losses: List[float] = []
+        grad_norms: List[float] = []
 
         for x_seq, y in train_loader:
             x_seq = x_seq.to(device, non_blocking=True)
@@ -127,7 +131,9 @@ def train_sgld(
             loss.backward()
 
             if grad_clip_norm > 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
+                # clip_grad_norm_ returns the total norm BEFORE clipping.
+                gnorm = torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
+                grad_norms.append(float(gnorm))
 
             opt.step()
             tr_losses.append(loss.item())
@@ -141,6 +147,7 @@ def train_sgld(
             "train_mse_norm": float(np.mean(tr_losses)),
             "val_rmse":       float(val_m["rmse"]),
             "val_rmse_day":   float(val_m["rmse_day"]),
+            "grad_norm_mean": (float(np.mean(grad_norms)) if grad_norms else None),
             "epoch_seconds":  float(time.time() - t0),
         }
 
@@ -175,6 +182,19 @@ def train_sgld(
             )
             entry["ens_val_rmse_day"] = float(ens_val_m["rmse_day"])
             entry["n_ens"] = n_ens
+
+            # Inter-sample weight distance: L2 between consecutive posterior
+            # samples in flat parameter space. A stationary, well-mixing chain
+            # gives roughly stable distances; monotonically growing distances
+            # signal divergence rather than exploration of a fixed posterior.
+            sample_flat = np.concatenate(
+                [p.detach().cpu().numpy().ravel() for p in model.parameters()]
+            )
+            if prev_sample_flat is not None:
+                entry["weight_l2_from_prev_sample"] = float(
+                    np.linalg.norm(sample_flat - prev_sample_flat)
+                )
+            prev_sample_flat = sample_flat
 
         train_log.append(entry)
 
@@ -329,5 +349,42 @@ def _ensemble_metrics(
         metrics[f"coverage_day_{lvl}"] = (
             float(inside[day_mask].mean()) if day_mask.any() else None
         )
+
+    # ------------------------------------------------------------------
+    # Probabilistic scores for the Gaussian predictive N(mean, sigma_epi):
+    # negative log-likelihood and closed-form CRPS (Gneiting & Raftery,
+    # 2007).  Plus the central UQ diagnostic: if sigma_epi is informative,
+    # the daytime points the model is least sure about should carry the
+    # largest errors.  We bin daytime points by sigma quartile (ascending)
+    # and report the mean |error| per bin.  All reported daytime-only,
+    # where the band is non-degenerate.
+    # ------------------------------------------------------------------
+    if day_mask.any():
+        yv = y_true[day_mask]
+        mv = mean_pred[day_mask]
+        sv = np.maximum(std_pred[day_mask], 1e-6)
+        zt = (yv - mv) / sv
+
+        metrics["nll_day"] = float(
+            (0.5 * np.log(2.0 * math.pi * sv ** 2) + 0.5 * zt ** 2).mean()
+        )
+        verf = np.vectorize(math.erf)
+        Phi = 0.5 * (1.0 + verf(zt / math.sqrt(2.0)))
+        phi = np.exp(-0.5 * zt ** 2) / math.sqrt(2.0 * math.pi)
+        crps = sv * (zt * (2.0 * Phi - 1.0) + 2.0 * phi - 1.0 / math.sqrt(math.pi))
+        metrics["crps_day"] = float(crps.mean())
+
+        abs_err = np.abs(yv - mv)
+        order = np.argsort(sv)
+        quart = np.array_split(order, 4)
+        metrics["err_by_sigma_quartile_day"] = [
+            float(abs_err[idx].mean()) for idx in quart
+        ]
+        metrics["sigma_by_quartile_day"] = [float(sv[idx].mean()) for idx in quart]
+    else:
+        metrics["nll_day"] = None
+        metrics["crps_day"] = None
+        metrics["err_by_sigma_quartile_day"] = None
+        metrics["sigma_by_quartile_day"] = None
 
     return metrics
