@@ -1,6 +1,6 @@
 # Plan de runs — fuente de verdad
 
-_Actualizado: 2026-08-11 (relanzado local tras desconexión de AIA blanco)_
+_Actualizado: 2026-08-19 (gsage_v2 cerrado 12/12; fusion_resnet en curso; 1ª corrida SGLD documentada)_
 
 Este archivo es la **única fuente de verdad** para qué runs faltan, en qué máquina se
 lanzan, en qué orden y con qué restricciones. Antes de lanzar cualquier run,
@@ -87,22 +87,30 @@ se cambia de máquina, y al menos 1×/día si ambas máquinas trabajan en parale
 
 ---
 
-## Estado (tras sync 2026-08-10)
+## Estado (verificado 2026-08-19)
 
 Meta v2 = 12 combos (2 sitios × 3 horizontes × 2 seeds {42, 1}).
 Meta mlp = 24 (4 seeds {42, 1, 7, 13}, protocolo original).
+Conteo autoritativo = combos con `summary.json` en `runs/`.
 
 | Grupo | Hecho/Meta | Faltantes |
 |---|---|---|
-| resnet_v2 | 12 / 12 ✓ | — (cerrado: `elp h6 s1` terminó 2026-08-11 05:33) |
-| gsage_v2 | 7 / 12 | `uni h1 s1`, `uni h3 s1`, `uni h3 s42`, `uni h6 s1`, `uni h6 s42` |
-| mlp | 13 / 24 | El Paso × todos: `h1 s{1,7,13,42}` (s42 solo si no está), `h3 s{1,7,13,42}`, `h6 s{1,7,13,42}` |
-| fusion_resnet | 4 / 12 | `elp h1 s{42,1}`, `elp h3 s{42,1}`, `elp h6 s42`, `uni h1 s{42,1}`, `uni h6 s{42,1}` |
-| fusion_gsage | 0 / 12 | Todos — **bloqueado hasta gsage_v2 = 12/12** |
-| SGLD (3 arches) | 0 / 72 | **Bloqueado hasta reunión con asesor** — método pendiente |
+| resnet_v2 | 12 / 12 ✓ (+4 supl. uni seeds 7/13) | — cerrado |
+| gsage_v2 | **12 / 12 ✓** (elpaso 6, uni 6) | — cerrado → **desbloquea fusion_gsage** |
+| mlp | 13 / 24 (uni 12/12, elp 1/12) | El Paso `h{1,3,6} × s{1,7,13,42}` — diferido |
+| fusion_resnet | 7–8 / 12 | `uni h1 s1`, `uni h6 s{42,1}`, `elp h6 s42` — corriendo en Daniel |
+| fusion_gsage | 0 / 12 | **desbloqueado**, sin arrancar |
+| SGLD (3 arches) | 0 / 72 | 1ª corrida real **diverge** — ver §SGLD |
 
-Extras que no forman parte de la meta (no borrar, quedan como suplementario):
-resnet_v2 tiene runs Uniandes con seeds 7/13 del protocolo viejo (4×3=12 → cuenta 15/12).
+Extras (no borrar, suplementario): resnet_v2 tiene runs Uniandes con seeds 7/13
+del protocolo viejo.
+
+**En curso (2026-08-19):** Daniel corre la cola `fusion_resnet` (combo `uni h1 s1`,
+luego `uni h6 s{42,1}` y `elp h6 s42`; ~1 día/combo). AIA libre tras cerrar gsage.
+
+> ⚠️ Las secciones **"Colas activas"** de más abajo son **registro histórico
+> (11–12 ago)** del plan de camino crítico ya ejecutado; el estado vigente es
+> esta tabla, no aquéllas.
 
 ---
 
@@ -230,9 +238,26 @@ Al llegar a 12/12 → arrancar `fusion_gsage` (Cola D).
 Fusion_gsage 12 combos (2 sitios × 3 H × 2 seeds).
 **Solo uno a la vez por máquina** (pico 5.5 GB por trial).
 
-### Bloqueado
-- **SGLD** (72 runs pendientes): NO arrancar hasta reunión con asesor —
-  método epistémico aún abierto (fresh-init y warm-start descartados).
+### SGLD — epistémica (hallazgo 2026-08-18)
+Tras el redireccionamiento del asesor (epistémica-sola vía SGLD, ver
+`project_uq_cooperative_bnn` en memoria), se refinó `src/solar_uq/train_sgld.py`
+(monitoreo de la **media del ensamble** + banda de cobertura + diagnósticos: NLL,
+CRPS, error-vs-cuantil-σ, `weight_l2_from_prev_sample`, norma de gradiente) y se
+lanzó la 1ª corrida real: **resnet uniandes h1 seed42**, warm-start del checkpoint
+v2, `sgld_lr=1e-7`, `burn_in=20`, `sample_every=5`, `n_samples=10`.
+
+**Resultado: la cadena diverge.** La media del ensamble EMPEORA al agregar muestras
+(`ens_val_rmse_day` 379 → 432, de n=2 a n=9) y queda por encima de persistence
+(RMSE_day=294); el `train` loss sube (0.9 → 1.6). No es convergencia lenta: es
+divergencia (la cadena abandona la cuenca del warm-start). El run fue interrumpido
+externamente en época 66/70 (sin `summary.json`; 9 checkpoints válidos):
+`runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260818_125632/` (ver `NOTE.md`).
+
+**Decisión pendiente con el asesor** (es su método): (a) **reconfinar la cadena**
+—`sgld_prior_precision`↑ (default 100 parece insuficiente), `sgld_lr`↓ a 1e-8— o
+(b) **pivotar a deep ensembles** sobre las semillas (el título/abstract, "epistemic
+uncertainty" sin atarse a SGLD, ya lo soportan sin cambios). Las 72 combos SGLD
+quedan en pausa hasta esa decisión.
 
 ---
 
