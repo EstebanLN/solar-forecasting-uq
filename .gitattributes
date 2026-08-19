@@ -1,0 +1,9 @@
+# GitHub Linguist configuration.
+#
+# Exclude exploratory notebooks from the repository language breakdown. Their
+# embedded cell outputs (base64 images, JSON) inflate the byte count and
+# misrepresent a project whose substance is the Python package under src/.
+*.ipynb linguist-documentation
+
+# Treat generated result tables and grids as data, not code.
+results/*.csv linguist-generated
