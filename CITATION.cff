@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "Short-Term Solar Irradiance Forecasting at Contrasting Colombian Sites"
+abstract: >-
+  Code accompanying a study of short-term global horizontal irradiance (GHI)
+  forecasting from GOES-16 geostationary satellite imagery and ground measurements
+  at two climatically contrasting Colombian sites, comparing graph-based and
+  convolutional spatio-temporal deep learning with multisource fusion and an
+  SGLD-based epistemic uncertainty layer.
+type: software
+authors:
+  - given-names: Esteban
+    family-names: "Ladino Nieto"
+    affiliation: "Universidad de los Andes, Bogotá, Colombia"
+    email: e.ladino@uniandes.edu.co
+  - given-names: "Daniel Francisco"
+    family-names: "Villarraga Florez"
+    affiliation: "Centro para la Optimización Aplicada (COPA), Universidad de los Andes, Bogotá, Colombia"
+    email: df.villarraga2191@uniandes.edu.co
+version: "0.1.0"
+date-released: "2026-08-19"
+keywords:
+  - solar irradiance forecasting
+  - global horizontal irradiance
+  - GOES-16
+  - graph neural networks
+  - GraphSAGE
+  - convolutional neural networks
+  - multisource fusion
+  - epistemic uncertainty
+  - Stochastic Gradient Langevin Dynamics
+  - tropical Andean climate
+  - Colombia
+preferred-citation:
+  type: article
+  title: "Short-Term Solar Irradiance Forecasting at Contrasting Colombian Sites: Graph and Convolutional Deep Learning with Multisource Fusion and SGLD Epistemic Uncertainty"
+  authors:
+    - given-names: Esteban
+      family-names: "Ladino Nieto"
+    - given-names: "Daniel Francisco"
+      family-names: "Villarraga Florez"
+  year: 2026
+  notes: "In preparation."
