@@ -171,3 +171,7 @@ docs/article/main.abs
 PENDIENTES.md
 docs/
 notebooks/archive/
+
+# Internal ops / orchestration (not part of the publishable deliverable)
+RUNS_PLAN.md
+run_sequential.sh
