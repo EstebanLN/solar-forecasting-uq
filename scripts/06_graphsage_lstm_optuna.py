@@ -115,7 +115,7 @@ def make_objective(
         # costs ~0.7 GB of RAM. With persistent_workers, giving both loaders 4
         # workers pinned ~8 processes per job and drove the machine into swap
         # when several jobs ran concurrently.
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=8, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         edge_index, edge_weight = build_weighted_knn_edge_index(patch, k_neighbors)
