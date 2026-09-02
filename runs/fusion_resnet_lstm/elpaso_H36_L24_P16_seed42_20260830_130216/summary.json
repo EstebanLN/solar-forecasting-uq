@@ -1,0 +1,117 @@
+{
+  "run_name": "elpaso_H36_L24_P16_seed42_20260830_130216",
+  "study_name": "fusion_resnet_lstm_elpaso_P16",
+  "site": "elpaso",
+  "device": "cuda",
+  "seed": 42,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/home/estebanladino/Documents/solar-forecasting-uq/data/datasets/manifest_v1/elpaso/h6",
+    "patches_root": "/home/estebanladino/Documents/solar-forecasting-uq/data/patches_v1/elpaso/P16",
+    "ground_path": "/home/estebanladino/Documents/solar-forecasting-uq/data/ground_aligned/ground_10min_utc_elpaso.parquet",
+    "run_dir": "/home/estebanladino/Documents/solar-forecasting-uq/runs/fusion_resnet_lstm/elpaso_H36_L24_P16_seed42_20260830_130216"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 36,
+    "history_hours": 4.0,
+    "horizon_hours": 6.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 91,
+      "col": 53
+    },
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 253.4109212063951,
+    "y_std_train": 330.9594556900086,
+    "y_percentiles_train": [
+      0.0,
+      42.4798,
+      822.2575000000003,
+      934.7832,
+      1058.4981119999998
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 67739,
+      "rmse": 477.70129998893316,
+      "mae": 334.4475942175113,
+      "n_day": 36902,
+      "rmse_day": 528.67410626848,
+      "mae_day": 417.30517709609234,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 16974,
+      "rmse": 507.77653055666565,
+      "mae": 370.8561841757983,
+      "n_day": 8355,
+      "rmse_day": 580.7740967318999,
+      "mae_day": 493.75082795930587,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17429,
+      "rmse": 493.3387930032827,
+      "mae": 362.90153252624935,
+      "n_day": 8757,
+      "rmse_day": 566.416419542736,
+      "mae_day": 483.8490059495261,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_trial_number": 9,
+    "best_value_val_rmse_day": 158.3842581842524,
+    "best_params": {
+      "base": 32,
+      "emb_dim": 256,
+      "hidden_t": 256,
+      "n_lstm_layers": 2,
+      "dropout": 0.1,
+      "lr": 0.0004816144590812513,
+      "weight_decay": 7.864172535980103e-06,
+      "l1_reg": 0.001,
+      "batch_size": 16,
+      "tab_hidden": 32
+    }
+  },
+  "best_model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "best_epoch": 13,
+    "train_seconds_total": 19050.79642367363,
+    "n_params": 1860161,
+    "best_ckpt_path": "/home/estebanladino/Documents/solar-forecasting-uq/runs/fusion_resnet_lstm/elpaso_H36_L24_P16_seed42_20260830_130216/best_model.pt",
+    "final_val": {
+      "n": 16974,
+      "rmse": 122.32965038491758,
+      "mae": 75.56784251116324,
+      "n_day": 8355,
+      "rmse_day": 158.9347444386933,
+      "mae_day": 124.51906789417826,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.7590876241349522,
+      "skill_day_vs_persistence": 0.7263398189880681
+    },
+    "final_test": {
+      "n": 17429,
+      "rmse": 103.14469908633924,
+      "mae": 57.85068972423049,
+      "n_day": 8757,
+      "rmse_day": 140.24796280111553,
+      "mae_day": 93.95283966482646,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.7909252210667879,
+      "skill_day_vs_persistence": 0.7523942492445108
+    }
+  }
+}

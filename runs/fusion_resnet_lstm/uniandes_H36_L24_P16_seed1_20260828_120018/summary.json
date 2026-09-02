@@ -1,0 +1,117 @@
+{
+  "run_name": "uniandes_H36_L24_P16_seed1_20260828_120018",
+  "study_name": "fusion_resnet_lstm_uniandes_P16",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 1,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/home/estebanladino/Documents/solar-forecasting-uq/data/datasets/manifest_v1/uniandes/h6",
+    "patches_root": "/home/estebanladino/Documents/solar-forecasting-uq/data/patches_v1/uniandes/P16",
+    "ground_path": "/home/estebanladino/Documents/solar-forecasting-uq/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/home/estebanladino/Documents/solar-forecasting-uq/runs/fusion_resnet_lstm/uniandes_H36_L24_P16_seed1_20260828_120018"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 36,
+    "history_hours": 4.0,
+    "horizon_hours": 6.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 180.78839786820285,
+    "y_std_train": 283.1064661153594,
+    "y_percentiles_train": [
+      0.0,
+      2.202,
+      628.0594000000003,
+      858.5459999999997,
+      1088.74274
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54470,
+      "rmse": 419.8303181060779,
+      "mae": 281.04479528180656,
+      "n_day": 25215,
+      "rmse_day": 498.6695422994848,
+      "mae_day": 398.23299048185606,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 12406,
+      "rmse": 378.32913327097435,
+      "mae": 247.05014589714656,
+      "n_day": 5467,
+      "rmse_day": 462.17602240706213,
+      "mae_day": 370.62950722516916,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12075,
+      "rmse": 389.517844176586,
+      "mae": 250.79533714285714,
+      "n_day": 5465,
+      "rmse_day": 470.92567245567665,
+      "mae_day": 369.5877123513266,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_trial_number": 4,
+    "best_value_val_rmse_day": 228.64672448740308,
+    "best_params": {
+      "base": 16,
+      "emb_dim": 64,
+      "hidden_t": 64,
+      "n_lstm_layers": 1,
+      "dropout": 0.1,
+      "lr": 0.0013360671775872687,
+      "weight_decay": 7.347529240564552e-06,
+      "l1_reg": 0.0001,
+      "batch_size": 16,
+      "tab_hidden": 32
+    }
+  },
+  "best_model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "best_epoch": 3,
+    "train_seconds_total": 7789.834481716156,
+    "n_params": 220769,
+    "best_ckpt_path": "/home/estebanladino/Documents/solar-forecasting-uq/runs/fusion_resnet_lstm/uniandes_H36_L24_P16_seed1_20260828_120018/best_model.pt",
+    "final_val": {
+      "n": 12407,
+      "rmse": 155.6643140532279,
+      "mae": 82.2626854404681,
+      "n_day": 5468,
+      "rmse_day": 231.47789038223726,
+      "mae_day": 174.68997775331064,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.5885479061382922,
+      "skill_day_vs_persistence": 0.49915642707582464
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 157.35025638717403,
+      "mae": 85.15609709871975,
+      "n_day": 5465,
+      "rmse_day": 230.67385008909304,
+      "mae_day": 176.1691132945962,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.5960383876127645,
+      "skill_day_vs_persistence": 0.5101693036053296
+    }
+  }
+}
