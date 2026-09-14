@@ -107,7 +107,7 @@ Aggregate all completed runs into the results table, and run the tests:
 
 | Model | Site | Horizon | skill_day |
 |-------|------|---------|-----------|
-| **Fusion ResNet-LSTM** (satellite + surface) | El Paso | 6 h | **0.725** *(1 seed, in progress)* |
+| **Fusion ResNet-LSTM** (satellite + surface) | El Paso | 6 h | **0.739 ± 0.019** |
 | GraphSAGE-LSTM (tuned k-NN) | El Paso | 6 h | 0.604 ± 0.007 |
 | ResNet-LSTM | El Paso | 6 h | 0.579 ± 0.018 |
 | GraphSAGE-LSTM (fixed graph) | Uniandes | 6 h | 0.418 ± 0.011 |

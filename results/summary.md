@@ -14,6 +14,7 @@
 | ResNet+LSTM (Optuna v2) | 144.9 ±5.8 | 0.297 ±0.028 | 2/2 ✓ |
 | GraphSAGE+LSTM (Optuna v2) | 146.0 ±5.2 | 0.291 ±0.025 | 2/2 ✓ |
 | Fusion ResNet+LSTM | 116.8 ±0.3 | 0.433 ±0.001 | 2/2 ✓ |
+| Fusion GraphSAGE+LSTM | 116.4 ±0.8 | 0.435 ±0.004 | 2/2 ✓ |
 
 ### 3 h
 
@@ -24,6 +25,7 @@
 | ResNet+LSTM (Optuna v2) | 218.0 ±9.1 | 0.471 ±0.022 | 2/2 ✓ |
 | GraphSAGE+LSTM (Optuna v2) | 168.7 ±3.4 | 0.591 ±0.008 | 2/2 ✓ |
 | Fusion ResNet+LSTM | 136.3 ±8.0 | 0.669 ±0.019 | 2/2 ✓ |
+| Fusion GraphSAGE+LSTM | 134.0 ±0.7 | 0.675 ±0.002 | 2/2 ✓ |
 
 ### 6 h
 
@@ -31,9 +33,11 @@
 |---|---|---|---|
 | Persistence | 566.4 | 0.000 | — |
 | SARIMA | 285.5 ±197.9 | 0.495 ±0.350 | — |
-| ResNet+LSTM (Optuna v2) | 238.2 ±10.4 | 0.579 ±0.018 | 2/2 ✓ |
+| ResNet+LSTM (Optuna v2) | 232.6 ±12.2 | 0.589 ±0.021 | 3/2 ✓ |
 | GraphSAGE+LSTM (Optuna v2) | 224.1 ±4.0 | 0.604 ±0.007 | 2/2 ✓ |
-| Fusion ResNet+LSTM | 155.5 | 0.725 | 1/2 |
+| Fusion ResNet+LSTM | 147.9 ±10.8 | 0.739 ±0.019 | 2/2 ✓ |
+| Fusion GraphSAGE+LSTM | 140.0 | 0.753 | 1/2 |
+| ResNet+LSTM (SGLD) | 309.5 ±30.9 | 0.454 ±0.055 | — |
 
 ## UNIANDES
 
@@ -42,7 +46,7 @@
 
 | Model | RMSE_day (W/m²) | Skill_day | Seeds |
 |---|---|---|---|
-| Persistence | 293.9 | 0.000 | — |
+| Persistence | 293.6 | 0.000 | — |
 | SARIMA | 229.3 ±47.0 | 0.217 ±0.160 | — |
 | ResNet+LSTM | 250.3 ±5.3 | 0.148 ±0.018 | 5/5 ✓ |
 | GraphSAGE+LSTM | 248.0 ±6.0 | 0.156 ±0.020 | 5/5 ✓ |
@@ -51,6 +55,9 @@
 | GraphSAGE+LSTM (Optuna) | 250.8 ±5.1 | 0.147 ±0.017 | 4/4 ✓ |
 | ResNet+LSTM (Optuna v2) | 257.6 ±17.1 | 0.124 ±0.058 | 4/2 ✓ |
 | GraphSAGE+LSTM (Optuna v2) | 246.7 ±5.4 | 0.161 ±0.018 | 2/2 ✓ |
+| Fusion ResNet+LSTM | 213.8 ±0.8 | 0.273 ±0.003 | 2/2 ✓ |
+| Fusion GraphSAGE+LSTM | 213.9 ±1.9 | 0.272 ±0.007 | 2/2 ✓ |
+| ResNet+LSTM (SGLD) | 301.8 ±36.7 | -0.040 ±0.121 | — |
 
 ### 3 h
 
@@ -65,13 +72,14 @@
 | GraphSAGE+LSTM (Optuna) | 252.5 ±1.5 | 0.376 ±0.004 | 4/4 ✓ |
 | ResNet+LSTM (Optuna v2) | 259.1 ±10.9 | 0.360 ±0.027 | 4/2 ✓ |
 | GraphSAGE+LSTM (Optuna v2) | 257.6 ±0.2 | 0.364 ±0.001 | 2/2 ✓ |
-| Fusion ResNet+LSTM | 231.2 ±2.8 | 0.429 ±0.007 | 2/2 ✓ |
+| Fusion ResNet+LSTM | 230.8 ±6.6 | 0.430 ±0.016 | 2/2 ✓ |
+| Fusion GraphSAGE+LSTM | 232.7 ±1.2 | 0.426 ±0.003 | 2/2 ✓ |
 
 ### 6 h
 
 | Model | RMSE_day (W/m²) | Skill_day | Seeds |
 |---|---|---|---|
-| Persistence | 470.5 | 0.000 | — |
+| Persistence | 470.6 | 0.000 | — |
 | SARIMA | 252.8 ±11.7 | 0.462 ±0.025 | — |
 | ResNet+LSTM | 284.5 ±19.5 | 0.393 ±0.048 | 5/5 ✓ |
 | GraphSAGE+LSTM | 274.2 ±5.1 | 0.418 ±0.011 | 5/5 ✓ |
@@ -80,3 +88,5 @@
 | GraphSAGE+LSTM (Optuna) | 274.4 ±3.9 | 0.417 ±0.008 | 4/4 ✓ |
 | ResNet+LSTM (Optuna v2) | 288.5 ±4.0 | 0.387 ±0.009 | 2/2 ✓ |
 | GraphSAGE+LSTM (Optuna v2) | 267.2 ±1.9 | 0.433 ±0.004 | 2/2 ✓ |
+| Fusion ResNet+LSTM | 233.1 ±3.4 | 0.505 ±0.007 | 2/2 ✓ |
+| Fusion GraphSAGE+LSTM | 239.3 ±10.2 | 0.492 ±0.022 | 2/2 ✓ |
