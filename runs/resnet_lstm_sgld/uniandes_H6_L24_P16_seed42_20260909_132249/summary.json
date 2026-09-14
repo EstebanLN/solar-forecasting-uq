@@ -1,0 +1,140 @@
+{
+  "run_name": "uniandes_H6_L24_P16_seed42_20260909_132249",
+  "arch": "resnet",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 42,
+  "debug": true,
+  "day_threshold": 20.0,
+  "optuna_source": {
+    "version": "v2",
+    "runs_root": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_optuna_v2",
+    "best_params": {
+      "base": 16,
+      "emb_dim": 64,
+      "hidden_t": 128,
+      "n_lstm_layers": 1,
+      "dropout": 0.2,
+      "lr": 0.0015886544073689156,
+      "weight_decay": 0.00015629296213363555,
+      "l1_reg": 0.0,
+      "batch_size": 64
+    }
+  },
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h1",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260909_132249"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 6,
+    "history_hours": 4.0,
+    "horizon_hours": 1.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 172.22142,
+    "y_std_train": 278.22731397204376,
+    "y_percentiles_train": [
+      0.0,
+      6.1579999999999995,
+      528.3162000000001,
+      946.6878999999998,
+      1046.4868999999999
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 400,
+      "rmse": 181.3296086824212,
+      "mae": 91.90172000000003,
+      "n_day": 190,
+      "rmse_day": 261.3728521520248,
+      "mae_day": 186.3143263157895,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 120,
+      "rmse": 157.93287316230274,
+      "mae": 76.65611666666668,
+      "n_day": 54,
+      "rmse_day": 232.5276813158987,
+      "mae_day": 157.2535185185185,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 120,
+      "rmse": 196.2453002815609,
+      "mae": 109.59213333333334,
+      "n_day": 57,
+      "rmse_day": 283.18530803252077,
+      "mae_day": 221.3618245614035,
+      "day_threshold": 20.0
+    }
+  },
+  "sgld": {
+    "init": "warm_start",
+    "warm_start_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H6_L24_P16_seed42_20260608_211124/best_model.pt",
+    "sgld_lr": 1e-07,
+    "sgld_weight_decay": 0.00015629296213363555,
+    "adam_weight_decay": 0.00015629296213363555,
+    "burn_in": 3,
+    "sample_every": 2,
+    "n_samples": 2,
+    "total_epochs": 7,
+    "n_collected": 2,
+    "checkpoint_paths": [
+      "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260909_132249/checkpoint_e0005.pt",
+      "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260909_132249/checkpoint_e0007.pt"
+    ],
+    "train_seconds_total": 19.505837202072144
+  },
+  "best_model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "n_params": 296737,
+    "train_seconds_total": 19.505837202072144,
+    "inference_method": "ensemble_mean",
+    "final_val": null,
+    "final_test": {
+      "n": 119,
+      "rmse": 205.32854500851832,
+      "mae": 139.05074249395804,
+      "n_day": 57,
+      "rmse_day": 291.0073631544918,
+      "mae_day": 257.0383201063725,
+      "day_threshold": 20.0,
+      "ensemble_std_mean": 11.660798072814941,
+      "ensemble_std_day_mean": 19.15856170654297,
+      "n_checkpoints": 2,
+      "coverage_80": 0.025210084033613446,
+      "coverage_day_80": 0.03508771929824561,
+      "coverage_90": 0.05042016806722689,
+      "coverage_day_90": 0.05263157894736842,
+      "coverage_95": 0.058823529411764705,
+      "coverage_day_95": 0.05263157894736842,
+      "nll_day": 99100.765625,
+      "crps_day": 246.64911728491487,
+      "err_by_sigma_quartile_day": [
+        267.6896057128906,
+        324.86419677734375,
+        237.56593322753906,
+        197.27272033691406
+      ],
+      "sigma_by_quartile_day": [
+        3.035175085067749,
+        9.367753982543945,
+        20.233213424682617,
+        45.1497688293457
+      ],
+      "skill_vs_persistence": -0.04628515798301547,
+      "skill_day_vs_persistence": -0.027621684106124977
+    }
+  }
+}

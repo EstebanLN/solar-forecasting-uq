@@ -1,0 +1,72 @@
+[
+  {
+    "epoch": 1,
+    "phase": "burn-in",
+    "train_mse_norm": 0.4040718972682953,
+    "val_rmse": 200.1884381834266,
+    "val_rmse_day": 291.4361653949838,
+    "grad_norm_mean": 1.6907155854361398,
+    "epoch_seconds": 3.080655097961426
+  },
+  {
+    "epoch": 2,
+    "phase": "burn-in",
+    "train_mse_norm": 0.4584337558065142,
+    "val_rmse": 199.7229641018606,
+    "val_rmse_day": 290.4748619567747,
+    "grad_norm_mean": 1.5456138508660453,
+    "epoch_seconds": 2.582385778427124
+  },
+  {
+    "epoch": 3,
+    "phase": "burn-in",
+    "train_mse_norm": 0.372851095029286,
+    "val_rmse": 200.08981804469934,
+    "val_rmse_day": 291.9321974158564,
+    "grad_norm_mean": 1.314611784049443,
+    "epoch_seconds": 2.536363124847412
+  },
+  {
+    "epoch": 4,
+    "phase": "sample",
+    "train_mse_norm": 0.3967530514512743,
+    "val_rmse": 202.12137619425826,
+    "val_rmse_day": 292.6157745055291,
+    "grad_norm_mean": 1.740972374166761,
+    "epoch_seconds": 2.5404672622680664
+  },
+  {
+    "epoch": 5,
+    "phase": "sample",
+    "train_mse_norm": 0.37186118747506824,
+    "val_rmse": 191.7153381173887,
+    "val_rmse_day": 281.6238796343448,
+    "grad_norm_mean": 1.7260841301509313,
+    "epoch_seconds": 2.517256498336792,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260909_132249/checkpoint_e0005.pt",
+    "ens_val_rmse_day": 281.6238796343448,
+    "n_ens": 1
+  },
+  {
+    "epoch": 6,
+    "phase": "sample",
+    "train_mse_norm": 0.40442696639469694,
+    "val_rmse": 190.2238067978189,
+    "val_rmse_day": 282.07053688770884,
+    "grad_norm_mean": 1.8589865224702018,
+    "epoch_seconds": 2.5602529048919678
+  },
+  {
+    "epoch": 7,
+    "phase": "sample",
+    "train_mse_norm": 0.4142638487475259,
+    "val_rmse": 189.56603111984958,
+    "val_rmse_day": 280.3717112939429,
+    "grad_norm_mean": 1.7427061796188354,
+    "epoch_seconds": 2.555051326751709,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260909_132249/checkpoint_e0007.pt",
+    "ens_val_rmse_day": 279.6619734287656,
+    "n_ens": 2,
+    "weight_l2_from_prev_sample": 0.9101172685623169
+  }
+]
