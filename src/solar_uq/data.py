@@ -315,11 +315,13 @@ def neighpool_path_for_timestamp(t: pd.Timestamp, pool_root: Path) -> Path:
     return Path(pool_root) / t.strftime("%Y") / t.strftime("%m") / fname
 
 
-@lru_cache(maxsize=4096)
 def _load_pool_mmap(path_str: str) -> np.ndarray:
-    """Memory-map a neighbour-pool .npy (lazy; only touched pages are read).
-    Cheap to open, so an LRU of the mmap handles is enough — no full-array RAM
-    cache needed. Returned array is read-only (callers copy via fancy index)."""
+    """Memory-map a neighbour-pool .npy (lazy; only touched pages are read, and
+    the OS page cache serves them fast across workers). NOT cached: each memmap
+    holds an open file descriptor, so caching thousands across several workers
+    hit the OS open-file limit (OSError: Too many open files). Opening is cheap;
+    the returned memmap is dereferenced at the end of __getitem__ so its fd is
+    released. Callers copy the needed slice (fancy index + nan_to_num)."""
     return np.load(path_str, mmap_mode="r")
 
 
