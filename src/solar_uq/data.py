@@ -309,6 +309,41 @@ def neighpool_path_for_timestamp(t: pd.Timestamp, pool_root: Path) -> Path:
     return Path(pool_root) / t.strftime("%Y") / t.strftime("%m") / fname
 
 
+@lru_cache(maxsize=2048)
+def _load_pool_cached(path_str: str) -> np.ndarray:
+    """Parse a neighbour-pool .npz once and reuse it (fallback path). Works for
+    sequential access (val/test); under shuffled training the access order is
+    random so this LRU thrashes — use preload_pool_cache() for training instead.
+    Returned array is treated read-only (callers copy via fancy-index + nan_to_num).
+    """
+    with np.load(path_str) as d:
+        return d["pool"]
+
+
+# Full-store RAM cache for neighbour pools. Unlike the LRU above this survives
+# shuffled access. Populated only if preload_pool_cache() is called; the pool
+# store is ~60 GB (float16), so this needs a main process with num_workers=0
+# (spawned workers would each need their own copy).
+_POOL_CACHE: dict = {}
+
+
+def preload_pool_cache(pool_root: Path) -> None:
+    """Eagerly load every neighbour-pool .npz under *pool_root* into RAM, keyed
+    by absolute path string, so each __getitem__ becomes a dict lookup instead
+    of a per-access npz parse (which starved the GPU under shuffled training)."""
+    pool_root = Path(pool_root)
+    n = 0
+    for p in sorted(pool_root.rglob("*_neighpool.npz")):
+        key = str(p)
+        if key in _POOL_CACHE:
+            continue
+        with np.load(p) as d:
+            _POOL_CACHE[key] = d["pool"]
+        n += 1
+    print(f"[data] Preloaded {n} neighbour-pool files from {pool_root} "
+          f"({len(_POOL_CACHE)} total cached).")
+
+
 class NeighborPoolDataset(Dataset):
     """
     For the conv+graph hybrid (satellite-only).
@@ -355,9 +390,11 @@ class NeighborPoolDataset(Dataset):
             cframes.append(cframe)                                                       # (16,P,P)
 
             # neighbour pool → pick K at random (no replacement) for this frame
-            npth = neighpool_path_for_timestamp(t, self.pool_root)
-            with np.load(npth) as d:
-                pslot = d["pool"][:, slot]        # (M, 16, P, P)
+            npth = str(neighpool_path_for_timestamp(t, self.pool_root))
+            pool = _POOL_CACHE.get(npth) if _POOL_CACHE else None
+            if pool is None:
+                pool = _load_pool_cached(npth)
+            pslot = pool[:, slot]                             # (M, 16, P, P)
             M = pslot.shape[0]
             idx = np.random.choice(M, size=self.k, replace=(M < self.k))
             sel = np.nan_to_num(pslot[idx], nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32, copy=False)

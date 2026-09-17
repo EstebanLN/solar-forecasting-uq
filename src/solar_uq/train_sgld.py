@@ -56,6 +56,7 @@ def train_sgld(
     run_dir: Path,
     *,
     sgld_lr: float = 1e-5,
+    sgld_lr_final: float | None = None,
     weight_decay: float = 1e-4,
     l1_reg: float = 0.0,
     burn_in: int = 500,
@@ -96,10 +97,14 @@ def train_sgld(
     """
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    opt = SGLD(model.parameters(), lr=sgld_lr, weight_decay=weight_decay)
+    total_epochs = burn_in + n_samples * sample_every
+    # Decreasing step-size schedule (Welling & Teh): decay sgld_lr -> sgld_lr_final
+    # geometrically over all optimizer steps, for a chain that actually converges.
+    total_steps = total_epochs * max(1, len(train_loader))
+    opt = SGLD(model.parameters(), lr=sgld_lr, weight_decay=weight_decay,
+               lr_final=sgld_lr_final, total_steps=total_steps)
     loss_fn = nn.MSELoss()
 
-    total_epochs = burn_in + n_samples * sample_every
     checkpoint_paths: List[str] = []
     train_log: List[dict] = []
 
@@ -349,6 +354,27 @@ def _ensemble_metrics(
         metrics[f"coverage_day_{lvl}"] = (
             float(inside[day_mask].mean()) if day_mask.any() else None
         )
+
+    # ------------------------------------------------------------------
+    # Empirical (non-parametric) percentile band from the ensemble members
+    # (advisor's construction): for each t, the median plus the
+    # [alpha/2, 1-alpha/2] percentiles across the T samples. Non-symmetric,
+    # no Gaussian assumption. Reported alongside the Gaussian band above.
+    # ------------------------------------------------------------------
+    metrics["ensemble_median_day_mean"] = (
+        float(np.median(ensemble_preds, axis=0)[day_mask].mean()) if day_mask.any() else None
+    )
+    PCT = {"80": (10.0, 90.0), "90": (5.0, 95.0), "95": (2.5, 97.5)}
+    for lvl, (p_lo, p_hi) in PCT.items():
+        lo = np.percentile(ensemble_preds, p_lo, axis=0)
+        hi = np.percentile(ensemble_preds, p_hi, axis=0)
+        inside = (y_true >= lo) & (y_true <= hi)
+        metrics[f"coverage_pct_{lvl}"] = float(inside.mean())
+        metrics[f"coverage_day_pct_{lvl}"] = (
+            float(inside[day_mask].mean()) if day_mask.any() else None
+        )
+        if lvl == "95" and day_mask.any():
+            metrics["band_pct95_width_day_mean"] = float((hi - lo)[day_mask].mean())
 
     # ------------------------------------------------------------------
     # Probabilistic scores for the Gaussian predictive N(mean, sigma_epi):

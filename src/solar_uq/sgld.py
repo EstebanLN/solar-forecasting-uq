@@ -42,11 +42,26 @@ class SGLD(torch.optim.Optimizer):
                        scripts/08_sgld.py is 100.0).
     """
 
-    def __init__(self, params, lr: float = 1e-5, weight_decay: float = 0.0):
+    def __init__(self, params, lr: float = 1e-5, weight_decay: float = 0.0,
+                 lr_final: float | None = None, total_steps: int | None = None):
         if lr <= 0:
             raise ValueError(f"lr must be positive, got {lr}")
-        defaults = dict(lr=lr, weight_decay=weight_decay)
+        # Decreasing step size (Welling & Teh 2011): a chain with a polynomially
+        # decaying epsilon_t (Sum eps = inf, Sum eps^2 < inf) converges to the
+        # posterior WITHOUT a Metropolis correction, unlike a fixed step which
+        # random-walks off the mode. If lr_final/total_steps are given we decay
+        # geometrically lr -> lr_final over total_steps; else behave as constant.
+        defaults = dict(lr=lr, weight_decay=weight_decay,
+                        lr_final=lr_final, total_steps=total_steps)
         super().__init__(params, defaults)
+        self._t = 0
+
+    def _lr_at(self, group) -> float:
+        lr, lr_final, total = group["lr"], group["lr_final"], group["total_steps"]
+        if lr_final is None or total is None or total <= 0:
+            return lr
+        frac = min(self._t / float(total), 1.0)
+        return float(lr * (lr_final / lr) ** frac)   # geometric decay
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -56,7 +71,7 @@ class SGLD(torch.optim.Optimizer):
                 loss = closure()
 
         for group in self.param_groups:
-            lr = group["lr"]
+            lr = self._lr_at(group)
             wd = group["weight_decay"]
             noise_std = (2.0 * lr) ** 0.5  # N(0, 2ε) per Welling & Teh
 
@@ -70,4 +85,5 @@ class SGLD(torch.optim.Optimizer):
                 # Gradient descent + Langevin diffusion
                 p.data.add_(-lr * d_p + noise_std * torch.randn_like(p.data))
 
+        self._t += 1
         return loss
