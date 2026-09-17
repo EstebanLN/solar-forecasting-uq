@@ -304,9 +304,23 @@ def read_history_steps_from_manifest(manifest: pd.DataFrame) -> int:
 # ---------------------------------------------------------------------------
 
 def neighpool_path_for_timestamp(t: pd.Timestamp, pool_root: Path) -> Path:
-    """`pool_root / YYYY / MM / YYYYMMDD_HH_neighpool.npz` (pool key: (M,6,16,P,P))."""
-    fname = f"{t.strftime('%Y%m%d')}_{t.strftime('%H')}_neighpool.npz"
+    """`pool_root / YYYY / MM / YYYYMMDD_HH_neighpool.npy` (array (M,6,16,P,P)).
+
+    Stored as a raw .npy (not .npz) so it can be memory-mapped: spawned
+    DataLoader workers each open the mmap and share the OS page cache, with no
+    per-access zip parse and no 60 GB RAM copy — this is what makes parallel
+    (num_workers>0) dataloading feed the GPU for the conv+graph model.
+    """
+    fname = f"{t.strftime('%Y%m%d')}_{t.strftime('%H')}_neighpool.npy"
     return Path(pool_root) / t.strftime("%Y") / t.strftime("%m") / fname
+
+
+@lru_cache(maxsize=4096)
+def _load_pool_mmap(path_str: str) -> np.ndarray:
+    """Memory-map a neighbour-pool .npy (lazy; only touched pages are read).
+    Cheap to open, so an LRU of the mmap handles is enough — no full-array RAM
+    cache needed. Returned array is read-only (callers copy via fancy index)."""
+    return np.load(path_str, mmap_mode="r")
 
 
 @lru_cache(maxsize=2048)
@@ -391,10 +405,7 @@ class NeighborPoolDataset(Dataset):
 
             # neighbour pool → pick K at random (no replacement) for this frame
             npth = str(neighpool_path_for_timestamp(t, self.pool_root))
-            pool = _POOL_CACHE.get(npth) if _POOL_CACHE else None
-            if pool is None:
-                pool = _load_pool_cached(npth)
-            pslot = pool[:, slot]                             # (M, 16, P, P)
+            pslot = _load_pool_mmap(npth)[:, slot]            # (M, 16, P, P) via mmap
             M = pslot.shape[0]
             idx = np.random.choice(M, size=self.k, replace=(M < self.k))
             sel = np.nan_to_num(pslot[idx], nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32, copy=False)

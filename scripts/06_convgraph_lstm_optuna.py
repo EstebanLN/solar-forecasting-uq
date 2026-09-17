@@ -68,10 +68,10 @@ def make_objective(train_ds, val_ds, normalizer, k_neighbors, device, seed, day_
         l1_reg        = trial.suggest_categorical("l1_reg", [0.0, 1e-5, 1e-4])
         batch_size    = trial.suggest_categorical("batch_size", [8, 16, 32])
 
-        # num_workers=0: the neighbour pool is preloaded into the MAIN process's
-        # RAM cache (preload_pool_cache); spawned workers would not share it and
-        # would fall back to per-access npz parsing, starving the GPU.
-        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=0, seed=seed, device=device)
+        # num_workers=4 (spawn): the neighbour pool is memory-mapped, so workers
+        # share it via the OS page cache with no parse/copy → parallel dataloading
+        # that actually feeds the GPU for this heavy (K neighbour encoders) model.
+        train_loader = make_loader(train_ds, batch_size, shuffle=True,  num_workers=4, seed=seed, device=device)
         val_loader   = make_loader(val_ds,   batch_size, shuffle=False, num_workers=0, seed=seed, device=device)
 
         model = ConvGraphLSTM(
@@ -118,7 +118,8 @@ def main() -> None:
     assert POOL_ROOT.exists(), f"Missing neighbour pool: {POOL_ROOT} (run 03_build_neighbor_pool.py)"
 
     preload_patch_cache(PATCHES_ROOT)
-    preload_pool_cache(POOL_ROOT)   # ~60 GB into RAM → no per-access npz parse
+    # Neighbour pools are memory-mapped per access (see NeighborPoolDataset);
+    # spawned workers share them via the OS page cache — no RAM preload needed.
 
     train_man = pd.read_parquet(SITE_DIR / "manifest_train.parquet")
     val_man   = pd.read_parquet(SITE_DIR / "manifest_val.parquet")
