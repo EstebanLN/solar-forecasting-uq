@@ -297,3 +297,74 @@ def read_history_steps_from_manifest(manifest: pd.DataFrame) -> int:
             x = x.tolist()
         return len(x)
     return int(manifest["history_ts"].map(_hist_len).mode().iloc[0])
+
+
+# ---------------------------------------------------------------------------
+# Neighbour-pool dataset (conv centre + GraphSAGE over K random neighbour tiles)
+# ---------------------------------------------------------------------------
+
+def neighpool_path_for_timestamp(t: pd.Timestamp, pool_root: Path) -> Path:
+    """`pool_root / YYYY / MM / YYYYMMDD_HH_neighpool.npz` (pool key: (M,6,16,P,P))."""
+    fname = f"{t.strftime('%Y%m%d')}_{t.strftime('%H')}_neighpool.npz"
+    return Path(pool_root) / t.strftime("%Y") / t.strftime("%m") / fname
+
+
+class NeighborPoolDataset(Dataset):
+    """
+    For the conv+graph hybrid (satellite-only).
+
+    Returns:
+        center_seq : FloatTensor (L, C=16, P, P)   — exact site crop per frame
+        neigh_seq  : FloatTensor (L, K, C=16, P, P) — K tiles drawn AT RANDOM per
+                     frame from the per-hour neighbour pool (no fixed set)
+        y          : FloatTensor scalar, normalized
+
+    The random draw happens in __getitem__, so the K neighbour nodes vary every
+    time a sample is seen (stochastic graph, as agreed).
+    """
+    def __init__(
+        self,
+        manifest: pd.DataFrame,
+        patches_root: Path,
+        pool_root: Path,
+        normalizer: TargetNormalizer,
+        k_neighbors: int = 8,
+    ):
+        self.patches_root = Path(patches_root)
+        self.pool_root = Path(pool_root)
+        self.k = k_neighbors
+        self.normalizer = normalizer
+        self.man = filter_missing_patches(manifest, self.patches_root)
+
+    def __len__(self) -> int:
+        return len(self.man)
+
+    def __getitem__(self, i: int):
+        row = self.man.iloc[i]
+        y = self.normalizer.normalize(float(row["y"]))
+        history_ts = _parse_history_ts(row["history_ts"])
+
+        cframes, nframes = [], []
+        for ts_str in history_ts:
+            t = pd.to_datetime(ts_str, utc=True)
+            slot = slot_for_timestamp(t)
+
+            # centre crop (reuse the cached P16 patch store)
+            carr = load_patch_npz(str(patch_path_for_timestamp(t, self.patches_root)))  # (6,16,P,P)
+            cframe = np.nan_to_num(carr[slot], nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32, copy=False)
+            cframes.append(cframe)                                                       # (16,P,P)
+
+            # neighbour pool → pick K at random (no replacement) for this frame
+            npth = neighpool_path_for_timestamp(t, self.pool_root)
+            with np.load(npth) as d:
+                pslot = d["pool"][:, slot]        # (M, 16, P, P)
+            M = pslot.shape[0]
+            idx = np.random.choice(M, size=self.k, replace=(M < self.k))
+            sel = np.nan_to_num(pslot[idx], nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32, copy=False)
+            nframes.append(sel)                                                          # (K,16,P,P)
+
+        center_seq = np.stack(cframes, axis=0)      # (L, 16, P, P)
+        neigh_seq  = np.stack(nframes, axis=0)      # (L, K, 16, P, P)
+        return (torch.from_numpy(center_seq),
+                torch.from_numpy(neigh_seq),
+                torch.tensor(y, dtype=torch.float32))
