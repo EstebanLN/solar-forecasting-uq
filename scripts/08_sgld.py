@@ -119,6 +119,12 @@ def parse_args() -> argparse.Namespace:
                         "stable at the backbone level (~0.36) with ensemble "
                         "skill 0.184 (>= backbone 0.175) and a non-degenerate "
                         "sigma_epi (~17 W/m^2).")
+    p.add_argument("--sgld_lr_final",   type=float, default=None,
+                   help="If set, decay the SGLD step size geometrically from "
+                        "--sgld_lr to this value over all steps (Welling & Teh "
+                        "decreasing schedule → the chain converges instead of "
+                        "random-walking off the mode). Recommended for a proper "
+                        "long run, e.g. --sgld_lr 1e-6 --sgld_lr_final 1e-8.")
     p.add_argument("--sgld_prior_precision", type=float, default=100.0,
                    help="Gaussian prior precision for the SGLD confining term "
                         "(NOT the Optuna-tuned Adam weight_decay). The chain's "
@@ -451,6 +457,7 @@ def main() -> None:
         normalizer=normalizer,
         run_dir=RUN_DIR,
         sgld_lr=args.sgld_lr,
+        sgld_lr_final=args.sgld_lr_final,
         weight_decay=sgld_weight_decay,
         l1_reg=l1_reg,
         burn_in=args.burn_in,
