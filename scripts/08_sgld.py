@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-07_sgld.py — SGLD posterior sampling for all neural solar-forecasting architectures.
+08_sgld.py — SGLD posterior sampling for all neural solar-forecasting architectures.
 
 Unified entry point: one script handles ResNet+LSTM, GraphSAGE+LSTM, and FlatMLP.
 Hyperparameters are loaded automatically from the corresponding Optuna run
@@ -17,13 +17,13 @@ Protocol
    noise equilibrate into the local posterior.
 4. Run SGLD sampling (default 10 checkpoints × 5 epochs apart).
 5. Evaluate the ensemble mean on the test set → write summary.json compatible
-   with 08_results_table.py.
+   with 09_results_table.py.
 
 Usage (from project root):
-    .venv/bin/python scripts/07_sgld.py --arch resnet --site elpaso --hours_ahead 3 --seed 42
-    .venv/bin/python scripts/07_sgld.py --arch graphsage --site uniandes --hours_ahead 1 --seed 7
-    .venv/bin/python scripts/07_sgld.py --arch mlp --site elpaso --hours_ahead 6 --seed 13
-    .venv/bin/python scripts/07_sgld.py --arch resnet --optuna_version v1 --site elpaso --hours_ahead 3 --seed 42
+    .venv/bin/python scripts/08_sgld.py --arch resnet --site elpaso --hours_ahead 3 --seed 42
+    .venv/bin/python scripts/08_sgld.py --arch graphsage --site uniandes --hours_ahead 1 --seed 7
+    .venv/bin/python scripts/08_sgld.py --arch mlp --site elpaso --hours_ahead 6 --seed 13
+    .venv/bin/python scripts/08_sgld.py --arch resnet --optuna_version v1 --site elpaso --hours_ahead 3 --seed 42
 
 Output directory: runs/{arch}_sgld/{site}_H{H}_L{L}_P{patch}_seed{seed}_{timestamp}/
 """
@@ -483,7 +483,7 @@ def main() -> None:
     )
 
     # ------------------------------------------------------------------
-    # summary.json — compatible with 08_results_table.py
+    # summary.json — compatible with 09_results_table.py
     # ------------------------------------------------------------------
     ARCH_LABELS = {
         "resnet":    "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
@@ -546,7 +546,7 @@ def main() -> None:
             "checkpoint_paths": sgld_out["checkpoint_paths"],
             "train_seconds_total": sgld_out["train_seconds_total"],
         },
-        # "best_model" key mirrors Optuna summary structure → 08_results_table.py works as-is
+        # "best_model" key mirrors Optuna summary structure → 09_results_table.py works as-is
         "best_model": {
             "arch":              ARCH_LABELS[args.arch],
             "n_params":          n_params,

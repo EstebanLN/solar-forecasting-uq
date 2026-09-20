@@ -15,7 +15,7 @@ Phase 2 — Sampling (epochs burn_in+1 … burn_in + n_samples*sample_every):
 Ensemble inference
 ------------------
 After sampling, each checkpoint is loaded and run on the test set.  The ensemble
-mean is the point prediction (reported to 08_results_table.py via summary.json).
+mean is the point prediction (reported to 09_results_table.py via summary.json).
 The per-sample standard deviation is the empirical posterior uncertainty.
 
 AMP
@@ -323,7 +323,7 @@ def _ensemble_metrics(
     """Point metrics from ensemble mean + empirical uncertainty statistics.
 
     The returned dict is intentionally compatible with the ``final_test`` block
-    expected by 08_results_table.py (rmse, rmse_day, mae, mae_day, skill_*).
+    expected by 09_results_table.py (rmse, rmse_day, mae, mae_day, skill_*).
     Additional keys (ensemble_std_*) carry UQ information.
     """
     mean_pred = ensemble_preds.mean(axis=0)   # (N,)
