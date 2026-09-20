@@ -1,0 +1,67 @@
+{
+  "model": "convgraph_lstm",
+  "site": "elpaso",
+  "seed": 42,
+  "patch": 16,
+  "k_neighbors": 8,
+  "temporal": {
+    "horizon_hours": 6,
+    "history_steps": 24
+  },
+  "baselines": {
+    "persistence_val": {
+      "n": 16974,
+      "rmse": 507.77653055666565,
+      "mae": 370.8561841757983,
+      "n_day": 8355,
+      "rmse_day": 580.7740967318999,
+      "mae_day": 493.75082795930587,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17429,
+      "rmse": 493.3387930032827,
+      "mae": 362.90153252624935,
+      "n_day": 8757,
+      "rmse_day": 566.416419542736,
+      "mae_day": 483.8490059495261,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 25,
+    "best_value": 234.32117992375498,
+    "best_params": {
+      "base_c": 16,
+      "emb_c": 64,
+      "base_n": 16,
+      "emb_n": 32,
+      "hidden_g": 48,
+      "n_sage_layers": 2,
+      "concat_agg": false,
+      "hidden_t": 192,
+      "n_lstm_layers": 2,
+      "dropout": 0.2,
+      "lr": 0.0004309697814581797,
+      "weight_decay": 1.8789595873114254e-06,
+      "l1_reg": 1e-05,
+      "batch_size": 16
+    }
+  },
+  "best_model": {
+    "arch": "SmallResNet(center) + per-neighbour ResNet -> GraphSAGE(K nodes) -> concat -> LSTM",
+    "best_ckpt_path": "runs/convgraph_lstm/elpaso_H36_L24_P16_K8_seed42_20260919_193752/best_model.pt",
+    "final_test": {
+      "n": 17429,
+      "rmse": 167.11554881718789,
+      "mae": 110.52961501974515,
+      "n_day": 8757,
+      "rmse_day": 214.7652216377844,
+      "mae_day": 157.2796164592461,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.6612560147564241,
+      "skill_day_vs_persistence": 0.6208351060670831
+    },
+    "n_params": 936065
+  }
+}
