@@ -24,8 +24,8 @@ HORIZON_LABEL = {1.0: "1 h", 2.0: "2 h", 3.0: "3 h", 6.0: "6 h"}
 MODEL_ORDER = [
     "Persistence",
     "SARIMA",
-    "ResNet+LSTM",
-    "GraphSAGE+LSTM",
+    "ResNet+LSTM (baseline, pre-Optuna)",
+    "GraphSAGE+LSTM (baseline, pre-Optuna)",
     "MLP (Optuna)",
     "ResNet+LSTM (Optuna)",
     "GraphSAGE+LSTM (Optuna)",
@@ -42,8 +42,8 @@ MODEL_ORDER = [
 # v2 and fusion use the reduced two-seed protocol {42, 1} (see
 # run_sequential.sh and methodology ssec:optuna).
 EXPECTED_SEEDS: dict[str, int] = {
-    "ResNet+LSTM":                 5,
-    "GraphSAGE+LSTM":              5,
+    "ResNet+LSTM (baseline, pre-Optuna)":     5,
+    "GraphSAGE+LSTM (baseline, pre-Optuna)":  5,
     "MLP (Optuna)":                4,
     "ResNet+LSTM (Optuna)":        4,
     "GraphSAGE+LSTM (Optuna)":     4,
@@ -63,11 +63,18 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
 
     Optuna runs store metrics under 'best_model'; baselines under 'model'.
     """
-    records: list[dict] = []
+    # Keyed by (site, horizon, seed) so a re-run of the same seed supersedes the
+    # earlier one instead of being double-counted: sorted() yields the run dirs
+    # in timestamped (chronological) order, so the last write wins. This keeps
+    # the aggregate on one run per seed and matches the paper's reported means.
+    latest: dict[tuple, dict] = {}
     if not runs_dir.exists():
-        return records
+        return list(latest.values())
 
     for run_dir in sorted(runs_dir.iterdir()):
+        # Skip archived/superseded/invalid runs (convention: leading underscore).
+        if run_dir.name.startswith("_"):
+            continue
         sj = run_dir / "summary.json"
         if not sj.exists():
             continue
@@ -83,7 +90,8 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
         pers_test = d.get("baselines", {}).get("persistence_test", {})
 
         optuna = d.get("optuna", {})
-        records.append({
+        key = (d.get("site"), temporal.get("horizon_hours"), d.get("seed"))
+        latest[key] = {
             "model":         model_label,
             "site":          d.get("site"),
             "horizon_hours": temporal.get("horizon_hours"),
@@ -95,8 +103,8 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
             "skill_day":     test.get("skill_day_vs_persistence"),
             "pers_rmse_day": pers_test.get("rmse_day"),
             "best_trial":    optuna.get("best_trial_number"),
-        })
-    return records
+        }
+    return list(latest.values())
 
 
 def _load_sarima_runs(runs_dir: Path) -> list[dict]:
@@ -105,7 +113,19 @@ def _load_sarima_runs(runs_dir: Path) -> list[dict]:
     if not runs_dir.exists():
         return records
 
+    # Keep only the latest run per site (SARIMA has one file per site covering
+    # all horizons); skip archived/superseded runs (leading underscore, e.g.
+    # the pre-rewrite static-extrapolation forecasts).
+    latest_by_site: dict[str, Path] = {}
     for run_dir in sorted(runs_dir.iterdir()):
+        if run_dir.name.startswith("_"):
+            continue
+        if not (run_dir / "summary.json").exists():
+            continue
+        with (run_dir / "summary.json").open() as f:
+            latest_by_site[json.load(f).get("site")] = run_dir  # last (newest) wins
+
+    for run_dir in latest_by_site.values():
         sj = run_dir / "summary.json"
         if not sj.exists():
             continue
@@ -417,8 +437,8 @@ def main() -> None:
     args = ap.parse_args()
 
     all_records: list[dict] = []
-    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm",                "ResNet+LSTM")
-    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm",             "GraphSAGE+LSTM")
+    all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm",                "ResNet+LSTM (baseline, pre-Optuna)")
+    all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm",             "GraphSAGE+LSTM (baseline, pre-Optuna)")
     all_records += _load_nn_runs(RUNS_ROOT / "mlp_optuna",                 "MLP (Optuna)")
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna",         "ResNet+LSTM (Optuna)")
     all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna",      "GraphSAGE+LSTM (Optuna)")
