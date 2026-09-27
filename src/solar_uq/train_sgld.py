@@ -57,6 +57,8 @@ def train_sgld(
     *,
     sgld_lr: float = 1e-5,
     sgld_lr_final: float | None = None,
+    sgld_schedule: str = "poly",
+    sgld_gamma: float = 0.55,
     weight_decay: float = 1e-4,
     l1_reg: float = 0.0,
     burn_in: int = 500,
@@ -98,11 +100,14 @@ def train_sgld(
     run_dir.mkdir(parents=True, exist_ok=True)
 
     total_epochs = burn_in + n_samples * sample_every
-    # Decreasing step-size schedule (Welling & Teh): decay sgld_lr -> sgld_lr_final
-    # geometrically over all optimizer steps, for a chain that actually converges.
+    # Decreasing step-size schedule (Welling & Teh 2011): decay sgld_lr ->
+    # sgld_lr_final over all optimizer steps so the chain converges instead of
+    # random-walking off the mode. Default "poly" is the valid W&T polynomial
+    # schedule (Sum eps=inf, Sum eps^2<inf); see sgld.py.
     total_steps = total_epochs * max(1, len(train_loader))
     opt = SGLD(model.parameters(), lr=sgld_lr, weight_decay=weight_decay,
-               lr_final=sgld_lr_final, total_steps=total_steps)
+               lr_final=sgld_lr_final, total_steps=total_steps,
+               schedule=sgld_schedule, gamma=sgld_gamma)
     loss_fn = nn.MSELoss()
 
     checkpoint_paths: List[str] = []

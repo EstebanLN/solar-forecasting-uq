@@ -10,8 +10,15 @@ i.e., a Gaussian posterior (L2 prior) given MSE likelihood.
 Design notes:
 - AMP is NOT used: noise injection must happen in the same numerical regime as
   the gradient, so we operate entirely in fp32.
-- No LR scheduler: unlike Adam, SGLD requires a near-constant (or very slowly
-  decaying) step size to maintain ergodicity. Decaying to zero recovers SGD.
+- Step-size schedule: for a chain that CONVERGES to the posterior without a
+  Metropolis correction, Welling & Teh (2011) require a decreasing step size
+  ε_t with Σε_t = ∞ and Σε_t² < ∞. The polynomial schedule
+  ε_t = ε_0 (1 + t/t₀)^(-γ) with γ ∈ (0.5, 1] satisfies both (default,
+  ``schedule="poly"``); it decays slowly enough that the chain keeps exploring
+  (Σε = ∞) while the accumulated noise stays finite (Σε² < ∞). A geometric
+  decay (``schedule="geom"``) is kept only for backward compatibility — it has
+  Σε_t < ∞, so it freezes the chain too fast to sample the posterior and is NOT
+  a valid W&T schedule. A constant step (no lr_final) random-walks off the mode.
 - weight_decay encodes the Gaussian prior precision (σ² = 1/weight_decay).
   It is a SEPARATE hyperparameter from the Optuna-tuned Adam weight_decay:
   reusing Adam's value (~1e-6..1e-3) leaves the chain effectively unconfined
@@ -43,16 +50,20 @@ class SGLD(torch.optim.Optimizer):
     """
 
     def __init__(self, params, lr: float = 1e-5, weight_decay: float = 0.0,
-                 lr_final: float | None = None, total_steps: int | None = None):
+                 lr_final: float | None = None, total_steps: int | None = None,
+                 schedule: str = "poly", gamma: float = 0.55):
         if lr <= 0:
             raise ValueError(f"lr must be positive, got {lr}")
-        # Decreasing step size (Welling & Teh 2011): a chain with a polynomially
-        # decaying epsilon_t (Sum eps = inf, Sum eps^2 < inf) converges to the
-        # posterior WITHOUT a Metropolis correction, unlike a fixed step which
-        # random-walks off the mode. If lr_final/total_steps are given we decay
-        # geometrically lr -> lr_final over total_steps; else behave as constant.
-        defaults = dict(lr=lr, weight_decay=weight_decay,
-                        lr_final=lr_final, total_steps=total_steps)
+        if schedule not in ("poly", "geom"):
+            raise ValueError(f"schedule must be 'poly' or 'geom', got {schedule!r}")
+        if not (0.5 < gamma <= 1.0):
+            raise ValueError(f"gamma must be in (0.5, 1] for Sum eps=inf, Sum eps^2<inf, got {gamma}")
+        # Decreasing step size (Welling & Teh 2011). If lr_final/total_steps are
+        # given we decay lr -> lr_final over total_steps; else behave as a
+        # constant step. schedule="poly" is the valid W&T schedule (see module
+        # docstring); "geom" is kept only for backward compatibility.
+        defaults = dict(lr=lr, weight_decay=weight_decay, lr_final=lr_final,
+                        total_steps=total_steps, schedule=schedule, gamma=gamma)
         super().__init__(params, defaults)
         self._t = 0
 
@@ -60,8 +71,17 @@ class SGLD(torch.optim.Optimizer):
         lr, lr_final, total = group["lr"], group["lr_final"], group["total_steps"]
         if lr_final is None or total is None or total <= 0:
             return lr
-        frac = min(self._t / float(total), 1.0)
-        return float(lr * (lr_final / lr) ** frac)   # geometric decay
+        if group["schedule"] == "geom":
+            frac = min(self._t / float(total), 1.0)
+            return float(lr * (lr_final / lr) ** frac)   # geometric (Sum eps<inf; not W&T)
+        # Polynomial Robbins-Monro schedule: eps_t = lr * (1 + t/t0)^(-gamma),
+        # with t0 solved so eps(total_steps) = lr_final. For gamma in (0.5, 1]
+        # this satisfies Sum eps = inf and Sum eps^2 < inf (Welling & Teh 2011).
+        gamma = group["gamma"]
+        ratio = (lr / lr_final) ** (1.0 / gamma)         # = (1 + total/t0)
+        t0 = total / (ratio - 1.0)
+        t = min(self._t, total)
+        return float(lr * (1.0 + t / t0) ** (-gamma))
 
     @torch.no_grad()
     def step(self, closure=None):

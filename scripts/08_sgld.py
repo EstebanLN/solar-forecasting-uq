@@ -124,7 +124,16 @@ def parse_args() -> argparse.Namespace:
                         "--sgld_lr to this value over all steps (Welling & Teh "
                         "decreasing schedule → the chain converges instead of "
                         "random-walking off the mode). Recommended for a proper "
-                        "long run, e.g. --sgld_lr 1e-6 --sgld_lr_final 1e-8.")
+                        "long run, e.g. --sgld_lr 1e-7 --sgld_lr_final 1e-8.")
+    p.add_argument("--sgld_schedule",   type=str, default="poly", choices=["poly", "geom"],
+                   help="Decreasing-step-size schedule shape. 'poly' (default) is "
+                        "the valid Welling & Teh polynomial schedule "
+                        "eps_t = eps_0 (1+t/t0)^(-gamma) with Sum eps=inf, "
+                        "Sum eps^2<inf; 'geom' (Sum eps<inf) is kept only for "
+                        "backward compatibility and is NOT a valid W&T schedule.")
+    p.add_argument("--sgld_gamma",      type=float, default=0.55,
+                   help="Polynomial-schedule exponent gamma in (0.5, 1]; smaller "
+                        "decays more slowly (keeps exploring longer). Default 0.55.")
     p.add_argument("--sgld_prior_precision", type=float, default=100.0,
                    help="Gaussian prior precision for the SGLD confining term "
                         "(NOT the Optuna-tuned Adam weight_decay). The chain's "
@@ -311,9 +320,11 @@ def main() -> None:
         f"site={args.site} | hours={args.hours_ahead} | seed={args.seed} | "
         f"device={DEVICE}"
     )
+    _lrf = f"{args.sgld_lr_final:.1e}" if args.sgld_lr_final is not None else "None(constant)"
     print(
         f"  burn_in={args.burn_in} | sample_every={args.sample_every} | "
-        f"n_samples={args.n_samples} | sgld_lr={args.sgld_lr:.1e}"
+        f"n_samples={args.n_samples} | sgld_lr={args.sgld_lr:.1e} -> {_lrf} | "
+        f"schedule={args.sgld_schedule} gamma={args.sgld_gamma}"
     )
 
     # ------------------------------------------------------------------
@@ -458,6 +469,8 @@ def main() -> None:
         run_dir=RUN_DIR,
         sgld_lr=args.sgld_lr,
         sgld_lr_final=args.sgld_lr_final,
+        sgld_schedule=args.sgld_schedule,
+        sgld_gamma=args.sgld_gamma,
         weight_decay=sgld_weight_decay,
         l1_reg=l1_reg,
         burn_in=args.burn_in,
@@ -536,6 +549,9 @@ def main() -> None:
             "init":               "fresh" if args.fresh_init else "warm_start",
             "warm_start_ckpt":    None if args.fresh_init else mean_ckpt_path,
             "sgld_lr":            args.sgld_lr,
+            "sgld_lr_final":      args.sgld_lr_final,
+            "sgld_schedule":      args.sgld_schedule,
+            "sgld_gamma":         args.sgld_gamma,
             "sgld_weight_decay":  sgld_weight_decay,
             "adam_weight_decay":  adam_weight_decay,
             "burn_in":         args.burn_in,
