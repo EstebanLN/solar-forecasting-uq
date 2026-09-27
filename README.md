@@ -9,7 +9,10 @@ The project compares graph-based and convolutional spatio-temporal deep learning
 fixed vs. tuned distance-weighted graph-construction ablation), and **ResNet-LSTM** —
 against a **FlatMLP** spatial-ablation baseline, **SARIMA**, and **persistence**. A
 **multisource residual-fusion** variant augments the satellite encoder with co-located
-surface features. On top of the best backbone, an **SGLD posterior-sampling layer**
+surface features, and a satellite-only **ConvGraph-LSTM** hybrid encodes the central
+patch convolutionally while representing randomly-sampled neighbouring patches as
+GraphSAGE nodes, probing the value of wider spatial context. On top of the best
+backbone, an **SGLD posterior-sampling layer**
 provides epistemic uncertainty intended to flag forecasts produced under data-scarce
 conditions (under validation).
 
