@@ -34,18 +34,10 @@ FIGURES_DIR = PROJECT_ROOT / "results" / "figures"
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Colour palette (colour-blind friendly) ──────────────────────────────────
-# NOTE: "ResNet+LSTM"/"GraphSAGE+LSTM" (no suffix) in results/summary.csv are
-# legacy single-seed, hand-chosen-hyperparameter runs from scripts/05_*_baseline.py
-# that predate the Optuna protocol and are not described anywhere in the paper
-# text. They are intentionally excluded here (and renamed below) so that the
-# bars in this figure correspond 1:1 with the rows of Table tab:main, which
-# report the Optuna-tuned, four-seed models under the plain names
-# "ResNet-LSTM" / "GraphSAGE-LSTM".
-RENAME_MAP = {
-    "ResNet+LSTM (Optuna)":    "ResNet-LSTM",
-    "GraphSAGE+LSTM (Optuna)": "GraphSAGE-LSTM",
-}
-
+# The paper's deep-learning bars are the Optuna-tuned models; the per-site
+# source (Uniandes v1 4-seed, El Paso v2 2-seed) is selected in _load_summary()
+# to match Table tab:main exactly. The legacy single-seed baselines from
+# scripts/05_*_baseline.py are excluded there.
 PALETTE = {
     "Persistence":     "#999999",
     "SARIMA":          "#E69F00",
