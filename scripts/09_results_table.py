@@ -31,6 +31,7 @@ MODEL_ORDER = [
     "GraphSAGE+LSTM (Optuna)",
     "ResNet+LSTM (Optuna v2)",
     "GraphSAGE+LSTM (Optuna v2)",
+    "ConvGraph+LSTM",
     "Fusion ResNet+LSTM",
     "Fusion GraphSAGE+LSTM",
     "ResNet+LSTM (SGLD)",
@@ -49,6 +50,7 @@ EXPECTED_SEEDS: dict[str, int] = {
     "GraphSAGE+LSTM (Optuna)":     4,
     "ResNet+LSTM (Optuna v2)":     2,
     "GraphSAGE+LSTM (Optuna v2)":  2,
+    "ConvGraph+LSTM":              2,
     "Fusion ResNet+LSTM":          2,
     "Fusion GraphSAGE+LSTM":       2,
 }
@@ -444,6 +446,7 @@ def main() -> None:
     all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna",      "GraphSAGE+LSTM (Optuna)")
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna_v2",      "ResNet+LSTM (Optuna v2)")
     all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna_v2",   "GraphSAGE+LSTM (Optuna v2)")
+    all_records += _load_nn_runs(RUNS_ROOT / "convgraph_lstm",             "ConvGraph+LSTM")
     all_records += _load_nn_runs(RUNS_ROOT / "fusion_resnet_lstm",         "Fusion ResNet+LSTM")
     all_records += _load_nn_runs(RUNS_ROOT / "fusion_graphsage_lstm",      "Fusion GraphSAGE+LSTM")
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_sgld",           "ResNet+LSTM (SGLD)")

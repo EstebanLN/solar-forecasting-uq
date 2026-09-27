@@ -83,10 +83,20 @@ plt.rcParams.update({
 def _load_summary() -> pd.DataFrame:
     path = PROJECT_ROOT / "results" / "summary.csv"
     df = pd.read_csv(path)
-    df["model"] = df["model"].replace(RENAME_MAP)
-    # Keep only the models that appear in Table tab:main (Persistence, SARIMA,
-    # ResNet-LSTM, GraphSAGE-LSTM); excludes the legacy un-tuned baseline runs
-    # and the still-incomplete FlatMLP sweep (see RENAME_MAP note above).
+    # Site-specific provenance, matching Table tab:main exactly: the Uniandes
+    # deep-learning rows come from the v1 Optuna study (4 seeds), while El Paso,
+    # recomputed on the corrected ground truth, comes from the v2 study (2 seeds,
+    # and the tuned k-NN graph for GraphSAGE). A single global rename cannot
+    # express this, so we select the right source per site here.
+    src_by_site = {"uniandes": "(Optuna)", "elpaso": "(Optuna v2)"}
+    frames = [df[df["model"].isin(["Persistence", "SARIMA"])].copy()]
+    for base, disp in [("ResNet+LSTM", "ResNet-LSTM"),
+                       ("GraphSAGE+LSTM", "GraphSAGE-LSTM")]:
+        for site, suffix in src_by_site.items():
+            sel = df[(df["model"] == f"{base} {suffix}") & (df["site"] == site)].copy()
+            sel["model"] = disp
+            frames.append(sel)
+    df = pd.concat(frames, ignore_index=True)
     keep_models = [m for m in MODEL_ORDER if m in df["model"].unique()]
     df = df[df["model"].isin(keep_models)].copy()
     df["model_cat"] = pd.Categorical(df["model"], categories=keep_models, ordered=True)
@@ -233,12 +243,17 @@ def fig_timeseries() -> None:
         GraphSeqDataset, TargetNormalizer, make_loader,
         read_history_steps_from_manifest,
     )
-    from solar_uq.models.graphsage_lstm import GraphSAGE_LSTM, build_edge_index_8n
+    from solar_uq.models.graphsage_lstm import (
+        GraphSAGE_LSTM, build_edge_index_8n, build_weighted_knn_edge_index,
+    )
     from solar_uq.train import collect_predictions
 
-    # Best run: GraphSAGE-LSTM Optuna, elpaso, H=36 (6h), seed=42
-    RUN_DIR = PROJECT_ROOT / "runs" / "graphsage_lstm_optuna" / \
-              "elpaso_H36_L24_P16_seed42_20260503_091745"
+    # Best run: GraphSAGE-LSTM, El Paso, H=36 (6h), seed=42 on the CORRECTED
+    # ground truth (v2 Optuna study, tuned distance-weighted k-NN graph). This
+    # supersedes the pre-fix v1 fixed-graph run used before the timestamp-bug
+    # correction (see results.tex note); skill_day = 0.609.
+    RUN_DIR = PROJECT_ROOT / "runs" / "graphsage_lstm_optuna_v2" / \
+              "elpaso_H36_L24_P16_seed42_20260807_160708"
     assert RUN_DIR.exists(), f"Run dir not found: {RUN_DIR}"
 
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -252,7 +267,12 @@ def fig_timeseries() -> None:
     normalizer = TargetNormalizer(mean=meta["y_mean_train"], std=meta["y_std_train"])
 
     hp = meta.get("arch_hparams", summary["optuna"]["best_params"])
-    edge_index = build_edge_index_8n(patch)
+    # v2 runs use the tuned distance-weighted k-NN graph; fall back to the fixed
+    # 8-neighbour graph only if no k_neighbors was tuned (v1 runs).
+    if "k_neighbors" in hp:
+        edge_index, edge_weight = build_weighted_knn_edge_index(patch, hp["k_neighbors"])
+    else:
+        edge_index, edge_weight = build_edge_index_8n(patch), None
     model = GraphSAGE_LSTM(
         in_dim=16,
         hidden_g=hp.get("hidden_g",      96),
@@ -263,6 +283,7 @@ def fig_timeseries() -> None:
         input_bn=hp.get("input_bn",      True),
         concat_agg=hp.get("concat_agg",  True),
         edge_index=edge_index,
+        edge_weight=edge_weight,
     )
     model.load_state_dict(ckpt["model_state"])
     model = model.to(DEVICE)
