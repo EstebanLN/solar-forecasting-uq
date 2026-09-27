@@ -94,6 +94,10 @@ for one `(site, horizon, seed)` combination and writes a run directory under `ru
   --site elpaso --hours_ahead 6 --seed 42 \
   --n_trials 75 --runs_root runs/fusion_resnet_lstm
 
+# ConvGraph-LSTM (satellite-only conv + graph-over-neighbours hybrid)
+.venv/bin/python scripts/06_convgraph_lstm_optuna.py \
+  --site elpaso --hours_ahead 6 --seed 42 --n_trials 25 --num_workers 4
+
 # SGLD epistemic-uncertainty layer, warm-started from the tuned backbone
 .venv/bin/python scripts/08_sgld.py --arch resnet --site uniandes --hours_ahead 1 --seed 42
 ```
@@ -111,15 +115,19 @@ Aggregate all completed runs into the results table, and run the tests:
 | Model | Site | Horizon | skill_day |
 |-------|------|---------|-----------|
 | **Fusion ResNet-LSTM** (satellite + surface) | El Paso | 6 h | **0.739 ± 0.019** |
+| **ConvGraph-LSTM** (satellite-only hybrid) | El Paso | 6 h | 0.620 ± 0.001 |
 | GraphSAGE-LSTM (tuned k-NN) | El Paso | 6 h | 0.604 ± 0.007 |
-| ResNet-LSTM | El Paso | 6 h | 0.579 ± 0.018 |
-| GraphSAGE-LSTM (fixed graph) | Uniandes | 6 h | 0.418 ± 0.011 |
+| ResNet-LSTM | El Paso | 6 h | 0.588 ± 0.030 |
+| GraphSAGE-LSTM (fixed graph) | Uniandes | 6 h | 0.417 ± 0.008 |
 | ResNet-LSTM | Uniandes | 1 h | 0.161 ± 0.014 |
 
 Graph-based encoders are competitive with or better than convolutional ones at
 multi-hour horizons; absolute skill is markedly lower at the high-altitude mountain
-site, and multisource fusion delivers the largest gains where satellite and surface
-signals are complementary. Full table: [`results/summary.md`](results/summary.md).
+site. Adding surface features (multisource fusion) improves skill over the
+satellite-only encoders at every site and horizon, and the satellite-only
+ConvGraph-LSTM hybrid gives the highest satellite-only skill at El Paso but no
+gain at Uniandes — the value of wider spatial context is itself site-dependent.
+Full table: [`results/summary.md`](results/summary.md).
 
 > The codebase also contains exploratory uncertainty components — a Gamma-likelihood
 > variance network (`src/solar_uq/variance_net.py`) and split conformal prediction

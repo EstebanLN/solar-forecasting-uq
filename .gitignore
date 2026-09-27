@@ -176,5 +176,6 @@ notebooks/archive/
 RUNS_PLAN.md
 run_sequential.sh
 aia_autostart.sh
+scripts/run_*_queue.sh
 runs/optuna_storage/
 runs/_*_descartados/
