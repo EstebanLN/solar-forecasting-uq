@@ -75,7 +75,7 @@ def _load_ground(site: str) -> pd.DataFrame:
 # ── Figure 4: diurnal profile ────────────────────────────────────────────────
 
 def fig_diurnal_profile() -> None:
-    fig, ax = plt.subplots(figsize=(5.0, 3.0))
+    fig, ax = plt.subplots(figsize=(7.0, 3.3))
     for site in ("elpaso", "uniandes"):
         df = _load_ground(site)
         hourly = df.groupby(df.index.hour)["ghi"]
@@ -103,7 +103,7 @@ def fig_diurnal_profile() -> None:
 
 def fig_acf() -> None:
     max_lag_steps = 36  # 6h at 10-min cadence
-    fig, ax = plt.subplots(figsize=(5.0, 3.0))
+    fig, ax = plt.subplots(figsize=(7.0, 3.3))
     for site in ("elpaso", "uniandes"):
         df = _load_ground(site)
         x = df["ghi"].to_numpy()
@@ -134,7 +134,7 @@ def fig_acf() -> None:
 # ── Figure 6: 1-hour delta histogram ─────────────────────────────────────────
 
 def fig_delta_hist() -> None:
-    fig, ax = plt.subplots(figsize=(5.0, 3.0))
+    fig, ax = plt.subplots(figsize=(7.0, 3.3))
     for site in ("elpaso", "uniandes"):
         df = _load_ground(site)
         day = df[df["ghi"] >= 20.0]
@@ -170,7 +170,7 @@ def fig_patch_snapshot(channel: int = 1) -> None:
         "elpaso": PROJECT_ROOT / "data/patches_v1/elpaso/P16/2024/02/20240202_16_patch.npz",
         "uniandes": PROJECT_ROOT / "data/patches_v1/uniandes/P16/2025/02/20250227_16_patch.npz",
     }
-    fig, axes = plt.subplots(1, 2, figsize=(6.0, 3.2))
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.2))
     for ax, site in zip(axes, ("elpaso", "uniandes")):
         path = examples[site]
         if not path.exists():

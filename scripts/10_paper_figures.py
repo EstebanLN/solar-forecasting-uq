@@ -43,6 +43,7 @@ PALETTE = {
     "SARIMA":          "#E69F00",
     "ResNet-LSTM":     "#0072B2",
     "GraphSAGE-LSTM":  "#D55E00",
+    "FlatMLP":         "#009E73",
 }
 
 MODEL_ORDER = [
@@ -50,6 +51,7 @@ MODEL_ORDER = [
     "SARIMA",
     "ResNet-LSTM",
     "GraphSAGE-LSTM",
+    "FlatMLP",
 ]
 
 HORIZON_LABELS = {1.0: "1 h", 3.0: "3 h", 6.0: "6 h"}
@@ -88,6 +90,8 @@ def _load_summary() -> pd.DataFrame:
             sel = df[(df["model"] == f"{base} {suffix}") & (df["site"] == site)].copy()
             sel["model"] = disp
             frames.append(sel)
+    # FlatMLP spatial-ablation baseline (both sites; no v1/v2 split).
+    frames.append(df[df["model"] == "MLP (Optuna)"].assign(model="FlatMLP"))
     df = pd.concat(frames, ignore_index=True)
     keep_models = [m for m in MODEL_ORDER if m in df["model"].unique()]
     df = df[df["model"].isin(keep_models)].copy()
