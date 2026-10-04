@@ -1,0 +1,2371 @@
+[
+  {
+    "epoch": 1,
+    "phase": "burn-in",
+    "train_mse_norm": 11.194437721047123,
+    "val_rmse": 333.62457476436737,
+    "val_rmse_day": 292.1515319304188,
+    "grad_norm_mean": 17.036273380336365,
+    "epoch_seconds": 341.3218410015106
+  },
+  {
+    "epoch": 2,
+    "phase": "burn-in",
+    "train_mse_norm": 18.73238124825019,
+    "val_rmse": 310.65965119062986,
+    "val_rmse_day": 288.2997951722972,
+    "grad_norm_mean": 4.838687566217524,
+    "epoch_seconds": 342.07927322387695
+  },
+  {
+    "epoch": 3,
+    "phase": "burn-in",
+    "train_mse_norm": 23.19012729408526,
+    "val_rmse": 303.44482778718776,
+    "val_rmse_day": 293.7480007733481,
+    "grad_norm_mean": 4.475869148785955,
+    "epoch_seconds": 342.6804850101471
+  },
+  {
+    "epoch": 4,
+    "phase": "burn-in",
+    "train_mse_norm": 26.642653804249452,
+    "val_rmse": 302.91036483121917,
+    "val_rmse_day": 289.3177805938114,
+    "grad_norm_mean": 4.217497820164193,
+    "epoch_seconds": 341.64218640327454
+  },
+  {
+    "epoch": 5,
+    "phase": "burn-in",
+    "train_mse_norm": 29.408284725595646,
+    "val_rmse": 306.604258244764,
+    "val_rmse_day": 286.95865507071727,
+    "grad_norm_mean": 5.08961196158476,
+    "epoch_seconds": 340.47135066986084
+  },
+  {
+    "epoch": 6,
+    "phase": "burn-in",
+    "train_mse_norm": 31.818885361514976,
+    "val_rmse": 292.3313016876573,
+    "val_rmse_day": 285.5600517026347,
+    "grad_norm_mean": 6.0947988472413135,
+    "epoch_seconds": 340.71216797828674
+  },
+  {
+    "epoch": 7,
+    "phase": "burn-in",
+    "train_mse_norm": 33.909407981512025,
+    "val_rmse": 305.3904062274276,
+    "val_rmse_day": 286.77703580232367,
+    "grad_norm_mean": 4.700410110529896,
+    "epoch_seconds": 342.5082218647003
+  },
+  {
+    "epoch": 8,
+    "phase": "burn-in",
+    "train_mse_norm": 35.845886813814005,
+    "val_rmse": 301.3773306648618,
+    "val_rmse_day": 289.2553864620133,
+    "grad_norm_mean": 3.3896746163078513,
+    "epoch_seconds": 340.31027579307556
+  },
+  {
+    "epoch": 9,
+    "phase": "burn-in",
+    "train_mse_norm": 37.448698205614775,
+    "val_rmse": 298.0909022531636,
+    "val_rmse_day": 292.0555075931631,
+    "grad_norm_mean": 3.2999509441772092,
+    "epoch_seconds": 341.3426938056946
+  },
+  {
+    "epoch": 10,
+    "phase": "burn-in",
+    "train_mse_norm": 38.994301975385724,
+    "val_rmse": 296.88063004811255,
+    "val_rmse_day": 292.10133123391336,
+    "grad_norm_mean": 3.5403781482331524,
+    "epoch_seconds": 341.81427359580994
+  },
+  {
+    "epoch": 11,
+    "phase": "burn-in",
+    "train_mse_norm": 40.496296671292704,
+    "val_rmse": 303.25107151150155,
+    "val_rmse_day": 290.21075631816007,
+    "grad_norm_mean": 4.233813706401649,
+    "epoch_seconds": 340.0427825450897
+  },
+  {
+    "epoch": 12,
+    "phase": "burn-in",
+    "train_mse_norm": 41.81801773622164,
+    "val_rmse": 294.6563481585779,
+    "val_rmse_day": 290.4883851442108,
+    "grad_norm_mean": 4.538672770787657,
+    "epoch_seconds": 340.30367612838745
+  },
+  {
+    "epoch": 13,
+    "phase": "burn-in",
+    "train_mse_norm": 43.000741916630744,
+    "val_rmse": 284.1886746279364,
+    "val_rmse_day": 296.16258024578883,
+    "grad_norm_mean": 4.115783323456474,
+    "epoch_seconds": 340.73491048812866
+  },
+  {
+    "epoch": 14,
+    "phase": "burn-in",
+    "train_mse_norm": 44.184921691240646,
+    "val_rmse": 297.8609742832958,
+    "val_rmse_day": 289.19061077007353,
+    "grad_norm_mean": 4.7210941463052825,
+    "epoch_seconds": 341.0786998271942
+  },
+  {
+    "epoch": 15,
+    "phase": "burn-in",
+    "train_mse_norm": 45.30142709381041,
+    "val_rmse": 285.7657265593873,
+    "val_rmse_day": 294.84280893685445,
+    "grad_norm_mean": 5.3728966686359625,
+    "epoch_seconds": 340.95499181747437
+  },
+  {
+    "epoch": 16,
+    "phase": "burn-in",
+    "train_mse_norm": 46.30730709975018,
+    "val_rmse": 292.8780092231296,
+    "val_rmse_day": 291.91855226813277,
+    "grad_norm_mean": 5.541968990358958,
+    "epoch_seconds": 340.5791509151459
+  },
+  {
+    "epoch": 17,
+    "phase": "burn-in",
+    "train_mse_norm": 47.33443549458219,
+    "val_rmse": 308.7741571076267,
+    "val_rmse_day": 284.99209061742204,
+    "grad_norm_mean": 6.321887259613498,
+    "epoch_seconds": 340.9366991519928
+  },
+  {
+    "epoch": 18,
+    "phase": "burn-in",
+    "train_mse_norm": 48.27191791696775,
+    "val_rmse": 301.7712439007403,
+    "val_rmse_day": 286.4391674416338,
+    "grad_norm_mean": 6.3800902228079694,
+    "epoch_seconds": 341.2282819747925
+  },
+  {
+    "epoch": 19,
+    "phase": "burn-in",
+    "train_mse_norm": 49.06291506190366,
+    "val_rmse": 279.2580828254045,
+    "val_rmse_day": 297.9159742794566,
+    "grad_norm_mean": 4.961622214016412,
+    "epoch_seconds": 339.71777391433716
+  },
+  {
+    "epoch": 20,
+    "phase": "burn-in",
+    "train_mse_norm": 49.920413608175934,
+    "val_rmse": 274.44280103203437,
+    "val_rmse_day": 301.48343586155,
+    "grad_norm_mean": 5.2081043701700915,
+    "epoch_seconds": 341.2882399559021
+  },
+  {
+    "epoch": 21,
+    "phase": "burn-in",
+    "train_mse_norm": 50.8037283516434,
+    "val_rmse": 290.44176387402405,
+    "val_rmse_day": 292.2397567843034,
+    "grad_norm_mean": 6.340438088084513,
+    "epoch_seconds": 340.927387714386
+  },
+  {
+    "epoch": 22,
+    "phase": "burn-in",
+    "train_mse_norm": 51.60082770555573,
+    "val_rmse": 283.3832209586462,
+    "val_rmse_day": 297.16112558500987,
+    "grad_norm_mean": 6.22613270831381,
+    "epoch_seconds": 340.812326669693
+  },
+  {
+    "epoch": 23,
+    "phase": "burn-in",
+    "train_mse_norm": 52.37456810617853,
+    "val_rmse": 293.88103696909195,
+    "val_rmse_day": 290.895165036516,
+    "grad_norm_mean": 6.138189656768756,
+    "epoch_seconds": 340.24698758125305
+  },
+  {
+    "epoch": 24,
+    "phase": "burn-in",
+    "train_mse_norm": 53.1311858781524,
+    "val_rmse": 284.8620670277631,
+    "val_rmse_day": 293.01337771598,
+    "grad_norm_mean": 6.711855421676502,
+    "epoch_seconds": 341.566442489624
+  },
+  {
+    "epoch": 25,
+    "phase": "burn-in",
+    "train_mse_norm": 53.919172317778084,
+    "val_rmse": 313.2769984028556,
+    "val_rmse_day": 286.96429661166405,
+    "grad_norm_mean": 7.982719341680595,
+    "epoch_seconds": 340.8222951889038
+  },
+  {
+    "epoch": 26,
+    "phase": "burn-in",
+    "train_mse_norm": 54.80446971292051,
+    "val_rmse": 338.06480948457875,
+    "val_rmse_day": 286.0716034455269,
+    "grad_norm_mean": 9.877016723628333,
+    "epoch_seconds": 340.29488134384155
+  },
+  {
+    "epoch": 27,
+    "phase": "burn-in",
+    "train_mse_norm": 55.59902570504473,
+    "val_rmse": 325.95145674714104,
+    "val_rmse_day": 284.5035121239844,
+    "grad_norm_mean": 10.811606386381753,
+    "epoch_seconds": 338.69027304649353
+  },
+  {
+    "epoch": 28,
+    "phase": "burn-in",
+    "train_mse_norm": 56.16169347558723,
+    "val_rmse": 331.15690860058453,
+    "val_rmse_day": 284.59883104493474,
+    "grad_norm_mean": 9.967454268780488,
+    "epoch_seconds": 340.6328399181366
+  },
+  {
+    "epoch": 29,
+    "phase": "burn-in",
+    "train_mse_norm": 56.71179498169196,
+    "val_rmse": 310.8713386068303,
+    "val_rmse_day": 285.3033948446192,
+    "grad_norm_mean": 9.103431234969959,
+    "epoch_seconds": 341.45813179016113
+  },
+  {
+    "epoch": 30,
+    "phase": "burn-in",
+    "train_mse_norm": 57.390434602155764,
+    "val_rmse": 327.16063296812877,
+    "val_rmse_day": 285.2559124897451,
+    "grad_norm_mean": 10.006772240411161,
+    "epoch_seconds": 340.770991563797
+  },
+  {
+    "epoch": 31,
+    "phase": "burn-in",
+    "train_mse_norm": 57.9037867524528,
+    "val_rmse": 317.6141120756704,
+    "val_rmse_day": 284.8832436995844,
+    "grad_norm_mean": 9.355517873604486,
+    "epoch_seconds": 340.65090703964233
+  },
+  {
+    "epoch": 32,
+    "phase": "burn-in",
+    "train_mse_norm": 58.496686724368026,
+    "val_rmse": 316.01953249009506,
+    "val_rmse_day": 285.6187980701595,
+    "grad_norm_mean": 9.742177396216698,
+    "epoch_seconds": 342.0134551525116
+  },
+  {
+    "epoch": 33,
+    "phase": "burn-in",
+    "train_mse_norm": 59.18419157027638,
+    "val_rmse": 340.180565734181,
+    "val_rmse_day": 285.7894840099001,
+    "grad_norm_mean": 11.75777597234226,
+    "epoch_seconds": 341.3362843990326
+  },
+  {
+    "epoch": 34,
+    "phase": "burn-in",
+    "train_mse_norm": 59.83331733929786,
+    "val_rmse": 334.3692323239285,
+    "val_rmse_day": 285.0685970623374,
+    "grad_norm_mean": 12.956998911917227,
+    "epoch_seconds": 339.7884886264801
+  },
+  {
+    "epoch": 35,
+    "phase": "burn-in",
+    "train_mse_norm": 60.409689162881065,
+    "val_rmse": 368.6819653800514,
+    "val_rmse_day": 292.3582953397293,
+    "grad_norm_mean": 13.336685261769766,
+    "epoch_seconds": 341.2987356185913
+  },
+  {
+    "epoch": 36,
+    "phase": "burn-in",
+    "train_mse_norm": 61.07539640985908,
+    "val_rmse": 366.41625207060514,
+    "val_rmse_day": 290.9147462645054,
+    "grad_norm_mean": 15.308990220362958,
+    "epoch_seconds": 340.64458203315735
+  },
+  {
+    "epoch": 37,
+    "phase": "burn-in",
+    "train_mse_norm": 61.66225026911363,
+    "val_rmse": 379.7932818900059,
+    "val_rmse_day": 295.067344045136,
+    "grad_norm_mean": 15.913417362697949,
+    "epoch_seconds": 339.50035309791565
+  },
+  {
+    "epoch": 38,
+    "phase": "burn-in",
+    "train_mse_norm": 62.077144862410954,
+    "val_rmse": 357.1576028667742,
+    "val_rmse_day": 287.9618246466186,
+    "grad_norm_mean": 14.94668280326064,
+    "epoch_seconds": 340.7747149467468
+  },
+  {
+    "epoch": 39,
+    "phase": "burn-in",
+    "train_mse_norm": 62.544856277210535,
+    "val_rmse": 362.2231201076775,
+    "val_rmse_day": 289.58166686440745,
+    "grad_norm_mean": 15.009340342168134,
+    "epoch_seconds": 340.72100734710693
+  },
+  {
+    "epoch": 40,
+    "phase": "burn-in",
+    "train_mse_norm": 63.01260616480517,
+    "val_rmse": 365.31090469083983,
+    "val_rmse_day": 291.0927430193333,
+    "grad_norm_mean": 16.43362955477429,
+    "epoch_seconds": 340.8286962509155
+  },
+  {
+    "epoch": 41,
+    "phase": "burn-in",
+    "train_mse_norm": 63.56044573345806,
+    "val_rmse": 348.62464486987267,
+    "val_rmse_day": 287.47872350250054,
+    "grad_norm_mean": 19.213490831561547,
+    "epoch_seconds": 341.0987904071808
+  },
+  {
+    "epoch": 42,
+    "phase": "burn-in",
+    "train_mse_norm": 63.721140105457714,
+    "val_rmse": 312.5218873290649,
+    "val_rmse_day": 285.40235625312573,
+    "grad_norm_mean": 16.36707243500898,
+    "epoch_seconds": 339.7722554206848
+  },
+  {
+    "epoch": 43,
+    "phase": "burn-in",
+    "train_mse_norm": 64.04935658429423,
+    "val_rmse": 296.6891828372539,
+    "val_rmse_day": 289.8927015530712,
+    "grad_norm_mean": 14.70555004270188,
+    "epoch_seconds": 340.1804678440094
+  },
+  {
+    "epoch": 44,
+    "phase": "burn-in",
+    "train_mse_norm": 64.45692779075235,
+    "val_rmse": 286.6791981221968,
+    "val_rmse_day": 293.8911111573768,
+    "grad_norm_mean": 14.526494925134791,
+    "epoch_seconds": 340.3717849254608
+  },
+  {
+    "epoch": 45,
+    "phase": "burn-in",
+    "train_mse_norm": 64.8098987985784,
+    "val_rmse": 292.3531814640022,
+    "val_rmse_day": 293.37289765047075,
+    "grad_norm_mean": 10.429536444650285,
+    "epoch_seconds": 341.63426637649536
+  },
+  {
+    "epoch": 46,
+    "phase": "burn-in",
+    "train_mse_norm": 65.26309924045896,
+    "val_rmse": 313.1198406970168,
+    "val_rmse_day": 287.55038034542275,
+    "grad_norm_mean": 10.607781348705712,
+    "epoch_seconds": 341.7675075531006
+  },
+  {
+    "epoch": 47,
+    "phase": "burn-in",
+    "train_mse_norm": 65.89193776866576,
+    "val_rmse": 354.6053656168724,
+    "val_rmse_day": 288.7620215975431,
+    "grad_norm_mean": 15.866264356347799,
+    "epoch_seconds": 339.9693286418915
+  },
+  {
+    "epoch": 48,
+    "phase": "burn-in",
+    "train_mse_norm": 66.28161289673031,
+    "val_rmse": 318.5137954673018,
+    "val_rmse_day": 284.4835349076372,
+    "grad_norm_mean": 14.972002250972576,
+    "epoch_seconds": 341.250750541687
+  },
+  {
+    "epoch": 49,
+    "phase": "burn-in",
+    "train_mse_norm": 66.5160877685726,
+    "val_rmse": 284.898449565477,
+    "val_rmse_day": 292.9629200428395,
+    "grad_norm_mean": 11.209151864366724,
+    "epoch_seconds": 340.47073435783386
+  },
+  {
+    "epoch": 50,
+    "phase": "burn-in",
+    "train_mse_norm": 66.83645912934021,
+    "val_rmse": 289.7336430006788,
+    "val_rmse_day": 290.09400883811156,
+    "grad_norm_mean": 10.189441294134065,
+    "epoch_seconds": 339.58642411231995
+  },
+  {
+    "epoch": 51,
+    "phase": "burn-in",
+    "train_mse_norm": 67.26601141192607,
+    "val_rmse": 291.1197241600229,
+    "val_rmse_day": 287.8265483184441,
+    "grad_norm_mean": 11.52117516905603,
+    "epoch_seconds": 341.06915855407715
+  },
+  {
+    "epoch": 52,
+    "phase": "burn-in",
+    "train_mse_norm": 67.62987611690573,
+    "val_rmse": 290.8938819046833,
+    "val_rmse_day": 291.08188708526984,
+    "grad_norm_mean": 10.97932980282411,
+    "epoch_seconds": 340.70643377304077
+  },
+  {
+    "epoch": 53,
+    "phase": "burn-in",
+    "train_mse_norm": 67.95193505406135,
+    "val_rmse": 258.3113708771054,
+    "val_rmse_day": 335.9369267551077,
+    "grad_norm_mean": 8.92689397113219,
+    "epoch_seconds": 340.9076569080353
+  },
+  {
+    "epoch": 54,
+    "phase": "burn-in",
+    "train_mse_norm": 68.29264673670261,
+    "val_rmse": 260.9992746813554,
+    "val_rmse_day": 339.37231818721295,
+    "grad_norm_mean": 6.949895421395667,
+    "epoch_seconds": 340.7850890159607
+  },
+  {
+    "epoch": 55,
+    "phase": "burn-in",
+    "train_mse_norm": 68.65924935303093,
+    "val_rmse": 262.1535953972132,
+    "val_rmse_day": 325.1270870070649,
+    "grad_norm_mean": 6.572451422562304,
+    "epoch_seconds": 339.2567217350006
+  },
+  {
+    "epoch": 56,
+    "phase": "burn-in",
+    "train_mse_norm": 69.07090742930241,
+    "val_rmse": 285.7385991878612,
+    "val_rmse_day": 294.1230110049208,
+    "grad_norm_mean": 7.735386864684844,
+    "epoch_seconds": 339.9463119506836
+  },
+  {
+    "epoch": 57,
+    "phase": "burn-in",
+    "train_mse_norm": 69.52910125392044,
+    "val_rmse": 302.48582229080273,
+    "val_rmse_day": 285.3932482582987,
+    "grad_norm_mean": 10.541125412591924,
+    "epoch_seconds": 340.32868790626526
+  },
+  {
+    "epoch": 58,
+    "phase": "burn-in",
+    "train_mse_norm": 69.9433503437854,
+    "val_rmse": 306.45060820798324,
+    "val_rmse_day": 283.696713967324,
+    "grad_norm_mean": 12.603963106931882,
+    "epoch_seconds": 340.58832478523254
+  },
+  {
+    "epoch": 59,
+    "phase": "burn-in",
+    "train_mse_norm": 70.20853274932942,
+    "val_rmse": 269.0631981462817,
+    "val_rmse_day": 303.2533145615449,
+    "grad_norm_mean": 11.699714512778826,
+    "epoch_seconds": 340.78053617477417
+  },
+  {
+    "epoch": 60,
+    "phase": "burn-in",
+    "train_mse_norm": 70.46359316078771,
+    "val_rmse": 259.641697562619,
+    "val_rmse_day": 330.4866903785519,
+    "grad_norm_mean": 8.696558388300504,
+    "epoch_seconds": 339.62707352638245
+  },
+  {
+    "epoch": 61,
+    "phase": "burn-in",
+    "train_mse_norm": 70.80819115444191,
+    "val_rmse": 264.47754800124494,
+    "val_rmse_day": 317.89285154299523,
+    "grad_norm_mean": 8.572206967451512,
+    "epoch_seconds": 340.5274896621704
+  },
+  {
+    "epoch": 62,
+    "phase": "burn-in",
+    "train_mse_norm": 71.17617838383421,
+    "val_rmse": 267.70375221717893,
+    "val_rmse_day": 320.26970876006715,
+    "grad_norm_mean": 8.644673269936371,
+    "epoch_seconds": 340.8387234210968
+  },
+  {
+    "epoch": 63,
+    "phase": "burn-in",
+    "train_mse_norm": 71.50863030973613,
+    "val_rmse": 264.52927369172494,
+    "val_rmse_day": 336.42023420122723,
+    "grad_norm_mean": 9.144045791074541,
+    "epoch_seconds": 340.66098618507385
+  },
+  {
+    "epoch": 64,
+    "phase": "burn-in",
+    "train_mse_norm": 71.89494050308376,
+    "val_rmse": 267.0927013622772,
+    "val_rmse_day": 379.6085835389959,
+    "grad_norm_mean": 10.507288168979104,
+    "epoch_seconds": 340.6822679042816
+  },
+  {
+    "epoch": 65,
+    "phase": "burn-in",
+    "train_mse_norm": 72.28568205792847,
+    "val_rmse": 265.18760692754523,
+    "val_rmse_day": 349.0097491379386,
+    "grad_norm_mean": 12.80024128902123,
+    "epoch_seconds": 339.1221992969513
+  },
+  {
+    "epoch": 66,
+    "phase": "burn-in",
+    "train_mse_norm": 72.5730751984834,
+    "val_rmse": 271.9914764215476,
+    "val_rmse_day": 371.9279476642907,
+    "grad_norm_mean": 10.65536846483352,
+    "epoch_seconds": 339.91900873184204
+  },
+  {
+    "epoch": 67,
+    "phase": "burn-in",
+    "train_mse_norm": 72.89886601355407,
+    "val_rmse": 282.10204485210977,
+    "val_rmse_day": 314.94562618963346,
+    "grad_norm_mean": 11.87618710408996,
+    "epoch_seconds": 341.62595438957214
+  },
+  {
+    "epoch": 68,
+    "phase": "burn-in",
+    "train_mse_norm": 73.27906304424657,
+    "val_rmse": 294.217325351394,
+    "val_rmse_day": 302.4801492346864,
+    "grad_norm_mean": 15.280532225437238,
+    "epoch_seconds": 340.8898386955261
+  },
+  {
+    "epoch": 69,
+    "phase": "burn-in",
+    "train_mse_norm": 73.6922866467475,
+    "val_rmse": 312.7318814811121,
+    "val_rmse_day": 295.2459678886172,
+    "grad_norm_mean": 18.230417587206375,
+    "epoch_seconds": 339.9002959728241
+  },
+  {
+    "epoch": 70,
+    "phase": "burn-in",
+    "train_mse_norm": 73.96333559762357,
+    "val_rmse": 301.9382347798149,
+    "val_rmse_day": 292.3264859705566,
+    "grad_norm_mean": 17.932919654532686,
+    "epoch_seconds": 339.95564436912537
+  },
+  {
+    "epoch": 71,
+    "phase": "burn-in",
+    "train_mse_norm": 74.25111423421893,
+    "val_rmse": 298.2826810007624,
+    "val_rmse_day": 301.7882028632711,
+    "grad_norm_mean": 18.293544016732547,
+    "epoch_seconds": 341.56575083732605
+  },
+  {
+    "epoch": 72,
+    "phase": "burn-in",
+    "train_mse_norm": 74.63186517866049,
+    "val_rmse": 305.6302647461268,
+    "val_rmse_day": 301.0306937884721,
+    "grad_norm_mean": 19.488942874503127,
+    "epoch_seconds": 339.4614100456238
+  },
+  {
+    "epoch": 73,
+    "phase": "burn-in",
+    "train_mse_norm": 74.86894225178487,
+    "val_rmse": 278.35975367272175,
+    "val_rmse_day": 318.5728030396161,
+    "grad_norm_mean": 17.668255456074053,
+    "epoch_seconds": 339.76959919929504
+  },
+  {
+    "epoch": 74,
+    "phase": "burn-in",
+    "train_mse_norm": 75.09275859074751,
+    "val_rmse": 287.0187772660802,
+    "val_rmse_day": 314.9246673952069,
+    "grad_norm_mean": 14.82884359079825,
+    "epoch_seconds": 340.39185214042664
+  },
+  {
+    "epoch": 75,
+    "phase": "burn-in",
+    "train_mse_norm": 75.37749762460918,
+    "val_rmse": 291.18312730420877,
+    "val_rmse_day": 301.77670646296156,
+    "grad_norm_mean": 14.379142700908538,
+    "epoch_seconds": 341.0201280117035
+  },
+  {
+    "epoch": 76,
+    "phase": "burn-in",
+    "train_mse_norm": 75.6455251381899,
+    "val_rmse": 262.63404449145804,
+    "val_rmse_day": 327.32095825468804,
+    "grad_norm_mean": 13.111643107643497,
+    "epoch_seconds": 340.0506434440613
+  },
+  {
+    "epoch": 77,
+    "phase": "burn-in",
+    "train_mse_norm": 75.91941945910419,
+    "val_rmse": 264.6707692944492,
+    "val_rmse_day": 320.19820393630533,
+    "grad_norm_mean": 11.914095977341496,
+    "epoch_seconds": 341.57635974884033
+  },
+  {
+    "epoch": 78,
+    "phase": "burn-in",
+    "train_mse_norm": 76.19041416670942,
+    "val_rmse": 263.01220673704876,
+    "val_rmse_day": 320.7761033850738,
+    "grad_norm_mean": 11.964082422164097,
+    "epoch_seconds": 341.8573410511017
+  },
+  {
+    "epoch": 79,
+    "phase": "burn-in",
+    "train_mse_norm": 76.48810807819551,
+    "val_rmse": 254.52000077255607,
+    "val_rmse_day": 358.0184229110523,
+    "grad_norm_mean": 12.620471992694215,
+    "epoch_seconds": 341.7113800048828
+  },
+  {
+    "epoch": 80,
+    "phase": "burn-in",
+    "train_mse_norm": 76.71992851192384,
+    "val_rmse": 252.3355618660103,
+    "val_rmse_day": 345.1046203856253,
+    "grad_norm_mean": 11.11029954848137,
+    "epoch_seconds": 341.49006962776184
+  },
+  {
+    "epoch": 81,
+    "phase": "burn-in",
+    "train_mse_norm": 76.98074930883553,
+    "val_rmse": 254.07587768171487,
+    "val_rmse_day": 327.02357455630647,
+    "grad_norm_mean": 11.948879050620672,
+    "epoch_seconds": 341.3663651943207
+  },
+  {
+    "epoch": 82,
+    "phase": "burn-in",
+    "train_mse_norm": 77.28257905082826,
+    "val_rmse": 266.5761879153429,
+    "val_rmse_day": 299.5492357877961,
+    "grad_norm_mean": 13.549788659571341,
+    "epoch_seconds": 341.00955271720886
+  },
+  {
+    "epoch": 83,
+    "phase": "burn-in",
+    "train_mse_norm": 77.60382587510118,
+    "val_rmse": 277.12615948365874,
+    "val_rmse_day": 297.05517230500834,
+    "grad_norm_mean": 16.1965241441987,
+    "epoch_seconds": 342.8406186103821
+  },
+  {
+    "epoch": 84,
+    "phase": "burn-in",
+    "train_mse_norm": 77.91258496149285,
+    "val_rmse": 264.2271471013092,
+    "val_rmse_day": 313.0550250177922,
+    "grad_norm_mean": 16.823146604113052,
+    "epoch_seconds": 340.9528670310974
+  },
+  {
+    "epoch": 85,
+    "phase": "burn-in",
+    "train_mse_norm": 78.06156245781104,
+    "val_rmse": 262.5849241261402,
+    "val_rmse_day": 373.99875959506676,
+    "grad_norm_mean": 13.907474960299716,
+    "epoch_seconds": 341.32668685913086
+  },
+  {
+    "epoch": 86,
+    "phase": "burn-in",
+    "train_mse_norm": 78.57096522191,
+    "val_rmse": 286.321515161652,
+    "val_rmse_day": 425.0185373062337,
+    "grad_norm_mean": 21.86372175964051,
+    "epoch_seconds": 342.38239073753357
+  },
+  {
+    "epoch": 87,
+    "phase": "burn-in",
+    "train_mse_norm": 78.65906790690511,
+    "val_rmse": 269.70861246031257,
+    "val_rmse_day": 321.9628875201719,
+    "grad_norm_mean": 16.434161451018937,
+    "epoch_seconds": 340.9845161437988
+  },
+  {
+    "epoch": 88,
+    "phase": "burn-in",
+    "train_mse_norm": 78.85514822809584,
+    "val_rmse": 270.5777409858242,
+    "val_rmse_day": 309.7053114727267,
+    "grad_norm_mean": 14.486560501029214,
+    "epoch_seconds": 341.30066084861755
+  },
+  {
+    "epoch": 89,
+    "phase": "burn-in",
+    "train_mse_norm": 79.16652055342315,
+    "val_rmse": 263.3320661097932,
+    "val_rmse_day": 356.4558772655239,
+    "grad_norm_mean": 16.248855081372923,
+    "epoch_seconds": 341.46074175834656
+  },
+  {
+    "epoch": 90,
+    "phase": "burn-in",
+    "train_mse_norm": 79.41350833544607,
+    "val_rmse": 263.77470676671277,
+    "val_rmse_day": 348.4463971063303,
+    "grad_norm_mean": 13.762276946396153,
+    "epoch_seconds": 341.43754959106445
+  },
+  {
+    "epoch": 91,
+    "phase": "burn-in",
+    "train_mse_norm": 79.7091459694726,
+    "val_rmse": 271.6943665548479,
+    "val_rmse_day": 317.35718707864805,
+    "grad_norm_mean": 15.449650891547263,
+    "epoch_seconds": 340.25399255752563
+  },
+  {
+    "epoch": 92,
+    "phase": "burn-in",
+    "train_mse_norm": 80.014447833913,
+    "val_rmse": 269.7824673211114,
+    "val_rmse_day": 313.9661988873259,
+    "grad_norm_mean": 18.654447120692257,
+    "epoch_seconds": 341.5288016796112
+  },
+  {
+    "epoch": 93,
+    "phase": "burn-in",
+    "train_mse_norm": 80.26606163784035,
+    "val_rmse": 279.10761231909305,
+    "val_rmse_day": 295.4017327829997,
+    "grad_norm_mean": 17.324919224345233,
+    "epoch_seconds": 340.62925148010254
+  },
+  {
+    "epoch": 94,
+    "phase": "burn-in",
+    "train_mse_norm": 80.62116903848651,
+    "val_rmse": 310.08198367377497,
+    "val_rmse_day": 287.2019439441763,
+    "grad_norm_mean": 23.181462183634068,
+    "epoch_seconds": 341.30986618995667
+  },
+  {
+    "epoch": 95,
+    "phase": "burn-in",
+    "train_mse_norm": 81.04134978217955,
+    "val_rmse": 283.21423703568786,
+    "val_rmse_day": 299.5750400914998,
+    "grad_norm_mean": 32.215115862645675,
+    "epoch_seconds": 341.38347935676575
+  },
+  {
+    "epoch": 96,
+    "phase": "burn-in",
+    "train_mse_norm": 81.16506489316214,
+    "val_rmse": 259.70985757018343,
+    "val_rmse_day": 327.4120771663092,
+    "grad_norm_mean": 19.95722677828736,
+    "epoch_seconds": 342.3077759742737
+  },
+  {
+    "epoch": 97,
+    "phase": "burn-in",
+    "train_mse_norm": 81.39639276852172,
+    "val_rmse": 270.4066760978902,
+    "val_rmse_day": 310.9745660344725,
+    "grad_norm_mean": 17.734810182696254,
+    "epoch_seconds": 340.5785970687866
+  },
+  {
+    "epoch": 98,
+    "phase": "burn-in",
+    "train_mse_norm": 81.65904572634953,
+    "val_rmse": 266.4504667178655,
+    "val_rmse_day": 310.7050840926573,
+    "grad_norm_mean": 18.790864619895235,
+    "epoch_seconds": 339.3846182823181
+  },
+  {
+    "epoch": 99,
+    "phase": "burn-in",
+    "train_mse_norm": 81.91790931372479,
+    "val_rmse": 274.324657051502,
+    "val_rmse_day": 309.0733446116102,
+    "grad_norm_mean": 19.045057530202996,
+    "epoch_seconds": 341.0706033706665
+  },
+  {
+    "epoch": 100,
+    "phase": "burn-in",
+    "train_mse_norm": 82.13399005125162,
+    "val_rmse": 268.70884034033315,
+    "val_rmse_day": 315.62949797921505,
+    "grad_norm_mean": 21.104194773793534,
+    "epoch_seconds": 341.1486723423004
+  },
+  {
+    "epoch": 101,
+    "phase": "sample",
+    "train_mse_norm": 82.44994108369703,
+    "val_rmse": 304.94258068721183,
+    "val_rmse_day": 288.959166780172,
+    "grad_norm_mean": 25.066403261615203,
+    "epoch_seconds": 341.4641354084015
+  },
+  {
+    "epoch": 102,
+    "phase": "sample",
+    "train_mse_norm": 82.60839961762647,
+    "val_rmse": 259.10793833197073,
+    "val_rmse_day": 348.4926833966394,
+    "grad_norm_mean": 21.33834733758674,
+    "epoch_seconds": 341.41895937919617
+  },
+  {
+    "epoch": 103,
+    "phase": "sample",
+    "train_mse_norm": 82.96800973375487,
+    "val_rmse": 314.6829350875576,
+    "val_rmse_day": 473.2017136216517,
+    "grad_norm_mean": 26.942823130467925,
+    "epoch_seconds": 342.158109664917
+  },
+  {
+    "epoch": 104,
+    "phase": "sample",
+    "train_mse_norm": 83.70029486411822,
+    "val_rmse": 346.13787512285563,
+    "val_rmse_day": 516.0866581842366,
+    "grad_norm_mean": 41.47479264114062,
+    "epoch_seconds": 342.7151036262512
+  },
+  {
+    "epoch": 105,
+    "phase": "sample",
+    "train_mse_norm": 84.0182932906043,
+    "val_rmse": 322.1199642453052,
+    "val_rmse_day": 482.35383112852827,
+    "grad_norm_mean": 50.72499085368388,
+    "epoch_seconds": 340.4913897514343,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0105.pt",
+    "ens_val_rmse_day": 482.35383112852827,
+    "n_ens": 1
+  },
+  {
+    "epoch": 106,
+    "phase": "sample",
+    "train_mse_norm": 84.05097150340751,
+    "val_rmse": 373.38633274268653,
+    "val_rmse_day": 546.6863548044646,
+    "grad_norm_mean": 50.866581317928485,
+    "epoch_seconds": 341.51168060302734
+  },
+  {
+    "epoch": 107,
+    "phase": "sample",
+    "train_mse_norm": 84.80003952147291,
+    "val_rmse": 382.4849819838024,
+    "val_rmse_day": 556.7444475683387,
+    "grad_norm_mean": 68.25230937876029,
+    "epoch_seconds": 341.66843938827515
+  },
+  {
+    "epoch": 108,
+    "phase": "sample",
+    "train_mse_norm": 84.91678680518453,
+    "val_rmse": 355.117188625144,
+    "val_rmse_day": 522.6229500606828,
+    "grad_norm_mean": 73.74181488877977,
+    "epoch_seconds": 342.1508791446686
+  },
+  {
+    "epoch": 109,
+    "phase": "sample",
+    "train_mse_norm": 84.57131116691838,
+    "val_rmse": 309.6490428728756,
+    "val_rmse_day": 460.9842455558398,
+    "grad_norm_mean": 49.25364529915068,
+    "epoch_seconds": 343.7264914512634
+  },
+  {
+    "epoch": 110,
+    "phase": "sample",
+    "train_mse_norm": 85.20898521250912,
+    "val_rmse": 408.2974382124792,
+    "val_rmse_day": 593.8280415816876,
+    "grad_norm_mean": 80.37061451144116,
+    "epoch_seconds": 342.9439814090729,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0110.pt",
+    "ens_val_rmse_day": 536.5009057345449,
+    "n_ens": 2,
+    "weight_l2_from_prev_sample": 19.5959415435791
+  },
+  {
+    "epoch": 111,
+    "phase": "sample",
+    "train_mse_norm": 85.76823379162788,
+    "val_rmse": 288.03299951817195,
+    "val_rmse_day": 398.20095365519273,
+    "grad_norm_mean": 119.42574456027081,
+    "epoch_seconds": 343.55905771255493
+  },
+  {
+    "epoch": 112,
+    "phase": "sample",
+    "train_mse_norm": 85.03722793404434,
+    "val_rmse": 282.3968133274918,
+    "val_rmse_day": 390.9531937064447,
+    "grad_norm_mean": 44.306308223594485,
+    "epoch_seconds": 342.6101849079132
+  },
+  {
+    "epoch": 113,
+    "phase": "sample",
+    "train_mse_norm": 85.29660302227391,
+    "val_rmse": 340.5765975770172,
+    "val_rmse_day": 501.907390846107,
+    "grad_norm_mean": 39.85041411629093,
+    "epoch_seconds": 342.29488372802734
+  },
+  {
+    "epoch": 114,
+    "phase": "sample",
+    "train_mse_norm": 85.83750136464721,
+    "val_rmse": 338.2930404641383,
+    "val_rmse_day": 499.8965200021895,
+    "grad_norm_mean": 50.77368931564586,
+    "epoch_seconds": 342.0111894607544
+  },
+  {
+    "epoch": 115,
+    "phase": "sample",
+    "train_mse_norm": 86.03232181684551,
+    "val_rmse": 322.57729154244134,
+    "val_rmse_day": 478.1450555017995,
+    "grad_norm_mean": 63.397337672925254,
+    "epoch_seconds": 343.0535156726837,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0115.pt",
+    "ens_val_rmse_day": 516.2150811901606,
+    "n_ens": 3,
+    "weight_l2_from_prev_sample": 19.37221336364746
+  },
+  {
+    "epoch": 116,
+    "phase": "sample",
+    "train_mse_norm": 86.1293625424326,
+    "val_rmse": 381.56987832384146,
+    "val_rmse_day": 550.5940714658345,
+    "grad_norm_mean": 64.11405570520346,
+    "epoch_seconds": 342.5118284225464
+  },
+  {
+    "epoch": 117,
+    "phase": "sample",
+    "train_mse_norm": 87.65383166107993,
+    "val_rmse": 571.8805261854372,
+    "val_rmse_day": 770.4949353254718,
+    "grad_norm_mean": 112.76829981433005,
+    "epoch_seconds": 341.9024736881256
+  },
+  {
+    "epoch": 118,
+    "phase": "sample",
+    "train_mse_norm": 89.30127569836257,
+    "val_rmse": 632.0735979343744,
+    "val_rmse_day": 835.0537164971404,
+    "grad_norm_mean": 113.04099515977059,
+    "epoch_seconds": 343.4302628040314
+  },
+  {
+    "epoch": 119,
+    "phase": "sample",
+    "train_mse_norm": 90.9026525893238,
+    "val_rmse": 620.1663426008524,
+    "val_rmse_day": 822.1479730811704,
+    "grad_norm_mean": 122.57183224762294,
+    "epoch_seconds": 342.49436926841736
+  },
+  {
+    "epoch": 120,
+    "phase": "sample",
+    "train_mse_norm": 90.7006872774465,
+    "val_rmse": 659.1246830163972,
+    "val_rmse_day": 869.0010734448826,
+    "grad_norm_mean": 136.45198887409896,
+    "epoch_seconds": 342.048166513443,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0120.pt",
+    "ens_val_rmse_day": 599.4127246363981,
+    "n_ens": 4,
+    "weight_l2_from_prev_sample": 19.125728607177734
+  },
+  {
+    "epoch": 121,
+    "phase": "sample",
+    "train_mse_norm": 91.49106270062597,
+    "val_rmse": 601.8821838764885,
+    "val_rmse_day": 808.847710139397,
+    "grad_norm_mean": 132.5053209954775,
+    "epoch_seconds": 341.85859274864197
+  },
+  {
+    "epoch": 122,
+    "phase": "sample",
+    "train_mse_norm": 89.62547420258741,
+    "val_rmse": 419.47119879079014,
+    "val_rmse_day": 599.5423018056765,
+    "grad_norm_mean": 101.77433270823056,
+    "epoch_seconds": 343.6173346042633
+  },
+  {
+    "epoch": 123,
+    "phase": "sample",
+    "train_mse_norm": 89.22038878140506,
+    "val_rmse": 614.6660005048705,
+    "val_rmse_day": 801.2554085543197,
+    "grad_norm_mean": 108.8296322818372,
+    "epoch_seconds": 342.4868173599243
+  },
+  {
+    "epoch": 124,
+    "phase": "sample",
+    "train_mse_norm": 91.87271289696677,
+    "val_rmse": 669.7489037343806,
+    "val_rmse_day": 881.4526027052659,
+    "grad_norm_mean": 161.98244110188037,
+    "epoch_seconds": 341.91330790519714
+  },
+  {
+    "epoch": 125,
+    "phase": "sample",
+    "train_mse_norm": 92.68013467836282,
+    "val_rmse": 679.3631423955161,
+    "val_rmse_day": 895.4974200300996,
+    "grad_norm_mean": 172.5408502102318,
+    "epoch_seconds": 342.6935980319977,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0125.pt",
+    "ens_val_rmse_day": 655.9225274818677,
+    "n_ens": 5,
+    "weight_l2_from_prev_sample": 18.907960891723633
+  },
+  {
+    "epoch": 126,
+    "phase": "sample",
+    "train_mse_norm": 91.96671523577592,
+    "val_rmse": 560.1920742966523,
+    "val_rmse_day": 780.342213560969,
+    "grad_norm_mean": 204.7681787623525,
+    "epoch_seconds": 342.4865086078644
+  },
+  {
+    "epoch": 127,
+    "phase": "sample",
+    "train_mse_norm": 91.84904530589309,
+    "val_rmse": 546.4743612956872,
+    "val_rmse_day": 751.0723527687637,
+    "grad_norm_mean": 230.16419731209555,
+    "epoch_seconds": 343.94032406806946
+  },
+  {
+    "epoch": 128,
+    "phase": "sample",
+    "train_mse_norm": 91.22299630109397,
+    "val_rmse": 653.1898510700879,
+    "val_rmse_day": 862.0266326386705,
+    "grad_norm_mean": 204.83427840675955,
+    "epoch_seconds": 344.1052486896515
+  },
+  {
+    "epoch": 129,
+    "phase": "sample",
+    "train_mse_norm": 91.6623669739934,
+    "val_rmse": 548.6592200816453,
+    "val_rmse_day": 752.8426930191276,
+    "grad_norm_mean": 215.36076225771174,
+    "epoch_seconds": 342.2362685203552
+  },
+  {
+    "epoch": 130,
+    "phase": "sample",
+    "train_mse_norm": 90.70971209876237,
+    "val_rmse": 465.89885505622703,
+    "val_rmse_day": 651.746651480601,
+    "grad_norm_mean": 238.36732584407753,
+    "epoch_seconds": 343.2480905056,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0130.pt",
+    "ens_val_rmse_day": 654.3287601856773,
+    "n_ens": 6,
+    "weight_l2_from_prev_sample": 18.73682403564453
+  },
+  {
+    "epoch": 131,
+    "phase": "sample",
+    "train_mse_norm": 89.90680274481923,
+    "val_rmse": 387.52683754885294,
+    "val_rmse_day": 568.8130790532327,
+    "grad_norm_mean": 168.42841553974964,
+    "epoch_seconds": 341.8741509914398
+  },
+  {
+    "epoch": 132,
+    "phase": "sample",
+    "train_mse_norm": 90.9134350377232,
+    "val_rmse": 530.7376278962671,
+    "val_rmse_day": 747.0626786785115,
+    "grad_norm_mean": 221.69017281404925,
+    "epoch_seconds": 342.3759307861328
+  },
+  {
+    "epoch": 133,
+    "phase": "sample",
+    "train_mse_norm": 93.55857785300212,
+    "val_rmse": 716.4453615380316,
+    "val_rmse_day": 939.3777014729504,
+    "grad_norm_mean": 376.4158097679467,
+    "epoch_seconds": 341.62265181541443
+  },
+  {
+    "epoch": 134,
+    "phase": "sample",
+    "train_mse_norm": 95.60961427456269,
+    "val_rmse": 537.6879185161305,
+    "val_rmse_day": 744.7564282684069,
+    "grad_norm_mean": 417.52334835230516,
+    "epoch_seconds": 342.0812427997589
+  },
+  {
+    "epoch": 135,
+    "phase": "sample",
+    "train_mse_norm": 95.88622019022904,
+    "val_rmse": 826.3889012279957,
+    "val_rmse_day": 1040.313176299792,
+    "grad_norm_mean": 370.38878046679014,
+    "epoch_seconds": 341.94755363464355,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0135.pt",
+    "ens_val_rmse_day": 707.6009430816425,
+    "n_ens": 7,
+    "weight_l2_from_prev_sample": 18.508644104003906
+  },
+  {
+    "epoch": 136,
+    "phase": "sample",
+    "train_mse_norm": 98.63556827447755,
+    "val_rmse": 911.6052959752983,
+    "val_rmse_day": 1112.071263085748,
+    "grad_norm_mean": 383.7783925308662,
+    "epoch_seconds": 341.8096694946289
+  },
+  {
+    "epoch": 137,
+    "phase": "sample",
+    "train_mse_norm": 100.44278990687042,
+    "val_rmse": 792.2214438049814,
+    "val_rmse_day": 983.2256394790223,
+    "grad_norm_mean": 376.56766836727894,
+    "epoch_seconds": 341.15974164009094
+  },
+  {
+    "epoch": 138,
+    "phase": "sample",
+    "train_mse_norm": 97.16703654861114,
+    "val_rmse": 776.491023661521,
+    "val_rmse_day": 961.2879028293627,
+    "grad_norm_mean": 270.4477664733654,
+    "epoch_seconds": 342.8078393936157
+  },
+  {
+    "epoch": 139,
+    "phase": "sample",
+    "train_mse_norm": 97.1005350039577,
+    "val_rmse": 670.1164052518546,
+    "val_rmse_day": 856.7800760764007,
+    "grad_norm_mean": 212.33398686961272,
+    "epoch_seconds": 342.6559376716614
+  },
+  {
+    "epoch": 140,
+    "phase": "sample",
+    "train_mse_norm": 97.68802961926674,
+    "val_rmse": 835.3751355109326,
+    "val_rmse_day": 1018.7547439727014,
+    "grad_norm_mean": 216.7880888307133,
+    "epoch_seconds": 341.89457988739014,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0140.pt",
+    "ens_val_rmse_day": 745.1414367226243,
+    "n_ens": 8,
+    "weight_l2_from_prev_sample": 18.34726333618164
+  },
+  {
+    "epoch": 141,
+    "phase": "sample",
+    "train_mse_norm": 99.60399943878828,
+    "val_rmse": 739.9198611016946,
+    "val_rmse_day": 916.8322678160268,
+    "grad_norm_mean": 262.16420353967004,
+    "epoch_seconds": 340.1544494628906
+  },
+  {
+    "epoch": 142,
+    "phase": "sample",
+    "train_mse_norm": 98.73713935558699,
+    "val_rmse": 780.0925479331357,
+    "val_rmse_day": 964.73894795963,
+    "grad_norm_mean": 251.37648280764873,
+    "epoch_seconds": 340.97196793556213
+  },
+  {
+    "epoch": 143,
+    "phase": "sample",
+    "train_mse_norm": 98.12071938342561,
+    "val_rmse": 642.455423612977,
+    "val_rmse_day": 815.8669326589164,
+    "grad_norm_mean": 284.6336953644883,
+    "epoch_seconds": 342.433233499527
+  },
+  {
+    "epoch": 144,
+    "phase": "sample",
+    "train_mse_norm": 95.83208391230443,
+    "val_rmse": 523.557650923468,
+    "val_rmse_day": 693.5536549718271,
+    "grad_norm_mean": 260.33955920515854,
+    "epoch_seconds": 341.8131477832794
+  },
+  {
+    "epoch": 145,
+    "phase": "sample",
+    "train_mse_norm": 93.93947119638652,
+    "val_rmse": 486.35776112493767,
+    "val_rmse_day": 650.8370109997903,
+    "grad_norm_mean": 190.18076283483165,
+    "epoch_seconds": 341.58661937713623,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0145.pt",
+    "ens_val_rmse_day": 734.227427281889,
+    "n_ens": 9,
+    "weight_l2_from_prev_sample": 18.1741943359375
+  },
+  {
+    "epoch": 146,
+    "phase": "sample",
+    "train_mse_norm": 95.71016888832605,
+    "val_rmse": 820.4006304529632,
+    "val_rmse_day": 992.4915394595321,
+    "grad_norm_mean": 253.27915469887043,
+    "epoch_seconds": 342.9496397972107
+  },
+  {
+    "epoch": 147,
+    "phase": "sample",
+    "train_mse_norm": 100.4520609267548,
+    "val_rmse": 865.09580462767,
+    "val_rmse_day": 1018.5447471043867,
+    "grad_norm_mean": 370.45261689620804,
+    "epoch_seconds": 342.23067331314087
+  },
+  {
+    "epoch": 148,
+    "phase": "sample",
+    "train_mse_norm": 99.87254365742434,
+    "val_rmse": 765.449761003702,
+    "val_rmse_day": 923.1137172257465,
+    "grad_norm_mean": 400.46873975282966,
+    "epoch_seconds": 340.7353069782257
+  },
+  {
+    "epoch": 149,
+    "phase": "sample",
+    "train_mse_norm": 100.73520006292335,
+    "val_rmse": 861.2383080927301,
+    "val_rmse_day": 1047.0593934846506,
+    "grad_norm_mean": 361.3378909250701,
+    "epoch_seconds": 340.66347765922546
+  },
+  {
+    "epoch": 150,
+    "phase": "sample",
+    "train_mse_norm": 101.41581069502902,
+    "val_rmse": 856.7747007080567,
+    "val_rmse_day": 1041.0961541965382,
+    "grad_norm_mean": 327.53497110450235,
+    "epoch_seconds": 343.0110161304474,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0150.pt",
+    "ens_val_rmse_day": 764.0095970547358,
+    "n_ens": 10,
+    "weight_l2_from_prev_sample": 18.01314926147461
+  },
+  {
+    "epoch": 151,
+    "phase": "sample",
+    "train_mse_norm": 98.27881709648291,
+    "val_rmse": 687.7431550433873,
+    "val_rmse_day": 852.5792214834029,
+    "grad_norm_mean": 300.10935394134833,
+    "epoch_seconds": 341.9055736064911
+  },
+  {
+    "epoch": 152,
+    "phase": "sample",
+    "train_mse_norm": 98.8462940100739,
+    "val_rmse": 657.6138200241177,
+    "val_rmse_day": 818.9681660808303,
+    "grad_norm_mean": 296.9153853904337,
+    "epoch_seconds": 340.05322790145874
+  },
+  {
+    "epoch": 153,
+    "phase": "sample",
+    "train_mse_norm": 97.13887884276053,
+    "val_rmse": 601.2702700105435,
+    "val_rmse_day": 755.8320639365432,
+    "grad_norm_mean": 232.69882532449492,
+    "epoch_seconds": 341.612576007843
+  },
+  {
+    "epoch": 154,
+    "phase": "sample",
+    "train_mse_norm": 97.75589026878542,
+    "val_rmse": 692.4825836613957,
+    "val_rmse_day": 877.9622233416402,
+    "grad_norm_mean": 218.9172504470955,
+    "epoch_seconds": 343.5002827644348
+  },
+  {
+    "epoch": 155,
+    "phase": "sample",
+    "train_mse_norm": 99.93141768858305,
+    "val_rmse": 770.9301406050439,
+    "val_rmse_day": 968.0499535502993,
+    "grad_norm_mean": 239.43789499527483,
+    "epoch_seconds": 340.49004888534546,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0155.pt",
+    "ens_val_rmse_day": 782.0634707591445,
+    "n_ens": 11,
+    "weight_l2_from_prev_sample": 17.833127975463867
+  },
+  {
+    "epoch": 156,
+    "phase": "sample",
+    "train_mse_norm": 101.64817613221558,
+    "val_rmse": 840.0849051599312,
+    "val_rmse_day": 1029.0827274774408,
+    "grad_norm_mean": 242.6893651753463,
+    "epoch_seconds": 341.1640019416809
+  },
+  {
+    "epoch": 157,
+    "phase": "sample",
+    "train_mse_norm": 104.13534791552848,
+    "val_rmse": 946.7133942988837,
+    "val_rmse_day": 1145.399149279032,
+    "grad_norm_mean": 267.331711191637,
+    "epoch_seconds": 342.6556372642517
+  },
+  {
+    "epoch": 158,
+    "phase": "sample",
+    "train_mse_norm": 105.52143258827329,
+    "val_rmse": 1085.4181423872249,
+    "val_rmse_day": 1265.1799204925703,
+    "grad_norm_mean": 275.51805283591517,
+    "epoch_seconds": 342.4711196422577
+  },
+  {
+    "epoch": 159,
+    "phase": "sample",
+    "train_mse_norm": 107.75079323757699,
+    "val_rmse": 1010.8076014509371,
+    "val_rmse_day": 1202.9165807331062,
+    "grad_norm_mean": 294.05015586806,
+    "epoch_seconds": 341.0479838848114
+  },
+  {
+    "epoch": 160,
+    "phase": "sample",
+    "train_mse_norm": 107.23563498319822,
+    "val_rmse": 1010.1365092330273,
+    "val_rmse_day": 1202.7392384979325,
+    "grad_norm_mean": 297.2935861464921,
+    "epoch_seconds": 341.1944668292999,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0160.pt",
+    "ens_val_rmse_day": 816.2938820740417,
+    "n_ens": 12,
+    "weight_l2_from_prev_sample": 17.68303680419922
+  },
+  {
+    "epoch": 161,
+    "phase": "sample",
+    "train_mse_norm": 103.20381016307189,
+    "val_rmse": 708.816627863862,
+    "val_rmse_day": 878.0781236957123,
+    "grad_norm_mean": 391.2841999847797,
+    "epoch_seconds": 343.66771721839905
+  },
+  {
+    "epoch": 162,
+    "phase": "sample",
+    "train_mse_norm": 98.93968576890897,
+    "val_rmse": 712.796979557129,
+    "val_rmse_day": 874.374434768106,
+    "grad_norm_mean": 417.9703279522671,
+    "epoch_seconds": 341.8459892272949
+  },
+  {
+    "epoch": 163,
+    "phase": "sample",
+    "train_mse_norm": 100.8844210594184,
+    "val_rmse": 776.0248171730728,
+    "val_rmse_day": 940.8995503631174,
+    "grad_norm_mean": 513.0346905187948,
+    "epoch_seconds": 340.7331705093384
+  },
+  {
+    "epoch": 164,
+    "phase": "sample",
+    "train_mse_norm": 106.90594253786365,
+    "val_rmse": 988.0858278979301,
+    "val_rmse_day": 1217.2415049807591,
+    "grad_norm_mean": 658.7311086427931,
+    "epoch_seconds": 341.72191643714905
+  },
+  {
+    "epoch": 165,
+    "phase": "sample",
+    "train_mse_norm": 106.53136516646063,
+    "val_rmse": 896.2945225065833,
+    "val_rmse_day": 1082.1787548735574,
+    "grad_norm_mean": 645.894487923459,
+    "epoch_seconds": 342.4589490890503,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0165.pt",
+    "ens_val_rmse_day": 835.5542122773253,
+    "n_ens": 13,
+    "weight_l2_from_prev_sample": 17.558561325073242
+  },
+  {
+    "epoch": 166,
+    "phase": "sample",
+    "train_mse_norm": 106.81429085201066,
+    "val_rmse": 999.1476102666875,
+    "val_rmse_day": 1203.9539203281079,
+    "grad_norm_mean": 537.3884200489972,
+    "epoch_seconds": 342.5388882160187
+  },
+  {
+    "epoch": 167,
+    "phase": "sample",
+    "train_mse_norm": 109.24243290136734,
+    "val_rmse": 1041.909205109847,
+    "val_rmse_day": 1233.365829972499,
+    "grad_norm_mean": 462.1918047878936,
+    "epoch_seconds": 341.48702001571655
+  },
+  {
+    "epoch": 168,
+    "phase": "sample",
+    "train_mse_norm": 109.54835996412272,
+    "val_rmse": 940.0549141829654,
+    "val_rmse_day": 1137.1483599675512,
+    "grad_norm_mean": 486.832332601007,
+    "epoch_seconds": 343.3073925971985
+  },
+  {
+    "epoch": 169,
+    "phase": "sample",
+    "train_mse_norm": 105.28034967770141,
+    "val_rmse": 797.0875474237578,
+    "val_rmse_day": 991.463693962763,
+    "grad_norm_mean": 458.8949756851846,
+    "epoch_seconds": 342.7672896385193
+  },
+  {
+    "epoch": 170,
+    "phase": "sample",
+    "train_mse_norm": 98.57542819601719,
+    "val_rmse": 453.64007081531685,
+    "val_rmse_day": 645.7316128419551,
+    "grad_norm_mean": 281.97946630309394,
+    "epoch_seconds": 341.52867817878723,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0170.pt",
+    "ens_val_rmse_day": 821.4277436777794,
+    "n_ens": 14,
+    "weight_l2_from_prev_sample": 17.374807357788086
+  },
+  {
+    "epoch": 171,
+    "phase": "sample",
+    "train_mse_norm": 99.10917442104562,
+    "val_rmse": 839.7739122335657,
+    "val_rmse_day": 1113.2921667185783,
+    "grad_norm_mean": 413.81979611069005,
+    "epoch_seconds": 342.00844049453735
+  },
+  {
+    "epoch": 172,
+    "phase": "sample",
+    "train_mse_norm": 107.19173254489479,
+    "val_rmse": 1026.8068070631966,
+    "val_rmse_day": 1325.8993307959986,
+    "grad_norm_mean": 500.5994163179524,
+    "epoch_seconds": 341.40448451042175
+  },
+  {
+    "epoch": 173,
+    "phase": "sample",
+    "train_mse_norm": 109.18378285463163,
+    "val_rmse": 1128.1129682592384,
+    "val_rmse_day": 1426.5763753232125,
+    "grad_norm_mean": 556.8453662761468,
+    "epoch_seconds": 340.34721064567566
+  },
+  {
+    "epoch": 174,
+    "phase": "sample",
+    "train_mse_norm": 114.96101034313904,
+    "val_rmse": 1212.180012221532,
+    "val_rmse_day": 1482.913731109004,
+    "grad_norm_mean": 483.4633252653587,
+    "epoch_seconds": 341.51062297821045
+  },
+  {
+    "epoch": 175,
+    "phase": "sample",
+    "train_mse_norm": 111.95731095789044,
+    "val_rmse": 837.7313210760908,
+    "val_rmse_day": 1064.3073111910649,
+    "grad_norm_mean": 757.2686988465556,
+    "epoch_seconds": 340.5414493083954,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0175.pt",
+    "ens_val_rmse_day": 835.5587913687231,
+    "n_ens": 15,
+    "weight_l2_from_prev_sample": 17.280244827270508
+  },
+  {
+    "epoch": 176,
+    "phase": "sample",
+    "train_mse_norm": 113.62568168315434,
+    "val_rmse": 899.803483477308,
+    "val_rmse_day": 1125.5986914327639,
+    "grad_norm_mean": 1153.3334095391983,
+    "epoch_seconds": 342.12391996383667
+  },
+  {
+    "epoch": 177,
+    "phase": "sample",
+    "train_mse_norm": 106.43031246766408,
+    "val_rmse": 684.514126562518,
+    "val_rmse_day": 845.9090095372916,
+    "grad_norm_mean": 734.4634621465945,
+    "epoch_seconds": 341.7133617401123
+  },
+  {
+    "epoch": 178,
+    "phase": "sample",
+    "train_mse_norm": 99.66848668444706,
+    "val_rmse": 534.6398913758625,
+    "val_rmse_day": 675.4499003673741,
+    "grad_norm_mean": 265.0775339201045,
+    "epoch_seconds": 341.45206570625305
+  },
+  {
+    "epoch": 179,
+    "phase": "sample",
+    "train_mse_norm": 100.59150566591487,
+    "val_rmse": 737.9780758324398,
+    "val_rmse_day": 908.0784763501897,
+    "grad_norm_mean": 271.02077106467993,
+    "epoch_seconds": 342.74321484565735
+  },
+  {
+    "epoch": 180,
+    "phase": "sample",
+    "train_mse_norm": 103.2631258235357,
+    "val_rmse": 927.0203894079386,
+    "val_rmse_day": 1133.7263395449183,
+    "grad_norm_mean": 338.0761378282391,
+    "epoch_seconds": 340.65037178993225,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0180.pt",
+    "ens_val_rmse_day": 852.9656537476443,
+    "n_ens": 16,
+    "weight_l2_from_prev_sample": 17.138961791992188
+  },
+  {
+    "epoch": 181,
+    "phase": "sample",
+    "train_mse_norm": 106.29376153299316,
+    "val_rmse": 821.8670780774672,
+    "val_rmse_day": 1016.8426887642565,
+    "grad_norm_mean": 385.41207812740055,
+    "epoch_seconds": 342.14067673683167
+  },
+  {
+    "epoch": 182,
+    "phase": "sample",
+    "train_mse_norm": 108.10128557559574,
+    "val_rmse": 953.3138363973052,
+    "val_rmse_day": 1152.9371336185027,
+    "grad_norm_mean": 451.9817200826696,
+    "epoch_seconds": 341.0113275051117
+  },
+  {
+    "epoch": 183,
+    "phase": "sample",
+    "train_mse_norm": 106.89202955429037,
+    "val_rmse": 901.916892531378,
+    "val_rmse_day": 1102.1028487213014,
+    "grad_norm_mean": 367.8358802985753,
+    "epoch_seconds": 341.1470811367035
+  },
+  {
+    "epoch": 184,
+    "phase": "sample",
+    "train_mse_norm": 107.75516279582793,
+    "val_rmse": 921.9623985077337,
+    "val_rmse_day": 1111.9062640043749,
+    "grad_norm_mean": 411.15472758309664,
+    "epoch_seconds": 341.9004547595978
+  },
+  {
+    "epoch": 185,
+    "phase": "sample",
+    "train_mse_norm": 106.1384328825928,
+    "val_rmse": 774.126000661633,
+    "val_rmse_day": 965.6986356247777,
+    "grad_norm_mean": 382.4630065326786,
+    "epoch_seconds": 341.9160375595093,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0185.pt",
+    "ens_val_rmse_day": 859.1779045640482,
+    "n_ens": 17,
+    "weight_l2_from_prev_sample": 17.029069900512695
+  },
+  {
+    "epoch": 186,
+    "phase": "sample",
+    "train_mse_norm": 105.93411563238442,
+    "val_rmse": 846.8035332268872,
+    "val_rmse_day": 1042.577281083635,
+    "grad_norm_mean": 395.1445701874559,
+    "epoch_seconds": 342.5838541984558
+  },
+  {
+    "epoch": 187,
+    "phase": "sample",
+    "train_mse_norm": 105.9653319080869,
+    "val_rmse": 718.9782019384112,
+    "val_rmse_day": 872.1137220323747,
+    "grad_norm_mean": 404.9987305959439,
+    "epoch_seconds": 342.1028792858124
+  },
+  {
+    "epoch": 188,
+    "phase": "sample",
+    "train_mse_norm": 104.64037780940865,
+    "val_rmse": 743.3858719637864,
+    "val_rmse_day": 886.45484674788,
+    "grad_norm_mean": 546.7070901533149,
+    "epoch_seconds": 340.97184324264526
+  },
+  {
+    "epoch": 189,
+    "phase": "sample",
+    "train_mse_norm": 107.58406388014336,
+    "val_rmse": 963.0470747541381,
+    "val_rmse_day": 1169.7260835882275,
+    "grad_norm_mean": 1221.889141713135,
+    "epoch_seconds": 340.87560844421387
+  },
+  {
+    "epoch": 190,
+    "phase": "sample",
+    "train_mse_norm": 109.13837819145613,
+    "val_rmse": 1283.5597118046414,
+    "val_rmse_day": 1436.7964706291061,
+    "grad_norm_mean": 1520.6736532378693,
+    "epoch_seconds": 341.99424052238464,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0190.pt",
+    "ens_val_rmse_day": 889.8963979520533,
+    "n_ens": 18,
+    "weight_l2_from_prev_sample": 16.868711471557617
+  },
+  {
+    "epoch": 191,
+    "phase": "sample",
+    "train_mse_norm": 113.62626190454266,
+    "val_rmse": 1413.5704498033244,
+    "val_rmse_day": 1506.3799339644047,
+    "grad_norm_mean": 1295.6491595425841,
+    "epoch_seconds": 341.61957240104675
+  },
+  {
+    "epoch": 192,
+    "phase": "sample",
+    "train_mse_norm": 124.88815159821462,
+    "val_rmse": 1384.7304309761805,
+    "val_rmse_day": 1595.6366430096928,
+    "grad_norm_mean": 1482.828109700903,
+    "epoch_seconds": 341.11413979530334
+  },
+  {
+    "epoch": 193,
+    "phase": "sample",
+    "train_mse_norm": 114.69506092928077,
+    "val_rmse": 1009.0516284737694,
+    "val_rmse_day": 1215.0536743590692,
+    "grad_norm_mean": 737.813029655096,
+    "epoch_seconds": 341.1157441139221
+  },
+  {
+    "epoch": 194,
+    "phase": "sample",
+    "train_mse_norm": 109.93190306766242,
+    "val_rmse": 982.8421233397896,
+    "val_rmse_day": 1171.1309615700006,
+    "grad_norm_mean": 721.0260109012695,
+    "epoch_seconds": 342.2076983451843
+  },
+  {
+    "epoch": 195,
+    "phase": "sample",
+    "train_mse_norm": 107.64994896434429,
+    "val_rmse": 731.5479718004415,
+    "val_rmse_day": 931.4956317977773,
+    "grad_norm_mean": 601.5074311691119,
+    "epoch_seconds": 341.615341424942,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0195.pt",
+    "ens_val_rmse_day": 891.5225286341426,
+    "n_ens": 19,
+    "weight_l2_from_prev_sample": 16.730955123901367
+  },
+  {
+    "epoch": 196,
+    "phase": "sample",
+    "train_mse_norm": 110.29742239730113,
+    "val_rmse": 698.288545977916,
+    "val_rmse_day": 910.5805421697899,
+    "grad_norm_mean": 961.3981409232429,
+    "epoch_seconds": 339.65442728996277
+  },
+  {
+    "epoch": 197,
+    "phase": "sample",
+    "train_mse_norm": 108.93556326017165,
+    "val_rmse": 985.0696344189447,
+    "val_rmse_day": 1207.8537213237832,
+    "grad_norm_mean": 880.4526390207805,
+    "epoch_seconds": 342.6168739795685
+  },
+  {
+    "epoch": 198,
+    "phase": "sample",
+    "train_mse_norm": 113.59409295102526,
+    "val_rmse": 1000.0222963962876,
+    "val_rmse_day": 1232.284960320182,
+    "grad_norm_mean": 1061.5131297244473,
+    "epoch_seconds": 341.9231128692627
+  },
+  {
+    "epoch": 199,
+    "phase": "sample",
+    "train_mse_norm": 107.72693093011272,
+    "val_rmse": 891.7989723194797,
+    "val_rmse_day": 1134.0650587895445,
+    "grad_norm_mean": 678.0956206684208,
+    "epoch_seconds": 342.01278614997864
+  },
+  {
+    "epoch": 200,
+    "phase": "sample",
+    "train_mse_norm": 104.7788218908867,
+    "val_rmse": 575.1328841269564,
+    "val_rmse_day": 801.1073366986178,
+    "grad_norm_mean": 499.01140828940186,
+    "epoch_seconds": 341.15738439559937,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0200.pt",
+    "ens_val_rmse_day": 885.5507809204394,
+    "n_ens": 20,
+    "weight_l2_from_prev_sample": 16.638668060302734
+  },
+  {
+    "epoch": 201,
+    "phase": "sample",
+    "train_mse_norm": 101.25759957786316,
+    "val_rmse": 479.8399200547867,
+    "val_rmse_day": 661.0865120573437,
+    "grad_norm_mean": 286.23442303137165,
+    "epoch_seconds": 342.37826132774353
+  },
+  {
+    "epoch": 202,
+    "phase": "sample",
+    "train_mse_norm": 101.3507314110418,
+    "val_rmse": 559.9081249966817,
+    "val_rmse_day": 737.6669304794106,
+    "grad_norm_mean": 202.6957722555552,
+    "epoch_seconds": 342.5245816707611
+  },
+  {
+    "epoch": 203,
+    "phase": "sample",
+    "train_mse_norm": 101.8693301192749,
+    "val_rmse": 386.945954814081,
+    "val_rmse_day": 552.3418174702762,
+    "grad_norm_mean": 185.35088610166252,
+    "epoch_seconds": 340.97218084335327
+  },
+  {
+    "epoch": 204,
+    "phase": "sample",
+    "train_mse_norm": 101.00389110541673,
+    "val_rmse": 376.7388578279024,
+    "val_rmse_day": 549.3648402172195,
+    "grad_norm_mean": 157.58143410600104,
+    "epoch_seconds": 342.77644538879395
+  },
+  {
+    "epoch": 205,
+    "phase": "sample",
+    "train_mse_norm": 102.03902828976805,
+    "val_rmse": 569.0853852512519,
+    "val_rmse_day": 733.3384361515066,
+    "grad_norm_mean": 223.8175480038951,
+    "epoch_seconds": 342.2156219482422,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0205.pt",
+    "ens_val_rmse_day": 877.6737277768372,
+    "n_ens": 21,
+    "weight_l2_from_prev_sample": 16.538188934326172
+  },
+  {
+    "epoch": 206,
+    "phase": "sample",
+    "train_mse_norm": 102.79598650807749,
+    "val_rmse": 545.1862832495066,
+    "val_rmse_day": 725.7563044490483,
+    "grad_norm_mean": 223.01238565806037,
+    "epoch_seconds": 341.00694012641907
+  },
+  {
+    "epoch": 207,
+    "phase": "sample",
+    "train_mse_norm": 103.34777615264186,
+    "val_rmse": 555.0922596910048,
+    "val_rmse_day": 737.2624193111263,
+    "grad_norm_mean": 212.79013574553753,
+    "epoch_seconds": 342.87011909484863
+  },
+  {
+    "epoch": 208,
+    "phase": "sample",
+    "train_mse_norm": 103.00404864670351,
+    "val_rmse": 552.1011753066533,
+    "val_rmse_day": 730.1626511784596,
+    "grad_norm_mean": 171.7149748795187,
+    "epoch_seconds": 343.2385239601135
+  },
+  {
+    "epoch": 209,
+    "phase": "sample",
+    "train_mse_norm": 103.41179581069163,
+    "val_rmse": 380.263508418633,
+    "val_rmse_day": 498.2220211459351,
+    "grad_norm_mean": 304.5402317355027,
+    "epoch_seconds": 342.8564040660858
+  },
+  {
+    "epoch": 210,
+    "phase": "sample",
+    "train_mse_norm": 102.18100892591238,
+    "val_rmse": 359.5435835550494,
+    "val_rmse_day": 480.721916374152,
+    "grad_norm_mean": 181.21986197473578,
+    "epoch_seconds": 341.21084213256836,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0210.pt",
+    "ens_val_rmse_day": 858.1481144646598,
+    "n_ens": 22,
+    "weight_l2_from_prev_sample": 16.425737380981445
+  },
+  {
+    "epoch": 211,
+    "phase": "sample",
+    "train_mse_norm": 102.1992309050788,
+    "val_rmse": 315.69849890687215,
+    "val_rmse_day": 439.5437227860052,
+    "grad_norm_mean": 174.79902148211775,
+    "epoch_seconds": 342.6058340072632
+  },
+  {
+    "epoch": 212,
+    "phase": "sample",
+    "train_mse_norm": 102.78710614812664,
+    "val_rmse": 474.237135678327,
+    "val_rmse_day": 635.65458009021,
+    "grad_norm_mean": 165.60620009587734,
+    "epoch_seconds": 341.7963855266571
+  },
+  {
+    "epoch": 213,
+    "phase": "sample",
+    "train_mse_norm": 104.65093383923423,
+    "val_rmse": 494.8447782587919,
+    "val_rmse_day": 664.5465483889909,
+    "grad_norm_mean": 222.405601424208,
+    "epoch_seconds": 341.2922582626343
+  },
+  {
+    "epoch": 214,
+    "phase": "sample",
+    "train_mse_norm": 104.03682317753359,
+    "val_rmse": 529.2653891700642,
+    "val_rmse_day": 681.3786775418524,
+    "grad_norm_mean": 188.9000463471722,
+    "epoch_seconds": 341.4071259498596
+  },
+  {
+    "epoch": 215,
+    "phase": "sample",
+    "train_mse_norm": 103.8008965911283,
+    "val_rmse": 331.35021566274946,
+    "val_rmse_day": 484.1084912886414,
+    "grad_norm_mean": 215.70137916858295,
+    "epoch_seconds": 342.85655784606934,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0215.pt",
+    "ens_val_rmse_day": 840.2913771825129,
+    "n_ens": 23,
+    "weight_l2_from_prev_sample": 16.30406379699707
+  },
+  {
+    "epoch": 216,
+    "phase": "sample",
+    "train_mse_norm": 102.52538702639801,
+    "val_rmse": 327.2887650749489,
+    "val_rmse_day": 487.12209461269765,
+    "grad_norm_mean": 94.63348272954539,
+    "epoch_seconds": 342.3400332927704
+  },
+  {
+    "epoch": 217,
+    "phase": "sample",
+    "train_mse_norm": 102.34101761083713,
+    "val_rmse": 295.3427002475321,
+    "val_rmse_day": 435.7991238847281,
+    "grad_norm_mean": 73.1989895014739,
+    "epoch_seconds": 342.08905243873596
+  },
+  {
+    "epoch": 218,
+    "phase": "sample",
+    "train_mse_norm": 102.52654514027229,
+    "val_rmse": 321.61255429077806,
+    "val_rmse_day": 459.4784130995568,
+    "grad_norm_mean": 111.3352805849461,
+    "epoch_seconds": 342.34562158584595
+  },
+  {
+    "epoch": 219,
+    "phase": "sample",
+    "train_mse_norm": 102.37873313417874,
+    "val_rmse": 287.0516147047889,
+    "val_rmse_day": 409.0599409844412,
+    "grad_norm_mean": 104.20732176937173,
+    "epoch_seconds": 343.4939239025116
+  },
+  {
+    "epoch": 220,
+    "phase": "sample",
+    "train_mse_norm": 102.86510591588134,
+    "val_rmse": 460.70910889043427,
+    "val_rmse_day": 609.5145293661826,
+    "grad_norm_mean": 142.07416833038374,
+    "epoch_seconds": 341.808641910553,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0220.pt",
+    "ens_val_rmse_day": 830.2670528995553,
+    "n_ens": 24,
+    "weight_l2_from_prev_sample": 16.214092254638672
+  },
+  {
+    "epoch": 221,
+    "phase": "sample",
+    "train_mse_norm": 102.68927535809202,
+    "val_rmse": 257.40697455465624,
+    "val_rmse_day": 353.691667965575,
+    "grad_norm_mean": 116.27498876562139,
+    "epoch_seconds": 342.3777539730072
+  },
+  {
+    "epoch": 222,
+    "phase": "sample",
+    "train_mse_norm": 103.09274118444176,
+    "val_rmse": 422.6060791557513,
+    "val_rmse_day": 547.0207469834621,
+    "grad_norm_mean": 184.97019318439828,
+    "epoch_seconds": 341.9701316356659
+  },
+  {
+    "epoch": 223,
+    "phase": "sample",
+    "train_mse_norm": 105.48944002447641,
+    "val_rmse": 495.89089169504666,
+    "val_rmse_day": 667.190279628952,
+    "grad_norm_mean": 271.6392331214325,
+    "epoch_seconds": 342.1444935798645
+  },
+  {
+    "epoch": 224,
+    "phase": "sample",
+    "train_mse_norm": 105.20338192271599,
+    "val_rmse": 563.2991248805008,
+    "val_rmse_day": 719.7217687691694,
+    "grad_norm_mean": 197.96153484217962,
+    "epoch_seconds": 341.28912377357483
+  },
+  {
+    "epoch": 225,
+    "phase": "sample",
+    "train_mse_norm": 107.13220272170577,
+    "val_rmse": 663.8250744574113,
+    "val_rmse_day": 799.4138963790105,
+    "grad_norm_mean": 323.0824327997914,
+    "epoch_seconds": 342.591552734375,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0225.pt",
+    "ens_val_rmse_day": 828.7484699447914,
+    "n_ens": 25,
+    "weight_l2_from_prev_sample": 16.122512817382812
+  },
+  {
+    "epoch": 226,
+    "phase": "sample",
+    "train_mse_norm": 107.02359064772293,
+    "val_rmse": 591.5496116147161,
+    "val_rmse_day": 730.6605128894201,
+    "grad_norm_mean": 310.3981975648352,
+    "epoch_seconds": 342.2015151977539
+  },
+  {
+    "epoch": 227,
+    "phase": "sample",
+    "train_mse_norm": 106.36739462899224,
+    "val_rmse": 640.2859412851689,
+    "val_rmse_day": 803.8729610988452,
+    "grad_norm_mean": 247.1330617955608,
+    "epoch_seconds": 342.94389152526855
+  },
+  {
+    "epoch": 228,
+    "phase": "sample",
+    "train_mse_norm": 108.10648713645118,
+    "val_rmse": 571.9375493387885,
+    "val_rmse_day": 705.9409033955357,
+    "grad_norm_mean": 289.99605072800773,
+    "epoch_seconds": 341.19129967689514
+  },
+  {
+    "epoch": 229,
+    "phase": "sample",
+    "train_mse_norm": 108.16308078032489,
+    "val_rmse": 773.8146798860902,
+    "val_rmse_day": 950.780886117974,
+    "grad_norm_mean": 442.49298567753715,
+    "epoch_seconds": 341.6026246547699
+  },
+  {
+    "epoch": 230,
+    "phase": "sample",
+    "train_mse_norm": 112.77058676228972,
+    "val_rmse": 876.1230060144513,
+    "val_rmse_day": 1093.1028119484067,
+    "grad_norm_mean": 419.39639663808254,
+    "epoch_seconds": 342.89207553863525,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0230.pt",
+    "ens_val_rmse_day": 838.6923951982816,
+    "n_ens": 26,
+    "weight_l2_from_prev_sample": 16.037208557128906
+  },
+  {
+    "epoch": 231,
+    "phase": "sample",
+    "train_mse_norm": 112.43109531475366,
+    "val_rmse": 818.9241415937906,
+    "val_rmse_day": 1014.3560359274439,
+    "grad_norm_mean": 397.71933218528,
+    "epoch_seconds": 342.27907824516296
+  },
+  {
+    "epoch": 232,
+    "phase": "sample",
+    "train_mse_norm": 110.43073333614832,
+    "val_rmse": 751.7817856703366,
+    "val_rmse_day": 942.6315595655957,
+    "grad_norm_mean": 475.0592871000594,
+    "epoch_seconds": 342.61175560951233
+  },
+  {
+    "epoch": 233,
+    "phase": "sample",
+    "train_mse_norm": 110.01033203420592,
+    "val_rmse": 662.7223169552145,
+    "val_rmse_day": 822.7974178467468,
+    "grad_norm_mean": 587.432361523287,
+    "epoch_seconds": 341.7035675048828
+  },
+  {
+    "epoch": 234,
+    "phase": "sample",
+    "train_mse_norm": 105.3813334073984,
+    "val_rmse": 287.2723848111518,
+    "val_rmse_day": 378.88414510439674,
+    "grad_norm_mean": 409.73392618524736,
+    "epoch_seconds": 342.1929783821106
+  },
+  {
+    "epoch": 235,
+    "phase": "sample",
+    "train_mse_norm": 106.38225192872527,
+    "val_rmse": 391.5341838465818,
+    "val_rmse_day": 522.6981788128668,
+    "grad_norm_mean": 423.0943542079629,
+    "epoch_seconds": 342.32325291633606,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0235.pt",
+    "ens_val_rmse_day": 825.4249971167548,
+    "n_ens": 27,
+    "weight_l2_from_prev_sample": 15.93870735168457
+  },
+  {
+    "epoch": 236,
+    "phase": "sample",
+    "train_mse_norm": 106.09420722399354,
+    "val_rmse": 421.21114647962946,
+    "val_rmse_day": 594.4289484395949,
+    "grad_norm_mean": 340.5593010801915,
+    "epoch_seconds": 343.26928329467773
+  },
+  {
+    "epoch": 237,
+    "phase": "sample",
+    "train_mse_norm": 105.50481946859536,
+    "val_rmse": 356.834565972033,
+    "val_rmse_day": 449.11809243995003,
+    "grad_norm_mean": 348.0086876309649,
+    "epoch_seconds": 342.19852566719055
+  },
+  {
+    "epoch": 238,
+    "phase": "sample",
+    "train_mse_norm": 106.58274327606479,
+    "val_rmse": 608.0038549840132,
+    "val_rmse_day": 799.0280274572123,
+    "grad_norm_mean": 377.0435089904051,
+    "epoch_seconds": 342.04526376724243
+  },
+  {
+    "epoch": 239,
+    "phase": "sample",
+    "train_mse_norm": 110.92768941822729,
+    "val_rmse": 802.3337198397552,
+    "val_rmse_day": 1035.3873645017566,
+    "grad_norm_mean": 415.6502490187797,
+    "epoch_seconds": 342.40521025657654
+  },
+  {
+    "epoch": 240,
+    "phase": "sample",
+    "train_mse_norm": 111.43259179126773,
+    "val_rmse": 717.4684429644998,
+    "val_rmse_day": 955.7506528827669,
+    "grad_norm_mean": 398.57946142493927,
+    "epoch_seconds": 343.79142689704895,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0240.pt",
+    "ens_val_rmse_day": 829.2389635826881,
+    "n_ens": 28,
+    "weight_l2_from_prev_sample": 15.830049514770508
+  },
+  {
+    "epoch": 241,
+    "phase": "sample",
+    "train_mse_norm": 113.11447320909559,
+    "val_rmse": 914.7575852583204,
+    "val_rmse_day": 1191.0704242862985,
+    "grad_norm_mean": 452.47448373967546,
+    "epoch_seconds": 342.74358224868774
+  },
+  {
+    "epoch": 242,
+    "phase": "sample",
+    "train_mse_norm": 112.00877762624586,
+    "val_rmse": 961.7323900805961,
+    "val_rmse_day": 1188.47346454922,
+    "grad_norm_mean": 830.8108117294199,
+    "epoch_seconds": 342.4374506473541
+  },
+  {
+    "epoch": 243,
+    "phase": "sample",
+    "train_mse_norm": 123.6042559427497,
+    "val_rmse": 1229.576246562456,
+    "val_rmse_day": 1419.8224604378174,
+    "grad_norm_mean": 646.0061222453743,
+    "epoch_seconds": 342.0912606716156
+  },
+  {
+    "epoch": 244,
+    "phase": "sample",
+    "train_mse_norm": 121.10909005879726,
+    "val_rmse": 1065.4570303128537,
+    "val_rmse_day": 1247.5435557430405,
+    "grad_norm_mean": 435.5301971301187,
+    "epoch_seconds": 343.1423330307007
+  },
+  {
+    "epoch": 245,
+    "phase": "sample",
+    "train_mse_norm": 122.22619613230945,
+    "val_rmse": 1291.411578693906,
+    "val_rmse_day": 1485.4567853478857,
+    "grad_norm_mean": 487.52072955983317,
+    "epoch_seconds": 342.20810770988464,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0245.pt",
+    "ens_val_rmse_day": 850.861582880469,
+    "n_ens": 29,
+    "weight_l2_from_prev_sample": 15.738276481628418
+  },
+  {
+    "epoch": 246,
+    "phase": "sample",
+    "train_mse_norm": 124.56063329519188,
+    "val_rmse": 1372.3207814414784,
+    "val_rmse_day": 1541.7737092224372,
+    "grad_norm_mean": 758.5486062433071,
+    "epoch_seconds": 340.8276414871216
+  },
+  {
+    "epoch": 247,
+    "phase": "sample",
+    "train_mse_norm": 125.72874640354776,
+    "val_rmse": 1324.8392322940738,
+    "val_rmse_day": 1441.9259346207548,
+    "grad_norm_mean": 1125.1302890178567,
+    "epoch_seconds": 341.1678891181946
+  },
+  {
+    "epoch": 248,
+    "phase": "sample",
+    "train_mse_norm": 123.90369977130895,
+    "val_rmse": 1198.2339786433804,
+    "val_rmse_day": 1468.105426122475,
+    "grad_norm_mean": 1496.7036136932866,
+    "epoch_seconds": 341.85810112953186
+  },
+  {
+    "epoch": 249,
+    "phase": "sample",
+    "train_mse_norm": 115.09714963312264,
+    "val_rmse": 710.2617077402693,
+    "val_rmse_day": 920.7805631307327,
+    "grad_norm_mean": 631.2989183834021,
+    "epoch_seconds": 343.5737431049347
+  },
+  {
+    "epoch": 250,
+    "phase": "sample",
+    "train_mse_norm": 113.63370661935674,
+    "val_rmse": 887.6599809982617,
+    "val_rmse_day": 1086.1141769723697,
+    "grad_norm_mean": 536.6930499310573,
+    "epoch_seconds": 341.70225262641907,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/uniandes_H36_L24_P16_seed42_20260928_134325/checkpoint_e0250.pt",
+    "ens_val_rmse_day": 857.4408443246349,
+    "n_ens": 30,
+    "weight_l2_from_prev_sample": 15.645320892333984
+  }
+]

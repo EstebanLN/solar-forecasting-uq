@@ -1,0 +1,2371 @@
+[
+  {
+    "epoch": 1,
+    "phase": "burn-in",
+    "train_mse_norm": 0.7654760952372004,
+    "val_rmse": 283.9224319949988,
+    "val_rmse_day": 285.87554696953754,
+    "grad_norm_mean": 8.84846035984816,
+    "epoch_seconds": 463.0623412132263
+  },
+  {
+    "epoch": 2,
+    "phase": "burn-in",
+    "train_mse_norm": 0.9446583213561764,
+    "val_rmse": 237.37498587358394,
+    "val_rmse_day": 261.49897624577255,
+    "grad_norm_mean": 6.050021534744276,
+    "epoch_seconds": 470.2925646305084
+  },
+  {
+    "epoch": 3,
+    "phase": "burn-in",
+    "train_mse_norm": 1.0943090841913201,
+    "val_rmse": 292.2892792788267,
+    "val_rmse_day": 367.3036759503159,
+    "grad_norm_mean": 9.547678499836712,
+    "epoch_seconds": 467.79332089424133
+  },
+  {
+    "epoch": 4,
+    "phase": "burn-in",
+    "train_mse_norm": 1.2580045093665666,
+    "val_rmse": 266.1601290848439,
+    "val_rmse_day": 345.84125313489966,
+    "grad_norm_mean": 9.068952902116807,
+    "epoch_seconds": 472.5520176887512
+  },
+  {
+    "epoch": 5,
+    "phase": "burn-in",
+    "train_mse_norm": 1.3592593341038144,
+    "val_rmse": 265.9286520285093,
+    "val_rmse_day": 315.00861974387516,
+    "grad_norm_mean": 7.253971361359392,
+    "epoch_seconds": 472.39774990081787
+  },
+  {
+    "epoch": 6,
+    "phase": "burn-in",
+    "train_mse_norm": 1.3976460113016345,
+    "val_rmse": 290.7886118524161,
+    "val_rmse_day": 392.11440440714273,
+    "grad_norm_mean": 6.623684491309345,
+    "epoch_seconds": 473.90757608413696
+  },
+  {
+    "epoch": 7,
+    "phase": "burn-in",
+    "train_mse_norm": 1.5149858253825426,
+    "val_rmse": 270.1564308163104,
+    "val_rmse_day": 341.0647735226262,
+    "grad_norm_mean": 7.494828826422729,
+    "epoch_seconds": 474.99273896217346
+  },
+  {
+    "epoch": 8,
+    "phase": "burn-in",
+    "train_mse_norm": 1.67014969194842,
+    "val_rmse": 281.2861484089317,
+    "val_rmse_day": 347.18725243642683,
+    "grad_norm_mean": 9.572378864364913,
+    "epoch_seconds": 473.42200088500977
+  },
+  {
+    "epoch": 9,
+    "phase": "burn-in",
+    "train_mse_norm": 1.698863676937898,
+    "val_rmse": 295.64476730139484,
+    "val_rmse_day": 402.98970040236935,
+    "grad_norm_mean": 10.065098665376626,
+    "epoch_seconds": 473.92892575263977
+  },
+  {
+    "epoch": 10,
+    "phase": "burn-in",
+    "train_mse_norm": 1.7256798582027473,
+    "val_rmse": 285.92536369947095,
+    "val_rmse_day": 351.0587642389812,
+    "grad_norm_mean": 10.38177683165347,
+    "epoch_seconds": 471.38514137268066
+  },
+  {
+    "epoch": 11,
+    "phase": "burn-in",
+    "train_mse_norm": 1.86964282597581,
+    "val_rmse": 318.1917890310462,
+    "val_rmse_day": 413.6360103581975,
+    "grad_norm_mean": 10.564921584059508,
+    "epoch_seconds": 473.13805770874023
+  },
+  {
+    "epoch": 12,
+    "phase": "burn-in",
+    "train_mse_norm": 1.9412941236117565,
+    "val_rmse": 358.2345602892734,
+    "val_rmse_day": 481.0685335528722,
+    "grad_norm_mean": 10.561480348494236,
+    "epoch_seconds": 474.43665766716003
+  },
+  {
+    "epoch": 13,
+    "phase": "burn-in",
+    "train_mse_norm": 1.9603646735735079,
+    "val_rmse": 305.90243521377005,
+    "val_rmse_day": 373.09361164420596,
+    "grad_norm_mean": 10.14229056719175,
+    "epoch_seconds": 473.7159948348999
+  },
+  {
+    "epoch": 14,
+    "phase": "burn-in",
+    "train_mse_norm": 2.0069028916199025,
+    "val_rmse": 335.36585214243166,
+    "val_rmse_day": 411.90853948277214,
+    "grad_norm_mean": 9.814479157673507,
+    "epoch_seconds": 474.82861375808716
+  },
+  {
+    "epoch": 15,
+    "phase": "burn-in",
+    "train_mse_norm": 2.0820396566481087,
+    "val_rmse": 364.60470797011845,
+    "val_rmse_day": 474.19923404767684,
+    "grad_norm_mean": 8.30752207746357,
+    "epoch_seconds": 472.96796464920044
+  },
+  {
+    "epoch": 16,
+    "phase": "burn-in",
+    "train_mse_norm": 2.229012074423219,
+    "val_rmse": 377.6514151109849,
+    "val_rmse_day": 505.862723526365,
+    "grad_norm_mean": 9.132327038272125,
+    "epoch_seconds": 474.0879521369934
+  },
+  {
+    "epoch": 17,
+    "phase": "burn-in",
+    "train_mse_norm": 2.244147068777341,
+    "val_rmse": 347.3051114147127,
+    "val_rmse_day": 448.72058316418816,
+    "grad_norm_mean": 7.763269741522798,
+    "epoch_seconds": 472.892546415329
+  },
+  {
+    "epoch": 18,
+    "phase": "burn-in",
+    "train_mse_norm": 2.3705370603555997,
+    "val_rmse": 377.0748421503096,
+    "val_rmse_day": 510.0658249798524,
+    "grad_norm_mean": 9.631831168677934,
+    "epoch_seconds": 473.64702463150024
+  },
+  {
+    "epoch": 19,
+    "phase": "burn-in",
+    "train_mse_norm": 2.395509425232193,
+    "val_rmse": 360.0868043315351,
+    "val_rmse_day": 477.98901925055185,
+    "grad_norm_mean": 9.963180353014211,
+    "epoch_seconds": 472.7177302837372
+  },
+  {
+    "epoch": 20,
+    "phase": "burn-in",
+    "train_mse_norm": 2.318282475322837,
+    "val_rmse": 360.5196291052204,
+    "val_rmse_day": 476.66251755220105,
+    "grad_norm_mean": 9.561384120413194,
+    "epoch_seconds": 473.2780282497406
+  },
+  {
+    "epoch": 21,
+    "phase": "burn-in",
+    "train_mse_norm": 2.243118542401814,
+    "val_rmse": 338.91266694416225,
+    "val_rmse_day": 436.5142043697287,
+    "grad_norm_mean": 8.48870408917915,
+    "epoch_seconds": 473.4875764846802
+  },
+  {
+    "epoch": 22,
+    "phase": "burn-in",
+    "train_mse_norm": 2.2669810423830743,
+    "val_rmse": 357.32622931670085,
+    "val_rmse_day": 464.08340585758225,
+    "grad_norm_mean": 9.264475820872036,
+    "epoch_seconds": 472.6608552932739
+  },
+  {
+    "epoch": 23,
+    "phase": "burn-in",
+    "train_mse_norm": 2.2975325725187825,
+    "val_rmse": 320.8160849159553,
+    "val_rmse_day": 401.71806417129415,
+    "grad_norm_mean": 10.788695016670857,
+    "epoch_seconds": 472.66266775131226
+  },
+  {
+    "epoch": 24,
+    "phase": "burn-in",
+    "train_mse_norm": 2.2123625542005954,
+    "val_rmse": 319.5473098538221,
+    "val_rmse_day": 392.5259168034649,
+    "grad_norm_mean": 8.680004034393736,
+    "epoch_seconds": 470.93756794929504
+  },
+  {
+    "epoch": 25,
+    "phase": "burn-in",
+    "train_mse_norm": 2.386201267035209,
+    "val_rmse": 343.2074613856332,
+    "val_rmse_day": 455.4822905889083,
+    "grad_norm_mean": 13.142861157247465,
+    "epoch_seconds": 470.82173204421997
+  },
+  {
+    "epoch": 26,
+    "phase": "burn-in",
+    "train_mse_norm": 2.469512625747432,
+    "val_rmse": 355.23302363989745,
+    "val_rmse_day": 472.8308277937496,
+    "grad_norm_mean": 12.671660619014043,
+    "epoch_seconds": 471.6249771118164
+  },
+  {
+    "epoch": 27,
+    "phase": "burn-in",
+    "train_mse_norm": 2.578641818838971,
+    "val_rmse": 369.46363378276055,
+    "val_rmse_day": 503.7122646278988,
+    "grad_norm_mean": 13.452975353768934,
+    "epoch_seconds": 473.6538050174713
+  },
+  {
+    "epoch": 28,
+    "phase": "burn-in",
+    "train_mse_norm": 2.689305139308726,
+    "val_rmse": 396.4922707466962,
+    "val_rmse_day": 545.2506448523774,
+    "grad_norm_mean": 13.054758753030999,
+    "epoch_seconds": 472.679790019989
+  },
+  {
+    "epoch": 29,
+    "phase": "burn-in",
+    "train_mse_norm": 2.813979356425181,
+    "val_rmse": 414.92872446516645,
+    "val_rmse_day": 573.8456389771965,
+    "grad_norm_mean": 13.905298638129832,
+    "epoch_seconds": 471.3229887485504
+  },
+  {
+    "epoch": 30,
+    "phase": "burn-in",
+    "train_mse_norm": 2.916304117674866,
+    "val_rmse": 401.72715163345555,
+    "val_rmse_day": 551.9485357175031,
+    "grad_norm_mean": 14.432204143360194,
+    "epoch_seconds": 471.8629240989685
+  },
+  {
+    "epoch": 31,
+    "phase": "burn-in",
+    "train_mse_norm": 2.9209314878672767,
+    "val_rmse": 397.7958481808599,
+    "val_rmse_day": 550.8434009773234,
+    "grad_norm_mean": 14.577901154348295,
+    "epoch_seconds": 470.52534317970276
+  },
+  {
+    "epoch": 32,
+    "phase": "burn-in",
+    "train_mse_norm": 3.033550599413094,
+    "val_rmse": 427.4889169026576,
+    "val_rmse_day": 596.947447523459,
+    "grad_norm_mean": 15.924340397443308,
+    "epoch_seconds": 473.7245976924896
+  },
+  {
+    "epoch": 33,
+    "phase": "burn-in",
+    "train_mse_norm": 2.9759788775590437,
+    "val_rmse": 431.5555167139127,
+    "val_rmse_day": 598.9758863778662,
+    "grad_norm_mean": 15.96760369878813,
+    "epoch_seconds": 474.16410732269287
+  },
+  {
+    "epoch": 34,
+    "phase": "burn-in",
+    "train_mse_norm": 3.0598827197859184,
+    "val_rmse": 412.0435764742767,
+    "val_rmse_day": 568.0502752370367,
+    "grad_norm_mean": 18.357598372771598,
+    "epoch_seconds": 473.6636953353882
+  },
+  {
+    "epoch": 35,
+    "phase": "burn-in",
+    "train_mse_norm": 2.9851981923441646,
+    "val_rmse": 375.33565586874204,
+    "val_rmse_day": 510.05732227528017,
+    "grad_norm_mean": 18.817135730891167,
+    "epoch_seconds": 472.01374316215515
+  },
+  {
+    "epoch": 36,
+    "phase": "burn-in",
+    "train_mse_norm": 3.0515668137094916,
+    "val_rmse": 398.04514423565684,
+    "val_rmse_day": 555.249684360756,
+    "grad_norm_mean": 19.7512045818846,
+    "epoch_seconds": 471.0938894748688
+  },
+  {
+    "epoch": 37,
+    "phase": "burn-in",
+    "train_mse_norm": 3.0185205074881516,
+    "val_rmse": 408.6793183688366,
+    "val_rmse_day": 574.1572594221043,
+    "grad_norm_mean": 19.77918603277229,
+    "epoch_seconds": 472.1267864704132
+  },
+  {
+    "epoch": 38,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8315252587656734,
+    "val_rmse": 379.5495902754868,
+    "val_rmse_day": 527.3877193493034,
+    "grad_norm_mean": 16.1066647705516,
+    "epoch_seconds": 472.6786787509918
+  },
+  {
+    "epoch": 39,
+    "phase": "burn-in",
+    "train_mse_norm": 2.815168545895947,
+    "val_rmse": 382.1721343756322,
+    "val_rmse_day": 528.6822352520574,
+    "grad_norm_mean": 15.936554568411891,
+    "epoch_seconds": 474.0990426540375
+  },
+  {
+    "epoch": 40,
+    "phase": "burn-in",
+    "train_mse_norm": 2.854159449258389,
+    "val_rmse": 368.622693175808,
+    "val_rmse_day": 509.49498997883563,
+    "grad_norm_mean": 18.870634590053424,
+    "epoch_seconds": 470.67593479156494
+  },
+  {
+    "epoch": 41,
+    "phase": "burn-in",
+    "train_mse_norm": 2.6880846702100873,
+    "val_rmse": 344.06979674154076,
+    "val_rmse_day": 455.667677128887,
+    "grad_norm_mean": 14.876547089938459,
+    "epoch_seconds": 472.4924771785736
+  },
+  {
+    "epoch": 42,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8018761733595245,
+    "val_rmse": 370.91325070651214,
+    "val_rmse_day": 512.6170867461383,
+    "grad_norm_mean": 15.472956312226415,
+    "epoch_seconds": 472.8899121284485
+  },
+  {
+    "epoch": 43,
+    "phase": "burn-in",
+    "train_mse_norm": 2.860426831087753,
+    "val_rmse": 376.7039608838626,
+    "val_rmse_day": 521.3864170444702,
+    "grad_norm_mean": 16.55780541080318,
+    "epoch_seconds": 474.6681251525879
+  },
+  {
+    "epoch": 44,
+    "phase": "burn-in",
+    "train_mse_norm": 2.761032270213935,
+    "val_rmse": 405.2705819029514,
+    "val_rmse_day": 568.7869801634699,
+    "grad_norm_mean": 14.715240933053833,
+    "epoch_seconds": 472.47855019569397
+  },
+  {
+    "epoch": 45,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7573024040694274,
+    "val_rmse": 345.8507894473103,
+    "val_rmse_day": 443.586259874912,
+    "grad_norm_mean": 14.606445189968392,
+    "epoch_seconds": 472.04657673835754
+  },
+  {
+    "epoch": 46,
+    "phase": "burn-in",
+    "train_mse_norm": 2.701957865993426,
+    "val_rmse": 360.996548373443,
+    "val_rmse_day": 485.94945151691786,
+    "grad_norm_mean": 13.166851588110909,
+    "epoch_seconds": 474.53362488746643
+  },
+  {
+    "epoch": 47,
+    "phase": "burn-in",
+    "train_mse_norm": 2.776621957009955,
+    "val_rmse": 358.7719373182043,
+    "val_rmse_day": 487.26141640228275,
+    "grad_norm_mean": 16.334962654181343,
+    "epoch_seconds": 470.5889689922333
+  },
+  {
+    "epoch": 48,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7414759585020616,
+    "val_rmse": 343.9599967728253,
+    "val_rmse_day": 446.51290650537436,
+    "grad_norm_mean": 18.024331535209615,
+    "epoch_seconds": 472.7439730167389
+  },
+  {
+    "epoch": 49,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7480511995886765,
+    "val_rmse": 339.7089755683343,
+    "val_rmse_day": 442.45173840979834,
+    "grad_norm_mean": 18.211516854444312,
+    "epoch_seconds": 471.8723773956299
+  },
+  {
+    "epoch": 50,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7374092862467525,
+    "val_rmse": 339.1285833332477,
+    "val_rmse_day": 417.705846983717,
+    "grad_norm_mean": 16.66864451339462,
+    "epoch_seconds": 472.6309463977814
+  },
+  {
+    "epoch": 51,
+    "phase": "burn-in",
+    "train_mse_norm": 2.6756854784843433,
+    "val_rmse": 341.8876557264196,
+    "val_rmse_day": 423.6247883626902,
+    "grad_norm_mean": 15.274781807898124,
+    "epoch_seconds": 470.23779678344727
+  },
+  {
+    "epoch": 52,
+    "phase": "burn-in",
+    "train_mse_norm": 2.6610473889363053,
+    "val_rmse": 328.3061795452362,
+    "val_rmse_day": 403.09581807909495,
+    "grad_norm_mean": 17.978438042107765,
+    "epoch_seconds": 471.5329837799072
+  },
+  {
+    "epoch": 53,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7159646042799914,
+    "val_rmse": 353.1478353761679,
+    "val_rmse_day": 457.4879731184556,
+    "grad_norm_mean": 23.657900650545173,
+    "epoch_seconds": 472.9370262622833
+  },
+  {
+    "epoch": 54,
+    "phase": "burn-in",
+    "train_mse_norm": 2.833201521851851,
+    "val_rmse": 350.12312413279415,
+    "val_rmse_day": 454.94967195852473,
+    "grad_norm_mean": 26.21323949366062,
+    "epoch_seconds": 473.13814425468445
+  },
+  {
+    "epoch": 55,
+    "phase": "burn-in",
+    "train_mse_norm": 3.063014641256337,
+    "val_rmse": 372.87944100186377,
+    "val_rmse_day": 503.77297992364447,
+    "grad_norm_mean": 29.689791677355146,
+    "epoch_seconds": 473.79545736312866
+  },
+  {
+    "epoch": 56,
+    "phase": "burn-in",
+    "train_mse_norm": 3.3081143581478676,
+    "val_rmse": 385.1449514530199,
+    "val_rmse_day": 513.3534873741944,
+    "grad_norm_mean": 39.12781507674962,
+    "epoch_seconds": 474.2403733730316
+  },
+  {
+    "epoch": 57,
+    "phase": "burn-in",
+    "train_mse_norm": 3.4195410968787727,
+    "val_rmse": 391.2765982161913,
+    "val_rmse_day": 533.492675534173,
+    "grad_norm_mean": 39.69861597692736,
+    "epoch_seconds": 474.1042654514313
+  },
+  {
+    "epoch": 58,
+    "phase": "burn-in",
+    "train_mse_norm": 2.891528958580547,
+    "val_rmse": 399.99285407702405,
+    "val_rmse_day": 543.4903669313328,
+    "grad_norm_mean": 29.352972915389934,
+    "epoch_seconds": 473.5314974784851
+  },
+  {
+    "epoch": 59,
+    "phase": "burn-in",
+    "train_mse_norm": 3.142606024703835,
+    "val_rmse": 384.2843347247238,
+    "val_rmse_day": 523.3098100427335,
+    "grad_norm_mean": 35.911378721274126,
+    "epoch_seconds": 471.8423202037811
+  },
+  {
+    "epoch": 60,
+    "phase": "burn-in",
+    "train_mse_norm": 3.08569256432731,
+    "val_rmse": 376.6097703526373,
+    "val_rmse_day": 513.3418966166796,
+    "grad_norm_mean": 37.94834791335735,
+    "epoch_seconds": 472.419725894928
+  },
+  {
+    "epoch": 61,
+    "phase": "burn-in",
+    "train_mse_norm": 2.953416907905575,
+    "val_rmse": 354.85426416791876,
+    "val_rmse_day": 484.4595858845891,
+    "grad_norm_mean": 29.006508848156972,
+    "epoch_seconds": 471.6877074241638
+  },
+  {
+    "epoch": 62,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8251300568168434,
+    "val_rmse": 343.2462758576453,
+    "val_rmse_day": 459.7122231198213,
+    "grad_norm_mean": 18.965971831617683,
+    "epoch_seconds": 475.9881820678711
+  },
+  {
+    "epoch": 63,
+    "phase": "burn-in",
+    "train_mse_norm": 2.781569934082752,
+    "val_rmse": 353.7618695537652,
+    "val_rmse_day": 483.74110903158,
+    "grad_norm_mean": 15.198801562084475,
+    "epoch_seconds": 474.35439920425415
+  },
+  {
+    "epoch": 64,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7588782616251755,
+    "val_rmse": 350.1629651945793,
+    "val_rmse_day": 465.59589371099366,
+    "grad_norm_mean": 12.132738600038502,
+    "epoch_seconds": 475.3430688381195
+  },
+  {
+    "epoch": 65,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8006916421170387,
+    "val_rmse": 356.8784538340856,
+    "val_rmse_day": 489.06129034833015,
+    "grad_norm_mean": 12.859462501870949,
+    "epoch_seconds": 473.27121090888977
+  },
+  {
+    "epoch": 66,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7793317178988377,
+    "val_rmse": 353.4274927303917,
+    "val_rmse_day": 489.6750726368311,
+    "grad_norm_mean": 12.468337573135694,
+    "epoch_seconds": 475.83701252937317
+  },
+  {
+    "epoch": 67,
+    "phase": "burn-in",
+    "train_mse_norm": 2.767282084130317,
+    "val_rmse": 346.72993443757645,
+    "val_rmse_day": 466.49946488089626,
+    "grad_norm_mean": 11.280022487811564,
+    "epoch_seconds": 473.3628525733948
+  },
+  {
+    "epoch": 68,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7109352997805525,
+    "val_rmse": 339.84441482764083,
+    "val_rmse_day": 419.9319070086287,
+    "grad_norm_mean": 10.373164431689537,
+    "epoch_seconds": 474.4448547363281
+  },
+  {
+    "epoch": 69,
+    "phase": "burn-in",
+    "train_mse_norm": 2.676337148819997,
+    "val_rmse": 334.9054924444577,
+    "val_rmse_day": 419.62372210049006,
+    "grad_norm_mean": 8.126962676834372,
+    "epoch_seconds": 472.9888663291931
+  },
+  {
+    "epoch": 70,
+    "phase": "burn-in",
+    "train_mse_norm": 2.6910797426257993,
+    "val_rmse": 338.70563582612704,
+    "val_rmse_day": 415.73044670466635,
+    "grad_norm_mean": 10.030001303245282,
+    "epoch_seconds": 472.92064809799194
+  },
+  {
+    "epoch": 71,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7159173105705667,
+    "val_rmse": 341.633977913358,
+    "val_rmse_day": 396.2862888544201,
+    "grad_norm_mean": 10.855666190540672,
+    "epoch_seconds": 472.8325984477997
+  },
+  {
+    "epoch": 72,
+    "phase": "burn-in",
+    "train_mse_norm": 2.763087018796392,
+    "val_rmse": 353.58716169253194,
+    "val_rmse_day": 450.91602674877595,
+    "grad_norm_mean": 12.333121335894981,
+    "epoch_seconds": 471.8249320983887
+  },
+  {
+    "epoch": 73,
+    "phase": "burn-in",
+    "train_mse_norm": 2.751078523551173,
+    "val_rmse": 353.432026096177,
+    "val_rmse_day": 440.0711698526372,
+    "grad_norm_mean": 10.027655149215677,
+    "epoch_seconds": 472.48291659355164
+  },
+  {
+    "epoch": 74,
+    "phase": "burn-in",
+    "train_mse_norm": 2.829858188309307,
+    "val_rmse": 355.28506588752794,
+    "val_rmse_day": 451.5065863522436,
+    "grad_norm_mean": 11.892718062853554,
+    "epoch_seconds": 472.38959407806396
+  },
+  {
+    "epoch": 75,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7703302047361897,
+    "val_rmse": 337.0056049010928,
+    "val_rmse_day": 416.75043273644684,
+    "grad_norm_mean": 11.440138591366328,
+    "epoch_seconds": 471.7732193470001
+  },
+  {
+    "epoch": 76,
+    "phase": "burn-in",
+    "train_mse_norm": 2.731788976495425,
+    "val_rmse": 333.1484127859907,
+    "val_rmse_day": 394.69634507379305,
+    "grad_norm_mean": 11.57308728975342,
+    "epoch_seconds": 472.0609095096588
+  },
+  {
+    "epoch": 77,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7646963751760922,
+    "val_rmse": 334.26111985690795,
+    "val_rmse_day": 410.59306630563145,
+    "grad_norm_mean": 12.461155362550414,
+    "epoch_seconds": 472.65076184272766
+  },
+  {
+    "epoch": 78,
+    "phase": "burn-in",
+    "train_mse_norm": 2.791669432431051,
+    "val_rmse": 335.3394130489867,
+    "val_rmse_day": 395.9387564103671,
+    "grad_norm_mean": 13.25098821268816,
+    "epoch_seconds": 472.54855847358704
+  },
+  {
+    "epoch": 79,
+    "phase": "burn-in",
+    "train_mse_norm": 2.697606062404829,
+    "val_rmse": 339.3071286728329,
+    "val_rmse_day": 408.0793240328857,
+    "grad_norm_mean": 10.059718019848564,
+    "epoch_seconds": 473.8313114643097
+  },
+  {
+    "epoch": 80,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7404875530631236,
+    "val_rmse": 339.94246773004204,
+    "val_rmse_day": 415.81631292714576,
+    "grad_norm_mean": 11.259948443735778,
+    "epoch_seconds": 472.4605305194855
+  },
+  {
+    "epoch": 81,
+    "phase": "burn-in",
+    "train_mse_norm": 2.774598034812304,
+    "val_rmse": 347.2512273969614,
+    "val_rmse_day": 439.5694594061521,
+    "grad_norm_mean": 12.463760743571386,
+    "epoch_seconds": 472.2774589061737
+  },
+  {
+    "epoch": 82,
+    "phase": "burn-in",
+    "train_mse_norm": 2.7975249355786467,
+    "val_rmse": 339.72776724571827,
+    "val_rmse_day": 444.6512438154951,
+    "grad_norm_mean": 14.194281981922739,
+    "epoch_seconds": 471.7509009838104
+  },
+  {
+    "epoch": 83,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8063194712322166,
+    "val_rmse": 341.1117432758001,
+    "val_rmse_day": 428.5065713432943,
+    "grad_norm_mean": 13.948937663617537,
+    "epoch_seconds": 470.1500461101532
+  },
+  {
+    "epoch": 84,
+    "phase": "burn-in",
+    "train_mse_norm": 2.844449912820383,
+    "val_rmse": 350.71037785393725,
+    "val_rmse_day": 469.41903759135636,
+    "grad_norm_mean": 13.760485966700003,
+    "epoch_seconds": 473.2649803161621
+  },
+  {
+    "epoch": 85,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8259872681811897,
+    "val_rmse": 347.1160811386847,
+    "val_rmse_day": 433.9337228672538,
+    "grad_norm_mean": 12.287238220814888,
+    "epoch_seconds": 471.2352294921875
+  },
+  {
+    "epoch": 86,
+    "phase": "burn-in",
+    "train_mse_norm": 2.800978155478476,
+    "val_rmse": 348.2058521228934,
+    "val_rmse_day": 451.742656468257,
+    "grad_norm_mean": 12.186878384877106,
+    "epoch_seconds": 470.8228979110718
+  },
+  {
+    "epoch": 87,
+    "phase": "burn-in",
+    "train_mse_norm": 2.805856916889809,
+    "val_rmse": 346.9090257080188,
+    "val_rmse_day": 422.70635016464274,
+    "grad_norm_mean": 13.29185459914498,
+    "epoch_seconds": 472.61061429977417
+  },
+  {
+    "epoch": 88,
+    "phase": "burn-in",
+    "train_mse_norm": 2.765868109242219,
+    "val_rmse": 340.16444925732424,
+    "val_rmse_day": 432.08866984291546,
+    "grad_norm_mean": 10.90175959992983,
+    "epoch_seconds": 472.3831868171692
+  },
+  {
+    "epoch": 89,
+    "phase": "burn-in",
+    "train_mse_norm": 2.755947643369225,
+    "val_rmse": 340.7147169124206,
+    "val_rmse_day": 402.882933302086,
+    "grad_norm_mean": 9.917885889802049,
+    "epoch_seconds": 471.65848660469055
+  },
+  {
+    "epoch": 90,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8179319977028277,
+    "val_rmse": 343.47898674723206,
+    "val_rmse_day": 370.582322191545,
+    "grad_norm_mean": 11.56167920040082,
+    "epoch_seconds": 473.77392625808716
+  },
+  {
+    "epoch": 91,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8299674392028074,
+    "val_rmse": 341.9808123881728,
+    "val_rmse_day": 356.95710704180834,
+    "grad_norm_mean": 12.238313671773371,
+    "epoch_seconds": 469.9106011390686
+  },
+  {
+    "epoch": 92,
+    "phase": "burn-in",
+    "train_mse_norm": 2.883257785719636,
+    "val_rmse": 358.59676934666226,
+    "val_rmse_day": 344.9396701447482,
+    "grad_norm_mean": 15.629174297577826,
+    "epoch_seconds": 472.1700949668884
+  },
+  {
+    "epoch": 93,
+    "phase": "burn-in",
+    "train_mse_norm": 2.906948176768235,
+    "val_rmse": 355.1420188652173,
+    "val_rmse_day": 341.6208068363527,
+    "grad_norm_mean": 16.82967555460977,
+    "epoch_seconds": 472.67607951164246
+  },
+  {
+    "epoch": 94,
+    "phase": "burn-in",
+    "train_mse_norm": 2.908086076906733,
+    "val_rmse": 349.6455892667365,
+    "val_rmse_day": 363.48994903776276,
+    "grad_norm_mean": 17.07739431091114,
+    "epoch_seconds": 472.1518244743347
+  },
+  {
+    "epoch": 95,
+    "phase": "burn-in",
+    "train_mse_norm": 2.9506856797154803,
+    "val_rmse": 335.7007633492909,
+    "val_rmse_day": 386.4192543252777,
+    "grad_norm_mean": 21.43895723530297,
+    "epoch_seconds": 472.1611225605011
+  },
+  {
+    "epoch": 96,
+    "phase": "burn-in",
+    "train_mse_norm": 2.884677264394206,
+    "val_rmse": 338.0152665998948,
+    "val_rmse_day": 388.7931376402727,
+    "grad_norm_mean": 16.26255277805752,
+    "epoch_seconds": 471.54532051086426
+  },
+  {
+    "epoch": 97,
+    "phase": "burn-in",
+    "train_mse_norm": 2.91975039640687,
+    "val_rmse": 351.08059844986263,
+    "val_rmse_day": 377.13399372994,
+    "grad_norm_mean": 17.427295698103727,
+    "epoch_seconds": 473.0269694328308
+  },
+  {
+    "epoch": 98,
+    "phase": "burn-in",
+    "train_mse_norm": 2.893543451869606,
+    "val_rmse": 340.89946077099836,
+    "val_rmse_day": 360.57396277100145,
+    "grad_norm_mean": 17.997695411101905,
+    "epoch_seconds": 472.4165482521057
+  },
+  {
+    "epoch": 99,
+    "phase": "burn-in",
+    "train_mse_norm": 2.8557258653483077,
+    "val_rmse": 333.57950406493444,
+    "val_rmse_day": 371.13434815158706,
+    "grad_norm_mean": 17.011328837755553,
+    "epoch_seconds": 471.7783341407776
+  },
+  {
+    "epoch": 100,
+    "phase": "burn-in",
+    "train_mse_norm": 2.918643497553534,
+    "val_rmse": 342.3355317775692,
+    "val_rmse_day": 428.74526020995484,
+    "grad_norm_mean": 16.763021732424022,
+    "epoch_seconds": 471.73625445365906
+  },
+  {
+    "epoch": 101,
+    "phase": "sample",
+    "train_mse_norm": 3.011486567243631,
+    "val_rmse": 370.6327710202912,
+    "val_rmse_day": 492.7518738461566,
+    "grad_norm_mean": 18.783944076111027,
+    "epoch_seconds": 470.7171103954315
+  },
+  {
+    "epoch": 102,
+    "phase": "sample",
+    "train_mse_norm": 3.3151182599038407,
+    "val_rmse": 388.17290778452303,
+    "val_rmse_day": 542.2883307389977,
+    "grad_norm_mean": 28.692062940133535,
+    "epoch_seconds": 470.86954975128174
+  },
+  {
+    "epoch": 103,
+    "phase": "sample",
+    "train_mse_norm": 3.364638453336273,
+    "val_rmse": 393.1052235622414,
+    "val_rmse_day": 546.1702684176819,
+    "grad_norm_mean": 32.33228956735185,
+    "epoch_seconds": 472.5546495914459
+  },
+  {
+    "epoch": 104,
+    "phase": "sample",
+    "train_mse_norm": 3.3119215075565385,
+    "val_rmse": 389.29113869946076,
+    "val_rmse_day": 541.0559367653991,
+    "grad_norm_mean": 30.09222414924899,
+    "epoch_seconds": 471.722749710083
+  },
+  {
+    "epoch": 105,
+    "phase": "sample",
+    "train_mse_norm": 3.3595462958093067,
+    "val_rmse": 394.549588612202,
+    "val_rmse_day": 547.456104524062,
+    "grad_norm_mean": 32.48734641581929,
+    "epoch_seconds": 472.92942929267883,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0105.pt",
+    "ens_val_rmse_day": 547.456104524062,
+    "n_ens": 1
+  },
+  {
+    "epoch": 106,
+    "phase": "sample",
+    "train_mse_norm": 3.3753329111711,
+    "val_rmse": 398.85818121380527,
+    "val_rmse_day": 562.0716319799374,
+    "grad_norm_mean": 32.77243366971239,
+    "epoch_seconds": 472.6657257080078
+  },
+  {
+    "epoch": 107,
+    "phase": "sample",
+    "train_mse_norm": 3.4063608332180335,
+    "val_rmse": 414.97475366587764,
+    "val_rmse_day": 586.5426812175042,
+    "grad_norm_mean": 30.604413453508897,
+    "epoch_seconds": 472.01416873931885
+  },
+  {
+    "epoch": 108,
+    "phase": "sample",
+    "train_mse_norm": 3.604647597897205,
+    "val_rmse": 455.8329514316956,
+    "val_rmse_day": 642.211552821614,
+    "grad_norm_mean": 34.15341511457441,
+    "epoch_seconds": 470.81796526908875
+  },
+  {
+    "epoch": 109,
+    "phase": "sample",
+    "train_mse_norm": 3.746371685698396,
+    "val_rmse": 449.53273969279513,
+    "val_rmse_day": 632.6706842798599,
+    "grad_norm_mean": 37.285311843068406,
+    "epoch_seconds": 470.4886405467987
+  },
+  {
+    "epoch": 110,
+    "phase": "sample",
+    "train_mse_norm": 3.7127603484483953,
+    "val_rmse": 408.37553342956795,
+    "val_rmse_day": 576.3388020355511,
+    "grad_norm_mean": 41.3322801864761,
+    "epoch_seconds": 471.6830635070801,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0110.pt",
+    "ens_val_rmse_day": 559.830312811725,
+    "n_ens": 2,
+    "weight_l2_from_prev_sample": 25.670928955078125
+  },
+  {
+    "epoch": 111,
+    "phase": "sample",
+    "train_mse_norm": 3.56356003524337,
+    "val_rmse": 397.2547576118369,
+    "val_rmse_day": 559.2156545652441,
+    "grad_norm_mean": 41.08509576776763,
+    "epoch_seconds": 471.9255702495575
+  },
+  {
+    "epoch": 112,
+    "phase": "sample",
+    "train_mse_norm": 3.6891835117655427,
+    "val_rmse": 430.5111337943896,
+    "val_rmse_day": 601.9571796668142,
+    "grad_norm_mean": 45.84446321594642,
+    "epoch_seconds": 470.37078332901
+  },
+  {
+    "epoch": 113,
+    "phase": "sample",
+    "train_mse_norm": 3.7518095066933683,
+    "val_rmse": 399.86025606112105,
+    "val_rmse_day": 560.7900533999036,
+    "grad_norm_mean": 48.00139078780847,
+    "epoch_seconds": 472.1760938167572
+  },
+  {
+    "epoch": 114,
+    "phase": "sample",
+    "train_mse_norm": 3.8219107395644225,
+    "val_rmse": 454.80894626084506,
+    "val_rmse_day": 640.25443462654,
+    "grad_norm_mean": 51.6704845784349,
+    "epoch_seconds": 471.6681025028229
+  },
+  {
+    "epoch": 115,
+    "phase": "sample",
+    "train_mse_norm": 4.139405925937233,
+    "val_rmse": 530.0242316583683,
+    "val_rmse_day": 732.6086544355925,
+    "grad_norm_mean": 54.48204521373808,
+    "epoch_seconds": 470.3585798740387,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0115.pt",
+    "ens_val_rmse_day": 614.3504192968855,
+    "n_ens": 3,
+    "weight_l2_from_prev_sample": 25.322580337524414
+  },
+  {
+    "epoch": 116,
+    "phase": "sample",
+    "train_mse_norm": 4.599163700963283,
+    "val_rmse": 531.4886306825811,
+    "val_rmse_day": 728.7010761703291,
+    "grad_norm_mean": 56.71415555662967,
+    "epoch_seconds": 469.9613826274872
+  },
+  {
+    "epoch": 117,
+    "phase": "sample",
+    "train_mse_norm": 4.084596435360375,
+    "val_rmse": 467.0903258193097,
+    "val_rmse_day": 652.8199583433129,
+    "grad_norm_mean": 46.83208154201733,
+    "epoch_seconds": 470.3229660987854
+  },
+  {
+    "epoch": 118,
+    "phase": "sample",
+    "train_mse_norm": 4.005796288790768,
+    "val_rmse": 450.2933594687046,
+    "val_rmse_day": 632.1260270551588,
+    "grad_norm_mean": 42.67803905885288,
+    "epoch_seconds": 470.8529574871063
+  },
+  {
+    "epoch": 119,
+    "phase": "sample",
+    "train_mse_norm": 3.8230880159333904,
+    "val_rmse": 457.637501108386,
+    "val_rmse_day": 639.2269902318375,
+    "grad_norm_mean": 36.63089178370934,
+    "epoch_seconds": 470.7835216522217
+  },
+  {
+    "epoch": 120,
+    "phase": "sample",
+    "train_mse_norm": 4.073178840460617,
+    "val_rmse": 489.4823897455955,
+    "val_rmse_day": 670.615378361489,
+    "grad_norm_mean": 46.76595471904252,
+    "epoch_seconds": 469.7620966434479,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0120.pt",
+    "ens_val_rmse_day": 626.7021745227316,
+    "n_ens": 4,
+    "weight_l2_from_prev_sample": 25.049266815185547
+  },
+  {
+    "epoch": 121,
+    "phase": "sample",
+    "train_mse_norm": 4.2147656310319785,
+    "val_rmse": 469.19710598212873,
+    "val_rmse_day": 634.9039400006416,
+    "grad_norm_mean": 51.170108682545056,
+    "epoch_seconds": 470.93693590164185
+  },
+  {
+    "epoch": 122,
+    "phase": "sample",
+    "train_mse_norm": 3.9236427258927136,
+    "val_rmse": 435.2349992640506,
+    "val_rmse_day": 603.31225123624,
+    "grad_norm_mean": 43.24885142789903,
+    "epoch_seconds": 471.94170594215393
+  },
+  {
+    "epoch": 123,
+    "phase": "sample",
+    "train_mse_norm": 3.986789843469619,
+    "val_rmse": 416.2120373169254,
+    "val_rmse_day": 572.0583215680529,
+    "grad_norm_mean": 47.751242500687184,
+    "epoch_seconds": 470.212283372879
+  },
+  {
+    "epoch": 124,
+    "phase": "sample",
+    "train_mse_norm": 3.4967475155923635,
+    "val_rmse": 383.805072985957,
+    "val_rmse_day": 528.4212133603115,
+    "grad_norm_mean": 37.06647583714171,
+    "epoch_seconds": 470.24787521362305
+  },
+  {
+    "epoch": 125,
+    "phase": "sample",
+    "train_mse_norm": 3.3917814435179525,
+    "val_rmse": 363.3983241102692,
+    "val_rmse_day": 492.5818238490026,
+    "grad_norm_mean": 33.792978965847574,
+    "epoch_seconds": 468.7346441745758,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0125.pt",
+    "ens_val_rmse_day": 597.8727799870632,
+    "n_ens": 5,
+    "weight_l2_from_prev_sample": 24.77657699584961
+  },
+  {
+    "epoch": 126,
+    "phase": "sample",
+    "train_mse_norm": 3.3815758426514897,
+    "val_rmse": 365.4681611748028,
+    "val_rmse_day": 503.1825178667192,
+    "grad_norm_mean": 32.11975874538178,
+    "epoch_seconds": 470.08985662460327
+  },
+  {
+    "epoch": 127,
+    "phase": "sample",
+    "train_mse_norm": 3.4968700315460146,
+    "val_rmse": 393.8209036327168,
+    "val_rmse_day": 548.4628835236036,
+    "grad_norm_mean": 34.67307897620906,
+    "epoch_seconds": 469.66455721855164
+  },
+  {
+    "epoch": 128,
+    "phase": "sample",
+    "train_mse_norm": 3.693490054959895,
+    "val_rmse": 408.71484300281287,
+    "val_rmse_day": 570.5347827313362,
+    "grad_norm_mean": 46.160726664817496,
+    "epoch_seconds": 471.92469215393066
+  },
+  {
+    "epoch": 129,
+    "phase": "sample",
+    "train_mse_norm": 3.768919771890005,
+    "val_rmse": 393.05588168365716,
+    "val_rmse_day": 548.691896176739,
+    "grad_norm_mean": 45.92024967317937,
+    "epoch_seconds": 470.8521716594696
+  },
+  {
+    "epoch": 130,
+    "phase": "sample",
+    "train_mse_norm": 3.5161071126619823,
+    "val_rmse": 398.99741428263405,
+    "val_rmse_day": 557.8036179965624,
+    "grad_norm_mean": 38.139411312034795,
+    "epoch_seconds": 472.17269921302795,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0130.pt",
+    "ens_val_rmse_day": 590.35161940766,
+    "n_ens": 6,
+    "weight_l2_from_prev_sample": 24.526145935058594
+  },
+  {
+    "epoch": 131,
+    "phase": "sample",
+    "train_mse_norm": 3.4896334246976455,
+    "val_rmse": 376.9030375681335,
+    "val_rmse_day": 523.7238111392206,
+    "grad_norm_mean": 38.70063349048541,
+    "epoch_seconds": 471.0327763557434
+  },
+  {
+    "epoch": 132,
+    "phase": "sample",
+    "train_mse_norm": 3.3593132747024876,
+    "val_rmse": 392.32432551621645,
+    "val_rmse_day": 547.9847590494244,
+    "grad_norm_mean": 34.925932559417454,
+    "epoch_seconds": 470.67764258384705
+  },
+  {
+    "epoch": 133,
+    "phase": "sample",
+    "train_mse_norm": 3.5820352187627433,
+    "val_rmse": 417.37393664131855,
+    "val_rmse_day": 583.8375179190487,
+    "grad_norm_mean": 41.4032460966367,
+    "epoch_seconds": 470.0620527267456
+  },
+  {
+    "epoch": 134,
+    "phase": "sample",
+    "train_mse_norm": 3.8594724314360334,
+    "val_rmse": 432.7842943448015,
+    "val_rmse_day": 606.5539506455146,
+    "grad_norm_mean": 52.79742117338041,
+    "epoch_seconds": 471.09427762031555
+  },
+  {
+    "epoch": 135,
+    "phase": "sample",
+    "train_mse_norm": 3.68803784506018,
+    "val_rmse": 414.7944401617732,
+    "val_rmse_day": 574.902356301079,
+    "grad_norm_mean": 52.931292425758386,
+    "epoch_seconds": 470.2042450904846,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0135.pt",
+    "ens_val_rmse_day": 587.0029752251996,
+    "n_ens": 7,
+    "weight_l2_from_prev_sample": 24.279451370239258
+  },
+  {
+    "epoch": 136,
+    "phase": "sample",
+    "train_mse_norm": 3.5808490969180835,
+    "val_rmse": 397.90013041328274,
+    "val_rmse_day": 555.04936531388,
+    "grad_norm_mean": 46.48101508375266,
+    "epoch_seconds": 471.8729362487793
+  },
+  {
+    "epoch": 137,
+    "phase": "sample",
+    "train_mse_norm": 3.6335350892765654,
+    "val_rmse": 392.64196132515616,
+    "val_rmse_day": 541.9567795141065,
+    "grad_norm_mean": 43.832028666475104,
+    "epoch_seconds": 469.52435207366943
+  },
+  {
+    "epoch": 138,
+    "phase": "sample",
+    "train_mse_norm": 3.52769348291389,
+    "val_rmse": 416.47645537836047,
+    "val_rmse_day": 578.8798900882351,
+    "grad_norm_mean": 37.11010578842055,
+    "epoch_seconds": 469.37756609916687
+  },
+  {
+    "epoch": 139,
+    "phase": "sample",
+    "train_mse_norm": 3.45895279630716,
+    "val_rmse": 359.6776432686981,
+    "val_rmse_day": 480.20234270824074,
+    "grad_norm_mean": 41.35604605676996,
+    "epoch_seconds": 471.2926404476166
+  },
+  {
+    "epoch": 140,
+    "phase": "sample",
+    "train_mse_norm": 3.4599076386155754,
+    "val_rmse": 409.66141808959975,
+    "val_rmse_day": 559.5209399505155,
+    "grad_norm_mean": 44.07951537358856,
+    "epoch_seconds": 470.1886489391327,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0140.pt",
+    "ens_val_rmse_day": 581.5537804052635,
+    "n_ens": 8,
+    "weight_l2_from_prev_sample": 24.041786193847656
+  },
+  {
+    "epoch": 141,
+    "phase": "sample",
+    "train_mse_norm": 3.490157238537262,
+    "val_rmse": 380.0580926117912,
+    "val_rmse_day": 503.78983007774775,
+    "grad_norm_mean": 35.65009571416906,
+    "epoch_seconds": 470.29792189598083
+  },
+  {
+    "epoch": 142,
+    "phase": "sample",
+    "train_mse_norm": 3.3884805711756125,
+    "val_rmse": 384.3079646003609,
+    "val_rmse_day": 493.67113241455513,
+    "grad_norm_mean": 31.84132946917174,
+    "epoch_seconds": 471.66697883605957
+  },
+  {
+    "epoch": 143,
+    "phase": "sample",
+    "train_mse_norm": 3.324780790660536,
+    "val_rmse": 368.81370240035767,
+    "val_rmse_day": 460.54000428626915,
+    "grad_norm_mean": 30.93196879978387,
+    "epoch_seconds": 471.4921917915344
+  },
+  {
+    "epoch": 144,
+    "phase": "sample",
+    "train_mse_norm": 3.2908363893001664,
+    "val_rmse": 359.3554590446526,
+    "val_rmse_day": 461.9672314511187,
+    "grad_norm_mean": 30.384878450708115,
+    "epoch_seconds": 470.47431111335754
+  },
+  {
+    "epoch": 145,
+    "phase": "sample",
+    "train_mse_norm": 3.249945475349012,
+    "val_rmse": 351.9234638151531,
+    "val_rmse_day": 446.26933244113894,
+    "grad_norm_mean": 32.40118803480182,
+    "epoch_seconds": 471.16628241539,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0145.pt",
+    "ens_val_rmse_day": 563.9490862453295,
+    "n_ens": 9,
+    "weight_l2_from_prev_sample": 23.79472541809082
+  },
+  {
+    "epoch": 146,
+    "phase": "sample",
+    "train_mse_norm": 3.1605700560206222,
+    "val_rmse": 338.87218561035326,
+    "val_rmse_day": 442.7250555903335,
+    "grad_norm_mean": 29.18899340915635,
+    "epoch_seconds": 470.2736105918884
+  },
+  {
+    "epoch": 147,
+    "phase": "sample",
+    "train_mse_norm": 3.158707893846392,
+    "val_rmse": 341.55440919103023,
+    "val_rmse_day": 440.471151602061,
+    "grad_norm_mean": 27.7181011176526,
+    "epoch_seconds": 470.02014422416687
+  },
+  {
+    "epoch": 148,
+    "phase": "sample",
+    "train_mse_norm": 3.127743080420262,
+    "val_rmse": 343.1476485789762,
+    "val_rmse_day": 426.0611358378676,
+    "grad_norm_mean": 26.52405220706563,
+    "epoch_seconds": 470.06582379341125
+  },
+  {
+    "epoch": 149,
+    "phase": "sample",
+    "train_mse_norm": 3.1440363870682893,
+    "val_rmse": 345.17784337714244,
+    "val_rmse_day": 445.49798196455333,
+    "grad_norm_mean": 25.127559603077092,
+    "epoch_seconds": 470.52852725982666
+  },
+  {
+    "epoch": 150,
+    "phase": "sample",
+    "train_mse_norm": 3.193242145812224,
+    "val_rmse": 347.0009260785672,
+    "val_rmse_day": 444.30516130495306,
+    "grad_norm_mean": 23.834511120138046,
+    "epoch_seconds": 470.9473297595978,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0150.pt",
+    "ens_val_rmse_day": 550.4386382654428,
+    "n_ens": 10,
+    "weight_l2_from_prev_sample": 23.575069427490234
+  },
+  {
+    "epoch": 151,
+    "phase": "sample",
+    "train_mse_norm": 3.2417780015059785,
+    "val_rmse": 356.9529771537483,
+    "val_rmse_day": 479.4548849329755,
+    "grad_norm_mean": 25.86495639695612,
+    "epoch_seconds": 470.04679679870605
+  },
+  {
+    "epoch": 152,
+    "phase": "sample",
+    "train_mse_norm": 3.368705213098071,
+    "val_rmse": 343.7205228863267,
+    "val_rmse_day": 463.9837190870378,
+    "grad_norm_mean": 31.70597232441098,
+    "epoch_seconds": 471.5669250488281
+  },
+  {
+    "epoch": 153,
+    "phase": "sample",
+    "train_mse_norm": 3.3053031178313605,
+    "val_rmse": 343.4515762342745,
+    "val_rmse_day": 450.0956804925091,
+    "grad_norm_mean": 42.02458890361723,
+    "epoch_seconds": 470.37213706970215
+  },
+  {
+    "epoch": 154,
+    "phase": "sample",
+    "train_mse_norm": 3.2043056931763703,
+    "val_rmse": 340.32267744691165,
+    "val_rmse_day": 420.6656805095465,
+    "grad_norm_mean": 43.67337735373849,
+    "epoch_seconds": 469.6437027454376
+  },
+  {
+    "epoch": 155,
+    "phase": "sample",
+    "train_mse_norm": 3.1826205411270423,
+    "val_rmse": 345.6738126325563,
+    "val_rmse_day": 451.8362726660144,
+    "grad_norm_mean": 33.39186408173998,
+    "epoch_seconds": 470.65526032447815,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0155.pt",
+    "ens_val_rmse_day": 540.523377246403,
+    "n_ens": 11,
+    "weight_l2_from_prev_sample": 23.345876693725586
+  },
+  {
+    "epoch": 156,
+    "phase": "sample",
+    "train_mse_norm": 3.1741209845527143,
+    "val_rmse": 337.8274981306124,
+    "val_rmse_day": 429.99218798074486,
+    "grad_norm_mean": 31.778509907639133,
+    "epoch_seconds": 469.3045389652252
+  },
+  {
+    "epoch": 157,
+    "phase": "sample",
+    "train_mse_norm": 3.1295863426570687,
+    "val_rmse": 337.58406586441583,
+    "val_rmse_day": 448.5364607473923,
+    "grad_norm_mean": 27.55566747919478,
+    "epoch_seconds": 471.1417555809021
+  },
+  {
+    "epoch": 158,
+    "phase": "sample",
+    "train_mse_norm": 3.2552465375549793,
+    "val_rmse": 338.4345691092923,
+    "val_rmse_day": 446.8010875860213,
+    "grad_norm_mean": 33.76276150997596,
+    "epoch_seconds": 471.8522918224335
+  },
+  {
+    "epoch": 159,
+    "phase": "sample",
+    "train_mse_norm": 3.2065439705134677,
+    "val_rmse": 329.1609232521379,
+    "val_rmse_day": 370.11324879356584,
+    "grad_norm_mean": 32.62583732965368,
+    "epoch_seconds": 470.770632982254
+  },
+  {
+    "epoch": 160,
+    "phase": "sample",
+    "train_mse_norm": 3.1696167745621744,
+    "val_rmse": 323.0601343135722,
+    "val_rmse_day": 380.13554404330455,
+    "grad_norm_mean": 32.2065577383136,
+    "epoch_seconds": 471.0585901737213,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0160.pt",
+    "ens_val_rmse_day": 524.7506417127508,
+    "n_ens": 12,
+    "weight_l2_from_prev_sample": 23.16333770751953
+  },
+  {
+    "epoch": 161,
+    "phase": "sample",
+    "train_mse_norm": 3.182110156999425,
+    "val_rmse": 334.803638633525,
+    "val_rmse_day": 370.75919939468946,
+    "grad_norm_mean": 32.451391985014354,
+    "epoch_seconds": 470.60737895965576
+  },
+  {
+    "epoch": 162,
+    "phase": "sample",
+    "train_mse_norm": 3.160537375219036,
+    "val_rmse": 341.66079953931956,
+    "val_rmse_day": 353.25353258095,
+    "grad_norm_mean": 33.39711914639119,
+    "epoch_seconds": 469.2040252685547
+  },
+  {
+    "epoch": 163,
+    "phase": "sample",
+    "train_mse_norm": 3.1632388059294443,
+    "val_rmse": 357.50037182071173,
+    "val_rmse_day": 335.1552444537544,
+    "grad_norm_mean": 32.83277743460719,
+    "epoch_seconds": 470.28016901016235
+  },
+  {
+    "epoch": 164,
+    "phase": "sample",
+    "train_mse_norm": 3.2832519982184336,
+    "val_rmse": 365.55129862150693,
+    "val_rmse_day": 329.59898054659726,
+    "grad_norm_mean": 38.56071020873245,
+    "epoch_seconds": 470.93329071998596
+  },
+  {
+    "epoch": 165,
+    "phase": "sample",
+    "train_mse_norm": 3.294763872180843,
+    "val_rmse": 387.60334611789364,
+    "val_rmse_day": 337.63473410011085,
+    "grad_norm_mean": 51.55124300766171,
+    "epoch_seconds": 470.8450870513916,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0165.pt",
+    "ens_val_rmse_day": 503.1302466417795,
+    "n_ens": 13,
+    "weight_l2_from_prev_sample": 22.974613189697266
+  },
+  {
+    "epoch": 166,
+    "phase": "sample",
+    "train_mse_norm": 3.442905682125461,
+    "val_rmse": 413.0522423092348,
+    "val_rmse_day": 329.8768260175326,
+    "grad_norm_mean": 50.39092361223152,
+    "epoch_seconds": 470.75056171417236
+  },
+  {
+    "epoch": 167,
+    "phase": "sample",
+    "train_mse_norm": 3.317836074711976,
+    "val_rmse": 338.49756269583105,
+    "val_rmse_day": 350.0902222591032,
+    "grad_norm_mean": 38.99919898249825,
+    "epoch_seconds": 470.39919781684875
+  },
+  {
+    "epoch": 168,
+    "phase": "sample",
+    "train_mse_norm": 3.165908609857861,
+    "val_rmse": 325.7340999068338,
+    "val_rmse_day": 342.7585893378687,
+    "grad_norm_mean": 35.195045466686565,
+    "epoch_seconds": 470.86154866218567
+  },
+  {
+    "epoch": 169,
+    "phase": "sample",
+    "train_mse_norm": 3.179120031797385,
+    "val_rmse": 340.2029482028759,
+    "val_rmse_day": 369.2391585692121,
+    "grad_norm_mean": 35.32613808060233,
+    "epoch_seconds": 471.570663690567
+  },
+  {
+    "epoch": 170,
+    "phase": "sample",
+    "train_mse_norm": 3.152959701752516,
+    "val_rmse": 341.9051260684083,
+    "val_rmse_day": 366.21910036163416,
+    "grad_norm_mean": 37.78249907775144,
+    "epoch_seconds": 469.60149216651917,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0170.pt",
+    "ens_val_rmse_day": 489.92882323352933,
+    "n_ens": 14,
+    "weight_l2_from_prev_sample": 22.77640151977539
+  },
+  {
+    "epoch": 171,
+    "phase": "sample",
+    "train_mse_norm": 3.253246990644431,
+    "val_rmse": 365.7541095397095,
+    "val_rmse_day": 443.0985512856791,
+    "grad_norm_mean": 50.50946584871821,
+    "epoch_seconds": 469.5235171318054
+  },
+  {
+    "epoch": 172,
+    "phase": "sample",
+    "train_mse_norm": 3.4455885922058496,
+    "val_rmse": 377.0683378475074,
+    "val_rmse_day": 488.53813687599273,
+    "grad_norm_mean": 55.98348094136522,
+    "epoch_seconds": 470.75000643730164
+  },
+  {
+    "epoch": 173,
+    "phase": "sample",
+    "train_mse_norm": 3.4245299172390165,
+    "val_rmse": 384.3952357584888,
+    "val_rmse_day": 487.21925974296335,
+    "grad_norm_mean": 55.65714524791215,
+    "epoch_seconds": 470.96730303764343
+  },
+  {
+    "epoch": 174,
+    "phase": "sample",
+    "train_mse_norm": 3.3761675567293596,
+    "val_rmse": 361.06188900540633,
+    "val_rmse_day": 442.69243067952027,
+    "grad_norm_mean": 50.68607017686472,
+    "epoch_seconds": 469.00287413597107
+  },
+  {
+    "epoch": 175,
+    "phase": "sample",
+    "train_mse_norm": 3.362690731890088,
+    "val_rmse": 440.4560060284506,
+    "val_rmse_day": 585.0894330771202,
+    "grad_norm_mean": 52.25685824726233,
+    "epoch_seconds": 471.5020868778229,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0175.pt",
+    "ens_val_rmse_day": 494.7682563147035,
+    "n_ens": 15,
+    "weight_l2_from_prev_sample": 22.605440139770508
+  },
+  {
+    "epoch": 176,
+    "phase": "sample",
+    "train_mse_norm": 3.466359327016262,
+    "val_rmse": 361.78592480959975,
+    "val_rmse_day": 456.40996367496393,
+    "grad_norm_mean": 43.27366404923055,
+    "epoch_seconds": 472.65286469459534
+  },
+  {
+    "epoch": 177,
+    "phase": "sample",
+    "train_mse_norm": 3.474257935090171,
+    "val_rmse": 373.8104855342813,
+    "val_rmse_day": 477.55734587764533,
+    "grad_norm_mean": 53.9265959155858,
+    "epoch_seconds": 470.6807973384857
+  },
+  {
+    "epoch": 178,
+    "phase": "sample",
+    "train_mse_norm": 3.2911108251895103,
+    "val_rmse": 334.2533352023998,
+    "val_rmse_day": 380.331448860528,
+    "grad_norm_mean": 27.58296187215669,
+    "epoch_seconds": 470.3624804019928
+  },
+  {
+    "epoch": 179,
+    "phase": "sample",
+    "train_mse_norm": 3.208215428006835,
+    "val_rmse": 328.6459199605119,
+    "val_rmse_day": 362.45892213861987,
+    "grad_norm_mean": 22.170234183517334,
+    "epoch_seconds": 472.54042506217957
+  },
+  {
+    "epoch": 180,
+    "phase": "sample",
+    "train_mse_norm": 3.213950584449462,
+    "val_rmse": 334.6255083668261,
+    "val_rmse_day": 375.2544349813632,
+    "grad_norm_mean": 22.721303372434924,
+    "epoch_seconds": 470.3052544593811,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0180.pt",
+    "ens_val_rmse_day": 485.5335696496435,
+    "n_ens": 16,
+    "weight_l2_from_prev_sample": 22.43265151977539
+  },
+  {
+    "epoch": 181,
+    "phase": "sample",
+    "train_mse_norm": 3.2336073156004534,
+    "val_rmse": 336.8937003739114,
+    "val_rmse_day": 359.07152627086293,
+    "grad_norm_mean": 31.563433290823035,
+    "epoch_seconds": 471.18109130859375
+  },
+  {
+    "epoch": 182,
+    "phase": "sample",
+    "train_mse_norm": 3.2547278606953576,
+    "val_rmse": 340.02739745892734,
+    "val_rmse_day": 360.61464510580834,
+    "grad_norm_mean": 31.058954761002386,
+    "epoch_seconds": 471.6917779445648
+  },
+  {
+    "epoch": 183,
+    "phase": "sample",
+    "train_mse_norm": 3.2749779605054608,
+    "val_rmse": 338.64931794399035,
+    "val_rmse_day": 346.27663208604815,
+    "grad_norm_mean": 26.671561856510845,
+    "epoch_seconds": 471.96461749076843
+  },
+  {
+    "epoch": 184,
+    "phase": "sample",
+    "train_mse_norm": 3.3028362069875494,
+    "val_rmse": 352.55817251133095,
+    "val_rmse_day": 327.17286272980584,
+    "grad_norm_mean": 29.8074364520268,
+    "epoch_seconds": 471.3082778453827
+  },
+  {
+    "epoch": 185,
+    "phase": "sample",
+    "train_mse_norm": 3.291424436618767,
+    "val_rmse": 348.2007697808005,
+    "val_rmse_day": 332.32215899560146,
+    "grad_norm_mean": 30.531981137095052,
+    "epoch_seconds": 467.36903715133667,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0185.pt",
+    "ens_val_rmse_day": 473.0114352765981,
+    "n_ens": 17,
+    "weight_l2_from_prev_sample": 22.272274017333984
+  },
+  {
+    "epoch": 186,
+    "phase": "sample",
+    "train_mse_norm": 3.312486074981005,
+    "val_rmse": 341.2127765723948,
+    "val_rmse_day": 349.7109425384707,
+    "grad_norm_mean": 32.39662258029266,
+    "epoch_seconds": 467.1107506752014
+  },
+  {
+    "epoch": 187,
+    "phase": "sample",
+    "train_mse_norm": 3.357886576798934,
+    "val_rmse": 339.5266655451421,
+    "val_rmse_day": 357.0330459437219,
+    "grad_norm_mean": 33.98890354028557,
+    "epoch_seconds": 469.23743629455566
+  },
+  {
+    "epoch": 188,
+    "phase": "sample",
+    "train_mse_norm": 3.385600626553124,
+    "val_rmse": 338.95067515069644,
+    "val_rmse_day": 342.6015083515393,
+    "grad_norm_mean": 38.449921041262506,
+    "epoch_seconds": 467.8305780887604
+  },
+  {
+    "epoch": 189,
+    "phase": "sample",
+    "train_mse_norm": 3.5607261106998336,
+    "val_rmse": 383.02813213408126,
+    "val_rmse_day": 357.31908410997846,
+    "grad_norm_mean": 55.70029917785904,
+    "epoch_seconds": 462.97966504096985
+  },
+  {
+    "epoch": 190,
+    "phase": "sample",
+    "train_mse_norm": 3.6782391545453836,
+    "val_rmse": 392.29301317502836,
+    "val_rmse_day": 349.087925746074,
+    "grad_norm_mean": 73.2743964837191,
+    "epoch_seconds": 462.7994964122772,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0190.pt",
+    "ens_val_rmse_day": 462.7145375705724,
+    "n_ens": 18,
+    "weight_l2_from_prev_sample": 22.105804443359375
+  },
+  {
+    "epoch": 191,
+    "phase": "sample",
+    "train_mse_norm": 3.5023131114894848,
+    "val_rmse": 381.9202667900471,
+    "val_rmse_day": 363.6670053328544,
+    "grad_norm_mean": 37.978305740969105,
+    "epoch_seconds": 462.6451485157013
+  },
+  {
+    "epoch": 192,
+    "phase": "sample",
+    "train_mse_norm": 3.596788927244025,
+    "val_rmse": 411.0916331220471,
+    "val_rmse_day": 343.8569201785677,
+    "grad_norm_mean": 43.53143401454516,
+    "epoch_seconds": 461.86326575279236
+  },
+  {
+    "epoch": 193,
+    "phase": "sample",
+    "train_mse_norm": 3.668280285374421,
+    "val_rmse": 406.93035561970913,
+    "val_rmse_day": 341.44979908203106,
+    "grad_norm_mean": 46.876864380581964,
+    "epoch_seconds": 461.5384352207184
+  },
+  {
+    "epoch": 194,
+    "phase": "sample",
+    "train_mse_norm": 3.8558410939372934,
+    "val_rmse": 402.12414869204406,
+    "val_rmse_day": 320.7513412056991,
+    "grad_norm_mean": 55.29675409103487,
+    "epoch_seconds": 461.6538631916046
+  },
+  {
+    "epoch": 195,
+    "phase": "sample",
+    "train_mse_norm": 3.630028829070043,
+    "val_rmse": 352.09395759575636,
+    "val_rmse_day": 331.9468737563131,
+    "grad_norm_mean": 45.17468280323733,
+    "epoch_seconds": 461.820921421051,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0195.pt",
+    "ens_val_rmse_day": 452.88882710255007,
+    "n_ens": 19,
+    "weight_l2_from_prev_sample": 21.9610538482666
+  },
+  {
+    "epoch": 196,
+    "phase": "sample",
+    "train_mse_norm": 3.31388587956165,
+    "val_rmse": 323.8109329960626,
+    "val_rmse_day": 333.4495494868407,
+    "grad_norm_mean": 33.821795513115234,
+    "epoch_seconds": 461.99781250953674
+  },
+  {
+    "epoch": 197,
+    "phase": "sample",
+    "train_mse_norm": 3.375105325151965,
+    "val_rmse": 347.3211134116157,
+    "val_rmse_day": 314.35649841033126,
+    "grad_norm_mean": 36.750657703722204,
+    "epoch_seconds": 461.7474060058594
+  },
+  {
+    "epoch": 198,
+    "phase": "sample",
+    "train_mse_norm": 3.482179681028349,
+    "val_rmse": 375.8228491039203,
+    "val_rmse_day": 318.0088548311614,
+    "grad_norm_mean": 45.71159260668279,
+    "epoch_seconds": 462.52822828292847
+  },
+  {
+    "epoch": 199,
+    "phase": "sample",
+    "train_mse_norm": 3.542595162839894,
+    "val_rmse": 382.9918423028346,
+    "val_rmse_day": 331.4568062277073,
+    "grad_norm_mean": 37.37318161517086,
+    "epoch_seconds": 462.4102740287781
+  },
+  {
+    "epoch": 200,
+    "phase": "sample",
+    "train_mse_norm": 3.7025137195397955,
+    "val_rmse": 398.49155492977417,
+    "val_rmse_day": 312.3374558743314,
+    "grad_norm_mean": 52.87334716213048,
+    "epoch_seconds": 462.4995770454407,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0200.pt",
+    "ens_val_rmse_day": 439.1476843882917,
+    "n_ens": 20,
+    "weight_l2_from_prev_sample": 21.79469108581543
+  },
+  {
+    "epoch": 201,
+    "phase": "sample",
+    "train_mse_norm": 3.8116506557167282,
+    "val_rmse": 437.23531280211034,
+    "val_rmse_day": 340.26524675777426,
+    "grad_norm_mean": 58.21355420213068,
+    "epoch_seconds": 461.29660820961
+  },
+  {
+    "epoch": 202,
+    "phase": "sample",
+    "train_mse_norm": 3.7696289139983223,
+    "val_rmse": 392.33649803281446,
+    "val_rmse_day": 326.64040961358086,
+    "grad_norm_mean": 51.14032270551347,
+    "epoch_seconds": 461.89761090278625
+  },
+  {
+    "epoch": 203,
+    "phase": "sample",
+    "train_mse_norm": 3.603675726623427,
+    "val_rmse": 415.04319329163917,
+    "val_rmse_day": 334.8190194661418,
+    "grad_norm_mean": 39.3680122327737,
+    "epoch_seconds": 462.03512382507324
+  },
+  {
+    "epoch": 204,
+    "phase": "sample",
+    "train_mse_norm": 3.7747371898375426,
+    "val_rmse": 432.62479244996115,
+    "val_rmse_day": 340.9276696834119,
+    "grad_norm_mean": 45.302782686690314,
+    "epoch_seconds": 461.4481751918793
+  },
+  {
+    "epoch": 205,
+    "phase": "sample",
+    "train_mse_norm": 3.7574426393549456,
+    "val_rmse": 385.6088566257831,
+    "val_rmse_day": 323.87399994761984,
+    "grad_norm_mean": 46.25516747144466,
+    "epoch_seconds": 461.8756024837494,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0205.pt",
+    "ens_val_rmse_day": 429.6570972452479,
+    "n_ens": 21,
+    "weight_l2_from_prev_sample": 21.628700256347656
+  },
+  {
+    "epoch": 206,
+    "phase": "sample",
+    "train_mse_norm": 3.5080087951854764,
+    "val_rmse": 403.2065387533633,
+    "val_rmse_day": 320.79573673560964,
+    "grad_norm_mean": 36.6592801224245,
+    "epoch_seconds": 462.43911385536194
+  },
+  {
+    "epoch": 207,
+    "phase": "sample",
+    "train_mse_norm": 3.5440460768408184,
+    "val_rmse": 379.29444733341273,
+    "val_rmse_day": 312.0702646004638,
+    "grad_norm_mean": 37.110993157820594,
+    "epoch_seconds": 462.5955591201782
+  },
+  {
+    "epoch": 208,
+    "phase": "sample",
+    "train_mse_norm": 3.4335309805935377,
+    "val_rmse": 333.69704296495314,
+    "val_rmse_day": 327.94066172869174,
+    "grad_norm_mean": 31.326423036415846,
+    "epoch_seconds": 462.7698566913605
+  },
+  {
+    "epoch": 209,
+    "phase": "sample",
+    "train_mse_norm": 3.421325885635758,
+    "val_rmse": 352.9396628424147,
+    "val_rmse_day": 324.05622081241467,
+    "grad_norm_mean": 27.347809806881394,
+    "epoch_seconds": 462.8444836139679
+  },
+  {
+    "epoch": 210,
+    "phase": "sample",
+    "train_mse_norm": 3.567836982436939,
+    "val_rmse": 402.87895450931836,
+    "val_rmse_day": 321.8127268122207,
+    "grad_norm_mean": 33.88520914076858,
+    "epoch_seconds": 462.31421756744385,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0210.pt",
+    "ens_val_rmse_day": 419.70321484366286,
+    "n_ens": 22,
+    "weight_l2_from_prev_sample": 21.508811950683594
+  },
+  {
+    "epoch": 211,
+    "phase": "sample",
+    "train_mse_norm": 3.8893538900969102,
+    "val_rmse": 425.49476105268616,
+    "val_rmse_day": 322.520436347862,
+    "grad_norm_mean": 43.815454726743994,
+    "epoch_seconds": 462.19642329216003
+  },
+  {
+    "epoch": 212,
+    "phase": "sample",
+    "train_mse_norm": 4.057177321664218,
+    "val_rmse": 426.156928113009,
+    "val_rmse_day": 323.0530422854362,
+    "grad_norm_mean": 48.90490518947452,
+    "epoch_seconds": 462.2918105125427
+  },
+  {
+    "epoch": 213,
+    "phase": "sample",
+    "train_mse_norm": 4.0436234833443,
+    "val_rmse": 458.7639310876826,
+    "val_rmse_day": 336.3869078220638,
+    "grad_norm_mean": 46.87270155570166,
+    "epoch_seconds": 462.10869550704956
+  },
+  {
+    "epoch": 214,
+    "phase": "sample",
+    "train_mse_norm": 4.15000058740842,
+    "val_rmse": 446.1984977527099,
+    "val_rmse_day": 336.90171089836014,
+    "grad_norm_mean": 49.26380285858601,
+    "epoch_seconds": 462.2771637439728
+  },
+  {
+    "epoch": 215,
+    "phase": "sample",
+    "train_mse_norm": 4.259104797735381,
+    "val_rmse": 445.29603459110734,
+    "val_rmse_day": 344.7647083577974,
+    "grad_norm_mean": 50.144858670673905,
+    "epoch_seconds": 462.16089367866516,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0215.pt",
+    "ens_val_rmse_day": 411.6478531520647,
+    "n_ens": 23,
+    "weight_l2_from_prev_sample": 21.37689781188965
+  },
+  {
+    "epoch": 216,
+    "phase": "sample",
+    "train_mse_norm": 4.0632054409329825,
+    "val_rmse": 452.51024061058183,
+    "val_rmse_day": 344.5280520504269,
+    "grad_norm_mean": 44.20965071539863,
+    "epoch_seconds": 462.4650876522064
+  },
+  {
+    "epoch": 217,
+    "phase": "sample",
+    "train_mse_norm": 3.8391497772597005,
+    "val_rmse": 431.394729009748,
+    "val_rmse_day": 336.2711094463031,
+    "grad_norm_mean": 38.11802409851838,
+    "epoch_seconds": 461.9848952293396
+  },
+  {
+    "epoch": 218,
+    "phase": "sample",
+    "train_mse_norm": 3.9152234483564805,
+    "val_rmse": 381.51117266080263,
+    "val_rmse_day": 327.23100809513915,
+    "grad_norm_mean": 41.11591267664589,
+    "epoch_seconds": 462.255832195282
+  },
+  {
+    "epoch": 219,
+    "phase": "sample",
+    "train_mse_norm": 3.7709990978015724,
+    "val_rmse": 402.0141935842769,
+    "val_rmse_day": 344.21981218292564,
+    "grad_norm_mean": 33.40187143074436,
+    "epoch_seconds": 462.1075003147125
+  },
+  {
+    "epoch": 220,
+    "phase": "sample",
+    "train_mse_norm": 3.666182950132007,
+    "val_rmse": 364.41344641380925,
+    "val_rmse_day": 373.27494230557267,
+    "grad_norm_mean": 35.07564594816587,
+    "epoch_seconds": 462.69224309921265,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0220.pt",
+    "ens_val_rmse_day": 408.74259533270975,
+    "n_ens": 24,
+    "weight_l2_from_prev_sample": 21.212448120117188
+  },
+  {
+    "epoch": 221,
+    "phase": "sample",
+    "train_mse_norm": 3.639470901813606,
+    "val_rmse": 404.3513269352648,
+    "val_rmse_day": 342.4229330879323,
+    "grad_norm_mean": 34.636845421554575,
+    "epoch_seconds": 462.9816720485687
+  },
+  {
+    "epoch": 222,
+    "phase": "sample",
+    "train_mse_norm": 3.617377379169203,
+    "val_rmse": 347.763316079363,
+    "val_rmse_day": 329.5964109798876,
+    "grad_norm_mean": 35.43447603704122,
+    "epoch_seconds": 462.43466901779175
+  },
+  {
+    "epoch": 223,
+    "phase": "sample",
+    "train_mse_norm": 3.46611606190663,
+    "val_rmse": 325.7266494663661,
+    "val_rmse_day": 352.19356876149607,
+    "grad_norm_mean": 31.569924667189017,
+    "epoch_seconds": 462.63212871551514
+  },
+  {
+    "epoch": 224,
+    "phase": "sample",
+    "train_mse_norm": 3.350745846203717,
+    "val_rmse": 329.69160963943256,
+    "val_rmse_day": 361.1218848757042,
+    "grad_norm_mean": 26.672349156328796,
+    "epoch_seconds": 462.2968020439148
+  },
+  {
+    "epoch": 225,
+    "phase": "sample",
+    "train_mse_norm": 3.408319532505228,
+    "val_rmse": 351.9631771076397,
+    "val_rmse_day": 355.09950092288886,
+    "grad_norm_mean": 31.575228132501096,
+    "epoch_seconds": 462.7680583000183,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0225.pt",
+    "ens_val_rmse_day": 404.2875446708363,
+    "n_ens": 25,
+    "weight_l2_from_prev_sample": 21.108524322509766
+  },
+  {
+    "epoch": 226,
+    "phase": "sample",
+    "train_mse_norm": 3.5012466557250024,
+    "val_rmse": 352.337576238187,
+    "val_rmse_day": 382.72017595226396,
+    "grad_norm_mean": 35.05559170578356,
+    "epoch_seconds": 462.617712020874
+  },
+  {
+    "epoch": 227,
+    "phase": "sample",
+    "train_mse_norm": 3.5407422413283154,
+    "val_rmse": 359.5249416898313,
+    "val_rmse_day": 397.64893198072957,
+    "grad_norm_mean": 32.1427561098188,
+    "epoch_seconds": 462.42275500297546
+  },
+  {
+    "epoch": 228,
+    "phase": "sample",
+    "train_mse_norm": 3.5541726137367577,
+    "val_rmse": 363.8851501221609,
+    "val_rmse_day": 385.4546142210109,
+    "grad_norm_mean": 33.97282513819835,
+    "epoch_seconds": 462.6158871650696
+  },
+  {
+    "epoch": 229,
+    "phase": "sample",
+    "train_mse_norm": 3.609598028361375,
+    "val_rmse": 399.9326091147652,
+    "val_rmse_day": 351.8024840088628,
+    "grad_norm_mean": 42.281382035015326,
+    "epoch_seconds": 463.6183476448059
+  },
+  {
+    "epoch": 230,
+    "phase": "sample",
+    "train_mse_norm": 3.8565706562534166,
+    "val_rmse": 427.918772590518,
+    "val_rmse_day": 325.1774102293288,
+    "grad_norm_mean": 59.08818514053136,
+    "epoch_seconds": 463.53642892837524,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0230.pt",
+    "ens_val_rmse_day": 395.7597456237667,
+    "n_ens": 26,
+    "weight_l2_from_prev_sample": 20.98712730407715
+  },
+  {
+    "epoch": 231,
+    "phase": "sample",
+    "train_mse_norm": 4.090074917816248,
+    "val_rmse": 431.207926909645,
+    "val_rmse_day": 321.43933679185915,
+    "grad_norm_mean": 58.15103400423665,
+    "epoch_seconds": 462.97215366363525
+  },
+  {
+    "epoch": 232,
+    "phase": "sample",
+    "train_mse_norm": 4.039420136427846,
+    "val_rmse": 447.8788132042883,
+    "val_rmse_day": 327.72694406205864,
+    "grad_norm_mean": 59.52036045292497,
+    "epoch_seconds": 462.2204442024231
+  },
+  {
+    "epoch": 233,
+    "phase": "sample",
+    "train_mse_norm": 3.976692335865776,
+    "val_rmse": 417.0574975149766,
+    "val_rmse_day": 318.15571864540874,
+    "grad_norm_mean": 50.99100260448501,
+    "epoch_seconds": 462.72999691963196
+  },
+  {
+    "epoch": 234,
+    "phase": "sample",
+    "train_mse_norm": 3.9282837693399566,
+    "val_rmse": 399.5183852744073,
+    "val_rmse_day": 321.05545197562174,
+    "grad_norm_mean": 48.80762000122215,
+    "epoch_seconds": 466.1021840572357
+  },
+  {
+    "epoch": 235,
+    "phase": "sample",
+    "train_mse_norm": 3.851767105936835,
+    "val_rmse": 407.1092722148229,
+    "val_rmse_day": 313.75937734746833,
+    "grad_norm_mean": 44.97730860397058,
+    "epoch_seconds": 488.0120339393616,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0235.pt",
+    "ens_val_rmse_day": 389.7236275647707,
+    "n_ens": 27,
+    "weight_l2_from_prev_sample": 20.865251541137695
+  },
+  {
+    "epoch": 236,
+    "phase": "sample",
+    "train_mse_norm": 3.8630737466636447,
+    "val_rmse": 391.80244291319946,
+    "val_rmse_day": 328.53479587513027,
+    "grad_norm_mean": 47.006686190360554,
+    "epoch_seconds": 462.7167956829071
+  },
+  {
+    "epoch": 237,
+    "phase": "sample",
+    "train_mse_norm": 3.737276103849055,
+    "val_rmse": 402.7022239204758,
+    "val_rmse_day": 333.84811231426335,
+    "grad_norm_mean": 45.48837676564083,
+    "epoch_seconds": 462.15520000457764
+  },
+  {
+    "epoch": 238,
+    "phase": "sample",
+    "train_mse_norm": 3.8443228169100205,
+    "val_rmse": 393.7476116981,
+    "val_rmse_day": 346.18660004877177,
+    "grad_norm_mean": 51.75413121803222,
+    "epoch_seconds": 462.8402805328369
+  },
+  {
+    "epoch": 239,
+    "phase": "sample",
+    "train_mse_norm": 3.649479392907166,
+    "val_rmse": 402.9695822128913,
+    "val_rmse_day": 321.97634026133,
+    "grad_norm_mean": 46.819098258615384,
+    "epoch_seconds": 462.2024347782135
+  },
+  {
+    "epoch": 240,
+    "phase": "sample",
+    "train_mse_norm": 3.9348556473956786,
+    "val_rmse": 452.3673981314892,
+    "val_rmse_day": 348.12541860272194,
+    "grad_norm_mean": 55.84313814922724,
+    "epoch_seconds": 463.36612915992737,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0240.pt",
+    "ens_val_rmse_day": 382.79245886182434,
+    "n_ens": 28,
+    "weight_l2_from_prev_sample": 20.74267578125
+  },
+  {
+    "epoch": 241,
+    "phase": "sample",
+    "train_mse_norm": 4.032315063093651,
+    "val_rmse": 448.5630067640971,
+    "val_rmse_day": 348.186251236479,
+    "grad_norm_mean": 58.66446322340643,
+    "epoch_seconds": 578.388543844223
+  },
+  {
+    "epoch": 242,
+    "phase": "sample",
+    "train_mse_norm": 4.574401757038028,
+    "val_rmse": 563.0809658404019,
+    "val_rmse_day": 412.8041932292694,
+    "grad_norm_mean": 82.09223985198989,
+    "epoch_seconds": 534.6421146392822
+  },
+  {
+    "epoch": 243,
+    "phase": "sample",
+    "train_mse_norm": 4.612715077614188,
+    "val_rmse": 496.7126029256333,
+    "val_rmse_day": 371.4582733597275,
+    "grad_norm_mean": 76.56181121469389,
+    "epoch_seconds": 560.351987361908
+  },
+  {
+    "epoch": 244,
+    "phase": "sample",
+    "train_mse_norm": 4.812193690801377,
+    "val_rmse": 546.3693446050562,
+    "val_rmse_day": 409.24546703261376,
+    "grad_norm_mean": 79.63571114555867,
+    "epoch_seconds": 531.8586192131042
+  },
+  {
+    "epoch": 245,
+    "phase": "sample",
+    "train_mse_norm": 4.988445318584235,
+    "val_rmse": 534.2913455449428,
+    "val_rmse_day": 383.81107771358126,
+    "grad_norm_mean": 85.42204707221822,
+    "epoch_seconds": 462.4634220600128,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0245.pt",
+    "ens_val_rmse_day": 375.2522510708817,
+    "n_ens": 29,
+    "weight_l2_from_prev_sample": 20.611873626708984
+  },
+  {
+    "epoch": 246,
+    "phase": "sample",
+    "train_mse_norm": 4.672691256244283,
+    "val_rmse": 525.4612743205917,
+    "val_rmse_day": 383.78701848182675,
+    "grad_norm_mean": 71.16832212034576,
+    "epoch_seconds": 462.89374566078186
+  },
+  {
+    "epoch": 247,
+    "phase": "sample",
+    "train_mse_norm": 4.890417971248383,
+    "val_rmse": 560.0181061319481,
+    "val_rmse_day": 406.92969641314363,
+    "grad_norm_mean": 72.04358997804464,
+    "epoch_seconds": 462.2112293243408
+  },
+  {
+    "epoch": 248,
+    "phase": "sample",
+    "train_mse_norm": 5.0130417021479765,
+    "val_rmse": 550.503049364615,
+    "val_rmse_day": 404.2040864580573,
+    "grad_norm_mean": 70.74922005658337,
+    "epoch_seconds": 461.8211336135864
+  },
+  {
+    "epoch": 249,
+    "phase": "sample",
+    "train_mse_norm": 5.1832917607162825,
+    "val_rmse": 586.592998708605,
+    "val_rmse_day": 428.60265961491126,
+    "grad_norm_mean": 73.36167706258465,
+    "epoch_seconds": 462.3528952598572
+  },
+  {
+    "epoch": 250,
+    "phase": "sample",
+    "train_mse_norm": 5.31482619928424,
+    "val_rmse": 603.7039619509824,
+    "val_rmse_day": 438.1309389659419,
+    "grad_norm_mean": 69.65686725567802,
+    "epoch_seconds": 462.41085839271545,
+    "checkpoint_saved": "/srv/projects/Proyecto_e_ladino/runs/resnet_lstm_sgld/elpaso_H36_L24_P16_seed42_20260928_132250/checkpoint_e0250.pt",
+    "ens_val_rmse_day": 366.9937281933556,
+    "n_ens": 30,
+    "weight_l2_from_prev_sample": 20.50257682800293
+  }
+]
