@@ -1,0 +1,75 @@
+{
+  "model": "resnet_mc_dropout",
+  "method": "mc_dropout",
+  "arch": "resnet",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "patch": 16,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "mc_dropout": {
+    "n_passes": 5,
+    "tuned_dropout": 0.2,
+    "dropout_modules": 1,
+    "mc_seed": 0,
+    "scope": "head only (last-layer MC Dropout)",
+    "source_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H36_L24_P16_seed42_20260704_075716/best_model.pt"
+  },
+  "baselines": {
+    "persistence_test": {
+      "n": 12075,
+      "rmse": 389.517844176586,
+      "mae": 250.79533714285714,
+      "n_day": 5465,
+      "rmse_day": 470.92567245567665,
+      "mae_day": 369.5877123513266,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 245.12527244179557,
+    "mae": 182.45164317460765,
+    "n_day": 5465,
+    "rmse_day": 286.2399730525433,
+    "mae_day": 233.74845281778838,
+    "day_threshold": 20.0,
+    "ensemble_std_mean": 35.30742645263672,
+    "ensemble_std_day_mean": 34.6937370300293,
+    "n_checkpoints": 5,
+    "coverage_80": 0.29233954451345756,
+    "coverage_day_80": 0.11088746569075938,
+    "coverage_90": 0.3394616977225673,
+    "coverage_day_90": 0.13412625800548947,
+    "coverage_95": 0.37192546583850933,
+    "coverage_day_95": 0.15590118938700823,
+    "ensemble_median_day_mean": 384.3589172363281,
+    "coverage_pct_80": 0.2512629399585921,
+    "coverage_day_pct_80": 0.08709972552607502,
+    "coverage_pct_90": 0.2694824016563147,
+    "coverage_day_pct_90": 0.0958828911253431,
+    "coverage_pct_95": 0.275527950310559,
+    "coverage_day_pct_95": 0.10045745654162855,
+    "band_pct95_width_day_mean": 77.64884948730469,
+    "nll_day": 53958689161216.0,
+    "crps_day": 216.00274594776124,
+    "err_by_sigma_quartile_day": [
+      203.7287139892578,
+      248.7760772705078,
+      242.09640502929688,
+      240.4146270751953
+    ],
+    "sigma_by_quartile_day": [
+      13.179438591003418,
+      32.68610382080078,
+      38.19837951660156,
+      54.72677993774414
+    ],
+    "skill_vs_persistence": 0.370695653340419,
+    "skill_day_vs_persistence": 0.3921758999463265
+  }
+}

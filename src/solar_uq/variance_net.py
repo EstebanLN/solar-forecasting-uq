@@ -65,10 +65,28 @@ def make_variance_model(model: nn.Module) -> nn.Module:
 
 
 def gamma_params(raw: torch.Tensor, eps: float = 1e-6) -> Tuple[torch.Tensor, torch.Tensor]:
-    """raw: (B, 2) pre-activations -> (alpha, lambda), both strictly positive."""
-    alpha = nn.functional.softplus(raw[..., 0]) + eps
-    lam   = nn.functional.softplus(raw[..., 1]) + eps
-    return alpha, lam
+    """raw: (B, 2) pre-activations read as (log alpha, log lambda) -> (alpha, lambda).
+
+    Exponential (log) parameterisation. Under exp, d lambda / d raw = lambda, so
+    the NLL gradient with respect to raw stays O(1) whatever the scale of r;
+    callers also feed r in NORMALISED units (see scripts/12_variance_net.py),
+    which keeps both parameters near O(1) and the clamps below inactive. This is
+    the standard, better-conditioned choice.
+
+    Historical note, to avoid repeating a wrong diagnosis: the earlier softplus
+    parameterisation was at one point blamed for the variance network returning a
+    near-constant sigma_a on the real data (mean 302 W/m^2, std 12, corr 0.23
+    against |residual|). That was WRONG. scripts/12b_variance_net_validation.py
+    fits a known heteroscedastic sigma(x) and shows softplus recovers it with
+    corr 0.995 — Adam rescales per-parameter, so the small softplus gradient does
+    not stall training. The real cause was the TRAINING BUDGET: the network
+    learns the global level of sigma first and its modulation only later, so a
+    short run looks homoscedastic (synthetic cv 0.073 at 20 epochs vs 0.350 at
+    400; the real runs stopped at a median best_epoch of 10 under patience 8).
+    """
+    log_alpha = raw[..., 0].clamp(-12.0, 12.0)
+    log_lam   = raw[..., 1].clamp(-12.0, 12.0)
+    return log_alpha.exp() + eps, log_lam.exp() + eps
 
 
 def gamma_nll_loss(

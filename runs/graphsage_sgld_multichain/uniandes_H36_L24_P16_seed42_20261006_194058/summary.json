@@ -1,0 +1,42 @@
+{
+  "arch": "graphsage",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "n_chains_used": 4,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "protocol": {
+    "n_chains": 4,
+    "epochs": 2500,
+    "burn_in": 500,
+    "n_monitor": 64,
+    "val_every": 25,
+    "sgld_lr": 1e-07,
+    "sgld_lr_final": 1e-08,
+    "sgld_schedule": "poly",
+    "sgld_gamma": 0.55,
+    "warm_start_ckpt": "runs/graphsage_lstm_optuna_v2/uniandes_H36_L24_P16_seed42_20260816_153529/best_model.pt",
+    "parallel": true
+  },
+  "diagnostics": {
+    "pred_rhat_max": 1.2139528741768588,
+    "pred_rhat_median": 1.1914039444868458,
+    "pred_ess_min": 7.225964357117681,
+    "pred_ess_median": 7.838791305124755,
+    "val_rmse_day_rhat": 1.5610695752270842,
+    "val_rmse_day_ess": 12.784690553816507,
+    "val_rmse_day_drift": 6393.786727760842,
+    "persistence_val_rmse_day": 462.17602240706213,
+    "all_rhat_below_1p1": false
+  },
+  "chain_seconds": [
+    1019982.3016459942,
+    1019931.8762607574,
+    1020841.6417870522,
+    1020901.122471571
+  ]
+}

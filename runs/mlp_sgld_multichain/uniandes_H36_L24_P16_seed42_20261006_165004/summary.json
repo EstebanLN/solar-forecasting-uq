@@ -1,0 +1,38 @@
+{
+  "arch": "mlp",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "protocol": {
+    "n_chains": 2,
+    "epochs": 12,
+    "burn_in": 4,
+    "n_monitor": 32,
+    "val_every": 2,
+    "sgld_lr": 1e-07,
+    "sgld_lr_final": 1e-08,
+    "sgld_schedule": "poly",
+    "sgld_gamma": 0.55,
+    "warm_start_ckpt": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/uniandes_H36_L24_P16_seed42_20260524_223803/best_model.pt"
+  },
+  "diagnostics": {
+    "pred_rhat_max": 3.8968031155196727,
+    "pred_rhat_median": 1.9568634242652494,
+    "pred_ess_min": 1.3577175518626068,
+    "pred_ess_median": 2.0127067600932653,
+    "val_rmse_day_rhat": 1.7088833997202106,
+    "val_rmse_day_ess": 3.3587117236009876,
+    "val_rmse_day_drift": 7.3618916932277045,
+    "persistence_val_rmse_day": 590.4099115198771,
+    "all_rhat_below_1p1": false
+  },
+  "chain_seconds": [
+    27.90640926361084,
+    27.962061166763306
+  ]
+}

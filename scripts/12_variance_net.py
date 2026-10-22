@@ -89,8 +89,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seed",           type=int, default=42)
     p.add_argument("--patch",          type=int, default=16)
     p.add_argument("--optuna_version", default="v1", choices=["v1", "v2"])
-    p.add_argument("--epochs",         type=int, default=40)
-    p.add_argument("--patience",       type=int, default=8)
+    p.add_argument("--epochs",         type=int, default=300,
+                   help="sigma(x) modulation emerges late; see 12b_variance_net_validation.py")
+    p.add_argument("--patience",       type=int, default=40,
+                   help="was 8: it cut at a median best_epoch of 10, before heteroscedasticity appeared")
     p.add_argument("--lr",             type=float, default=1e-3)
     p.add_argument("--weight_decay",   type=float, default=1e-5)
     p.add_argument("--num_workers",    type=int, default=0)
@@ -188,9 +190,9 @@ def _epoch_val_nll(mean_model, variance_model, loader, normalizer, device) -> fl
         x_seq = x_seq.to(device, non_blocking=True)
         y_norm = y_norm.to(device, non_blocking=True)
         mu_norm = mean_model(x_seq)
-        y_phys  = normalizer.denormalize(y_norm)
-        mu_phys = normalizer.denormalize(mu_norm)
-        r = (mu_phys - y_phys) ** 2
+        # Residual in NORMALISED units: keeps r at O(1) so the Gamma
+        # parameters stay in a well-conditioned range (see gamma_params).
+        r = (mu_norm - y_norm) ** 2
         raw = variance_model(x_seq)
         alpha, lam = gamma_params(raw)
         losses.append(gamma_nll_loss(alpha, lam, r).item())
@@ -314,9 +316,7 @@ def main() -> None:
             y_norm = y_norm.to(DEVICE, non_blocking=True)
             with torch.no_grad():
                 mu_norm = mean_model(x_seq)
-            y_phys  = normalizer.denormalize(y_norm)
-            mu_phys = normalizer.denormalize(mu_norm)
-            r = (mu_phys - y_phys) ** 2
+            r = (mu_norm - y_norm) ** 2          # normalised units
 
             optimizer.zero_grad(set_to_none=True)
             raw = variance_model(x_seq)
@@ -365,9 +365,11 @@ def main() -> None:
             mu_phys = normalizer.denormalize(mu_norm)
             raw = variance_model(x_seq)
             alpha, lam = gamma_params(raw)
+            # sigma_a^2 is learned in normalised units -> back to W/m^2:
+            # r_phys = r_norm * std^2, so sigma_a_phys = std * sqrt(sigma2_norm)
             sigma2 = aleatoric_variance(alpha, lam)
             abs_resid.append((mu_phys - y_phys).abs().cpu().numpy())
-            sigma_a.append(torch.sqrt(sigma2).cpu().numpy())
+            sigma_a.append((float(normalizer.std) * torch.sqrt(sigma2)).cpu().numpy())
         abs_resid = np.concatenate(abs_resid)
         sigma_a   = np.concatenate(sigma_a)
 

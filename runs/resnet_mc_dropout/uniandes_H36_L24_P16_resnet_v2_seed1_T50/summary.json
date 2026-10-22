@@ -1,0 +1,75 @@
+{
+  "model": "resnet_mc_dropout",
+  "method": "mc_dropout",
+  "arch": "resnet",
+  "site": "uniandes",
+  "seed": 1,
+  "optuna_version": "v2",
+  "patch": 16,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "mc_dropout": {
+    "n_passes": 50,
+    "tuned_dropout": 0.1,
+    "dropout_modules": 1,
+    "mc_seed": 0,
+    "scope": "head only (last-layer MC Dropout)",
+    "source_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H36_L24_P16_seed1_20260706_164421/best_model.pt"
+  },
+  "baselines": {
+    "persistence_test": {
+      "n": 12075,
+      "rmse": 389.517844176586,
+      "mae": 250.79533714285714,
+      "n_day": 5465,
+      "rmse_day": 470.92567245567665,
+      "mae_day": 369.5877123513266,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 230.90233328364315,
+    "mae": 162.38041447242594,
+    "n_day": 5465,
+    "rmse_day": 291.3324867827313,
+    "mae_day": 229.59034197494074,
+    "day_threshold": 20.0,
+    "ensemble_std_mean": 11.538065910339355,
+    "ensemble_std_day_mean": 10.605271339416504,
+    "n_checkpoints": 50,
+    "coverage_80": 0.24877846790890268,
+    "coverage_day_80": 0.03421774931381519,
+    "coverage_90": 0.31403726708074536,
+    "coverage_day_90": 0.04117108874656908,
+    "coverage_95": 0.33374741200828156,
+    "coverage_day_95": 0.048307410795974386,
+    "ensemble_median_day_mean": 341.3913879394531,
+    "coverage_pct_80": 0.21267080745341616,
+    "coverage_day_pct_80": 0.032570905763952426,
+    "coverage_pct_90": 0.281407867494824,
+    "coverage_day_pct_90": 0.03824336688014639,
+    "coverage_pct_95": 0.306583850931677,
+    "coverage_day_pct_95": 0.04391582799634035,
+    "band_pct95_width_day_mean": 35.344688415527344,
+    "nll_day": 1059.8243408203125,
+    "crps_day": 223.76363480992285,
+    "err_by_sigma_quartile_day": [
+      193.84957885742188,
+      221.33285522460938,
+      238.25347900390625,
+      264.9516296386719
+    ],
+    "sigma_by_quartile_day": [
+      4.60598611831665,
+      8.066288948059082,
+      10.30617904663086,
+      19.447023391723633
+    ],
+    "skill_vs_persistence": 0.40720987052145396,
+    "skill_day_vs_persistence": 0.3813620623748204
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "model": "resnet_mc_dropout",
+  "method": "mc_dropout",
+  "arch": "resnet",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "patch": 16,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "mc_dropout": {
+    "n_passes": 50,
+    "tuned_dropout": 0.2,
+    "dropout_modules": 1,
+    "mc_seed": 0,
+    "scope": "head only (last-layer MC Dropout)",
+    "source_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H36_L24_P16_seed42_20260704_075716/best_model.pt"
+  },
+  "baselines": {
+    "persistence_test": {
+      "n": 12075,
+      "rmse": 389.517844176586,
+      "mae": 250.79533714285714,
+      "n_day": 5465,
+      "rmse_day": 470.92567245567665,
+      "mae_day": 369.5877123513266,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 244.45105092112632,
+    "mae": 181.99848927734615,
+    "n_day": 5465,
+    "rmse_day": 285.63095540597953,
+    "mae_day": 233.21466579175498,
+    "day_threshold": 20.0,
+    "ensemble_std_mean": 42.37321853637695,
+    "ensemble_std_day_mean": 42.16937255859375,
+    "n_checkpoints": 50,
+    "coverage_80": 0.36024844720496896,
+    "coverage_day_80": 0.127355901189387,
+    "coverage_90": 0.39602484472049687,
+    "coverage_day_90": 0.16193961573650503,
+    "coverage_95": 0.42037267080745344,
+    "coverage_day_95": 0.19121683440073192,
+    "ensemble_median_day_mean": 400.25616455078125,
+    "coverage_pct_80": 0.34633540372670807,
+    "coverage_day_pct_80": 0.10137236962488563,
+    "coverage_pct_90": 0.35751552795031055,
+    "coverage_day_pct_90": 0.12351326623970722,
+    "coverage_pct_95": 0.3729192546583851,
+    "coverage_day_pct_95": 0.157548032936871,
+    "band_pct95_width_day_mean": 118.63448333740234,
+    "nll_day": 30.052270889282227,
+    "crps_day": 211.58013981499104,
+    "err_by_sigma_quartile_day": [
+      202.94052124023438,
+      236.03932189941406,
+      245.9250946044922,
+      247.97589111328125
+    ],
+    "sigma_by_quartile_day": [
+      30.02124786376953,
+      41.416019439697266,
+      45.61259460449219,
+      51.636512756347656
+    ],
+    "skill_vs_persistence": 0.37242656639292493,
+    "skill_day_vs_persistence": 0.393469135125857
+  }
+}
