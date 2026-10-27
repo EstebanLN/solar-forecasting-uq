@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -436,7 +437,24 @@ def main() -> None:
                     help="Also save per-seed flat CSV to results/master.csv")
     ap.add_argument("--out", default=str(PROJECT_ROOT / "results" / "summary.csv"),
                     help="Save aggregated CSV (default: results/summary.csv)")
+    ap.add_argument("--skip-audit", action="store_true",
+                    help="Build the table even if scripts/00_audit_runs.py reports errors")
     args = ap.parse_args()
+
+    # Consistency gate. Numbers from this table go into the paper, and the defects
+    # the audit looks for (a variance net fitted to a non-canonical model, a run
+    # whose artefacts live on the other machine, a checkpoint recorded but absent)
+    # all produce plausible-looking output. Surface them before the table, not
+    # after a reviewer asks.
+    if not args.skip_audit:
+        import subprocess
+        r = subprocess.run([sys.executable, str(PROJECT_ROOT / "scripts" / "00_audit_runs.py")],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            print(r.stdout)
+            print("Refusing to build the table while the audit reports errors.")
+            print("Fix them, or pass --skip-audit if you know why they are acceptable.")
+            raise SystemExit(1)
 
     all_records: list[dict] = []
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm",                "ResNet+LSTM (baseline, pre-Optuna)")

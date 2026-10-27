@@ -148,7 +148,7 @@ def parse_args() -> argparse.Namespace:
                         "diverges over 1000+ epochs (empirically verified: "
                         "1e-2 -> val_rmse_day explodes into the "
                         "thousands/tens-of-thousands by epoch ~150; "
-                        "100-1000 -> stays within ~20% of the persistence "
+                        "100-1000 -> stays within ~20%% of the persistence "   # %% : argparse interpolates help
                         "baseline over 150 epochs)")
     p.add_argument("--burn_in",         type=int, default=20,
                    help="Epochs to discard before collecting samples. Default 20 "

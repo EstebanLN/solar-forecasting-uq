@@ -66,7 +66,11 @@ def pick_best(runs: list[dict], label: str = "") -> dict | None:
     if len(runs) > 1:
         scored = [r for r in runs if r["val_rmse_day"] is not None]
         if scored:
-            best = min(scored, key=lambda r: (r["val_rmse_day"], r["name"]))
+            # Pre-sort by name DESCENDING so that min(), which returns the first
+            # minimal element, yields the NEWEST run among exact ties. Sorting
+            # ascending here would silently prefer the oldest.
+            by_newest = sorted(scored, key=lambda r: r["name"], reverse=True)
+            best = min(by_newest, key=lambda r: r["val_rmse_day"])
         else:
             best = runs[-1]
         losers = [r for r in runs if r is not best]

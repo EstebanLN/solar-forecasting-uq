@@ -1,0 +1,100 @@
+[
+  {
+    "epoch": 1,
+    "phase": "burn-in",
+    "train_mse_norm": 1.008797878740539,
+    "val_rmse": 258.6908948948641,
+    "val_rmse_day": 323.3463344768219,
+    "epoch_seconds": 384.54515194892883
+  },
+  {
+    "epoch": 2,
+    "phase": "sample",
+    "train_mse_norm": 1.0085998431477747,
+    "val_rmse": 258.12983847873096,
+    "val_rmse_day": 327.19154001279134,
+    "epoch_seconds": 383.3853871822357,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0002.pt"
+  },
+  {
+    "epoch": 3,
+    "phase": "sample",
+    "train_mse_norm": 1.0047046162642783,
+    "val_rmse": 258.45073299704995,
+    "val_rmse_day": 325.9503139443,
+    "epoch_seconds": 385.3255295753479,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0003.pt"
+  },
+  {
+    "epoch": 4,
+    "phase": "sample",
+    "train_mse_norm": 1.0036762926220335,
+    "val_rmse": 256.480477804111,
+    "val_rmse_day": 331.22936212712534,
+    "epoch_seconds": 385.5285978317261,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0004.pt"
+  },
+  {
+    "epoch": 5,
+    "phase": "sample",
+    "train_mse_norm": 1.0016114251084731,
+    "val_rmse": 255.34175116599604,
+    "val_rmse_day": 332.79783595923834,
+    "epoch_seconds": 385.82961201667786,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0005.pt"
+  },
+  {
+    "epoch": 6,
+    "phase": "sample",
+    "train_mse_norm": 1.0004428216898944,
+    "val_rmse": 254.3855095860458,
+    "val_rmse_day": 335.8273805560542,
+    "epoch_seconds": 385.61351108551025,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0006.pt"
+  },
+  {
+    "epoch": 7,
+    "phase": "sample",
+    "train_mse_norm": 1.0032851105914429,
+    "val_rmse": 259.3687697139136,
+    "val_rmse_day": 329.8102333631079,
+    "epoch_seconds": 384.89486503601074,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0007.pt"
+  },
+  {
+    "epoch": 8,
+    "phase": "sample",
+    "train_mse_norm": 1.0078540168737582,
+    "val_rmse": 256.92468264412486,
+    "val_rmse_day": 335.5067788357519,
+    "epoch_seconds": 385.1683540344238,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0008.pt"
+  },
+  {
+    "epoch": 9,
+    "phase": "sample",
+    "train_mse_norm": 1.0195827257815102,
+    "val_rmse": 256.2408539551928,
+    "val_rmse_day": 333.08007625157603,
+    "epoch_seconds": 385.30926847457886,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0009.pt"
+  },
+  {
+    "epoch": 10,
+    "phase": "sample",
+    "train_mse_norm": 1.0119622897164362,
+    "val_rmse": 255.17423398454324,
+    "val_rmse_day": 346.42123027443114,
+    "epoch_seconds": 385.01175451278687,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0010.pt"
+  },
+  {
+    "epoch": 11,
+    "phase": "sample",
+    "train_mse_norm": 1.0171649648410055,
+    "val_rmse": 255.39253816684447,
+    "val_rmse_day": 345.9019066248331,
+    "epoch_seconds": 385.8325572013855,
+    "checkpoint_saved": "/home/estebanladino/Documents/solar-forecasting-uq/runs/resnet_lstm_sgld/uniandes_H6_L24_P16_seed42_20260908_154257/checkpoint_e0011.pt"
+  }
+]
