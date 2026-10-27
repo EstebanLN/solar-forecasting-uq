@@ -17,32 +17,39 @@
 #   (a) MemAvailable  - the number the OOM-killer effectively acts on, and
 #   (b) swap-out RATE - whether the machine is thrashing right now.
 #
-# ram_ok   -> 0 if there is room right now
+# ram_ok   -> 0 if there is room right now (checks swap traffic in BOTH directions)
 # ram_wait -> polls until there is room; non-zero if it gives up
 
 ram_ok() {
-  local min_avail_mb=${1:-5000} max_swapout_pps=${2:-200}
-  local avail out1 out2 rate
+  local min_avail_mb=${1:-5000} max_swap_pps=${2:-200}
+  local avail i1 i2 o1 o2 rin rout rate
   avail=$(awk '/^MemAvailable:/ {print int($2/1024)}' /proc/meminfo)
-  out1=$(awk '/^pswpout /{print $2}' /proc/vmstat)
+  # BOTH directions. An earlier version watched only pswpout, so a machine busy
+  # faulting pages back IN - the slow half of thrashing, which pins processes in
+  # I/O wait while CPU use looks near zero - passed the guard as clean.
+  i1=$(awk '/^pswpin /{print $2}' /proc/vmstat)
+  o1=$(awk '/^pswpout /{print $2}' /proc/vmstat)
   sleep 2
-  out2=$(awk '/^pswpout /{print $2}' /proc/vmstat)
-  rate=$(( (out2 - out1) / 2 ))
-  RAM_GUARD_STATE="avail=${avail}MB swapout=${rate}pages/s"
-  [ "$avail" -ge "$min_avail_mb" ] && [ "$rate" -le "$max_swapout_pps" ]
+  i2=$(awk '/^pswpin /{print $2}' /proc/vmstat)
+  o2=$(awk '/^pswpout /{print $2}' /proc/vmstat)
+  rin=$(( (i2 - i1) / 2 ))
+  rout=$(( (o2 - o1) / 2 ))
+  rate=$(( rin > rout ? rin : rout ))
+  RAM_GUARD_STATE="avail=${avail}MB swapin=${rin} swapout=${rout}pages/s"
+  [ "$avail" -ge "$min_avail_mb" ] && [ "$rate" -le "$max_swap_pps" ]
 }
 
 ram_wait() {
-  local min_avail_mb=${1:-5000} max_swapout_pps=${2:-200} max_wait_s=${3:-7200}
+  local min_avail_mb=${1:-5000} max_swap_pps=${2:-200} max_wait_s=${3:-7200}
   local waited=0 interval=60
-  while ! ram_ok "$min_avail_mb" "$max_swapout_pps"; do
+  while ! ram_ok "$min_avail_mb" "$max_swap_pps"; do
     if [ "$waited" -ge "$max_wait_s" ]; then
       echo "[ram_guard] GIVING UP after ${waited}s: $RAM_GUARD_STATE" \
-           "(need >=${min_avail_mb}MB and <=${max_swapout_pps} pages/s)" >&2
+           "(need >=${min_avail_mb}MB and <=${max_swap_pps} pages/s either way)" >&2
       return 1
     fi
     [ "$waited" -eq 0 ] && echo "[ram_guard] waiting for memory: $RAM_GUARD_STATE" \
-      "(need >=${min_avail_mb}MB, <=${max_swapout_pps} pages/s)" >&2
+      "(need >=${min_avail_mb}MB, <=${max_swap_pps} pages/s either way)" >&2
     sleep "$interval"
     waited=$(( waited + interval ))
   done
