@@ -108,6 +108,69 @@ def coverage(y, mu, sigma, day_mask):
     return cov
 
 
+def sharpness(y, mu, sigma, day_mask, level="90"):
+    """Does a band of varying width beat a flat one at the same coverage?
+
+    Coverage alone cannot answer that. A constant width set to the right quantile
+    of the global error covers its nominal share exactly and is still useless for
+    telling an easy hour from a hard one, so a calibrated band is not yet an
+    informative one. The comparison here is the interval (Winkler) score at one
+    level, which charges for width and for every miss:
+
+        IS = 2*z*sigma + (2/alpha) * distance outside the interval
+
+    against the same score for the single best constant width, chosen as the
+    empirical quantile of |y - mu| that attains the nominal level. A positive
+    skill means sigma(x) earns its place; around zero means the model is only
+    reproducing the average error.
+    """
+    z = Z[level]
+    alpha = 1.0 - int(level) / 100.0
+    y, mu, sigma = y[day_mask], mu[day_mask], sigma[day_mask]
+    if y.size == 0:
+        return {}
+
+    def iscore(w):
+        lo, hi = mu - w, mu + w
+        pen = np.where(y < lo, lo - y, 0.0) + np.where(y > hi, y - hi, 0.0)
+        return float(np.mean(2.0 * w + (2.0 / alpha) * pen))
+
+    abs_err = np.abs(y - mu)
+    w_const = float(np.quantile(abs_err, int(level) / 100.0))
+    # corr(sigma, |error|) has a ceiling well below 1 even for a perfectly
+    # specified model, because |error| is a noisy draw around sigma, so the
+    # observed value must be read against what is achievable and not against 1.
+    # Closed form, for y|x ~ N(mu, sigma(x)) and |e| = sigma*|z| with z ~ N(0,1):
+    #   Cov(sigma, sigma|z|) = E|z| * Var(sigma)
+    #   Var(sigma|z|)        = E[sigma^2] - (2/pi) * E[sigma]^2
+    #   ceiling              = E|z| * Var(sigma) / (sd(sigma) * sqrt(Var(sigma|z|)))
+    # with E|z| = sqrt(2/pi). Derived rather than simulated: an earlier version
+    # drew the errors with a fixed seed, which can correlate with a sigma that
+    # happens to come from the same stream and inflates the ceiling.
+    e_abs_z = np.sqrt(2.0 / np.pi)
+    m1, m2 = float(np.mean(sigma)), float(np.mean(sigma ** 2))
+    var_sigma = m2 - m1 ** 2
+    var_prod = m2 - (2.0 / np.pi) * m1 ** 2
+    corr_ceiling = (float(e_abs_z * var_sigma / (np.sqrt(var_sigma) * np.sqrt(var_prod)))
+                    if var_sigma > 0 and var_prod > 0 else float("nan"))
+    is_model, is_const = iscore(z * sigma), iscore(np.full_like(y, w_const))
+    width = z * sigma
+    corr = float(np.corrcoef(sigma, abs_err)[0, 1]) if sigma.std() > 0 else float("nan")
+    return {
+        "level": level,
+        "interval_score_model": is_model,
+        "interval_score_constant_width": is_const,
+        "interval_score_skill_vs_constant": float(1.0 - is_model / is_const) if is_const else float("nan"),
+        "constant_width": w_const,
+        "mean_width": float(width.mean()),
+        "width_cv": float(width.std() / width.mean()) if width.mean() else float("nan"),
+        "corr_sigma_vs_abs_error": corr,
+        "r2_sigma_vs_abs_error": corr ** 2 if corr == corr else float("nan"),
+        "corr_ceiling_if_perfectly_specified": corr_ceiling,
+        "corr_fraction_of_ceiling": float(corr / corr_ceiling) if corr_ceiling else float("nan"),
+    }
+
+
 def main():
     p = argparse.ArgumentParser(description="Combined aleatoric + epistemic predictive band")
     p.add_argument("--arch", required=True, choices=list(ARCH_CFG))
@@ -209,6 +272,22 @@ def main():
     for name, c in (("epistemic", cov_e), ("aleatoric", cov_a), ("COMBINED", cov_t)):
         print(f"  {name:12s} {c['80']:7.3f} {c['90']:7.3f} {c['95']:7.3f}")
 
+    sharp = sharpness(y_true, mu, sigma_tot, day, "90")
+    print(f"\n  sharpness at 90% (combined band)")
+    print(f"    interval score   model={sharp['interval_score_model']:.1f}  "
+          f"constant width={sharp['interval_score_constant_width']:.1f}  "
+          f"skill={sharp['interval_score_skill_vs_constant']:+.3f}")
+    print(f"    width            mean={sharp['mean_width']:.1f}  cv={sharp['width_cv']:.3f}  "
+          f"(flat band would be {sharp['constant_width']:.1f})")
+    print(f"    corr(sigma,|err|)={sharp['corr_sigma_vs_abs_error']:+.3f}  "
+          f"ceiling={sharp['corr_ceiling_if_perfectly_specified']:.3f}  "
+          f"({sharp['corr_fraction_of_ceiling']:.0%} of achievable)")
+
+    # Per-sample arrays for the figures and for any later recalibration. Gitignored
+    # by the *.npz rule, so this stays out of the repo.
+    np.savez_compressed(OUT_ROOT / "_tmp_arrays.npz", y=y_true, mu=mu,
+                        sigma_a=sigma_a, sigma_epi=sigma_epi, day=day)
+
     run_dir = OUT_ROOT / f"{args.site}_H{H}_L{L}_P{args.patch}_{args.arch}_{args.optuna_version}_M{len(seeds)}"
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "summary.json").write_text(json.dumps({
@@ -224,8 +303,10 @@ def main():
                        "sigma_tot_day_mean": float(sigma_tot[day].mean()),
                        "coverage_day_epistemic": cov_e,
                        "coverage_day_aleatoric": cov_a,
-                       "coverage_day_combined": cov_t},
+                       "coverage_day_combined": cov_t,
+                       "sharpness_day_combined": sharp},
     }, indent=2))
+    (OUT_ROOT / "_tmp_arrays.npz").replace(run_dir / "per_sample.npz")
     print(f"\nSaved -> {run_dir}")
 
 
