@@ -55,6 +55,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--n_trials",      type=int, default=75)
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int, default=0)
+    p.add_argument("--optuna_jobs", type=int, default=2,
+                   help="concurrent Optuna trials. 2 is the tuned default but it doubles "
+                        "the dataloader workers and is this project's largest memory "
+                        "consumer; pass 1 when sharing the machine (see scripts/ram_guard.sh)")
     p.add_argument("--day_threshold", type=float, default=20.0)
     p.add_argument("--runs_root",       default=None,
                    help="Directorio raíz donde guardar los runs "
@@ -247,7 +251,7 @@ def main() -> None:
         make_objective(train_ds, val_ds, normalizer, DEVICE, args.seed, args.day_threshold, USE_AMP,
                        fusion=args.fusion, d_tab=D_TAB),
         n_trials=args.n_trials,
-        n_jobs=2,
+        n_jobs=args.optuna_jobs,
         show_progress_bar=True,
         catch=(AssertionError,),
     )
