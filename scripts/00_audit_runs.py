@@ -16,6 +16,9 @@ corresponds to a defect that actually occurred in this project:
   THIN      a derived result built on fewer members than are now on disk, which
             is how the deep ensembles ended up at M=2 for one cell and M=4 for
             the rest after the missing checkpoints were synced
+  NESTED    a run directory inside another run directory, which rsync --relative
+            produces when the source path carries a ./ marker, and which makes a
+            run appear twice in any inventory
   RAW_SEL   a script that picks a run by sort order instead of run_select
 
 Exit code is 1 if anything was found, so it can gate a results build:
@@ -42,7 +45,7 @@ H_FROM_STEPS = {6: 1.0, 18: 3.0, 36: 6.0}
 SEVERITY = {
     "VNET_SRC": "ERROR", "VNET_OLD": "ERROR", "DANGLING": "ERROR",
     "FOREIGN": "ERROR", "RAW_SEL": "ERROR", "BADJSON": "ERROR",
-    "STALE": "WARN", "DUP": "WARN", "THIN": "WARN",
+    "STALE": "WARN", "DUP": "WARN", "THIN": "WARN", "NESTED": "ERROR",
 }
 findings: list[tuple[str, str]] = []
 
@@ -209,6 +212,22 @@ def audit_thin_derived(canon: dict) -> None:
                             f"seeds {missing} are now on disk too; rebuild for a symmetric grid")
 
 
+def audit_nested_runs() -> None:
+    """runs/<family>/<run>/summary.json is depth 3; anything deeper is a copy of a
+    run inside a run, unless it sits under a retired, underscore-prefixed group."""
+    root = PROJECT_ROOT / "runs"
+    if not root.exists():
+        return
+    for sj in sorted(root.rglob("summary.json")):
+        rel = sj.relative_to(root)
+        if len(rel.parts) <= 3:
+            continue
+        if any(part.startswith("_") for part in rel.parts[:-1]):
+            continue       # retired group, e.g. sarima/_superseded_static_forecast/<run>
+        add("NESTED", f"runs/{rel.parent}: a run directory nested inside another; "
+                      f"delete the inner copy so inventories do not double-count it")
+
+
 def audit_raw_selection() -> None:
     bad = []
     for f in sorted((PROJECT_ROOT / "scripts").glob("*.py")):
@@ -239,6 +258,7 @@ def main() -> int:
     audit_foreign_and_members(canon)
     audit_stale_derived()
     audit_thin_derived(canon)
+    audit_nested_runs()
     audit_raw_selection()
 
     if not findings:
