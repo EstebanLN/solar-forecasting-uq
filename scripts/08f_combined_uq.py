@@ -57,9 +57,16 @@ build_model, ARCH_CFG = _sgld.build_model, _sgld.ARCH_CFG
 Z = {"80": 1.281552, "90": 1.644854, "95": 1.959964}
 
 
-def find_mean_members(runs_root: Path, site: str, horizon: float):
-    """{seed: (best_params, ckpt)} for runs with a checkpoint on disk."""
-    out = {}
+def find_mean_members(runs_root: Path, site: str, horizon: float, prefer_ckpt=None):
+    """{seed: (best_params, ckpt)} for runs with a checkpoint on disk.
+
+    A seed can have more than one tuned run (elpaso h6 has two, with hidden_t 256
+    and 128). Picking the last one in sort order silently pairs a mean model with
+    a variance net trained on the OTHER architecture, which fails at load time.
+    prefer_ckpt maps seed -> the checkpoint the variance net was trained on, so
+    the pair stays coherent; without it the newest run still wins.
+    """
+    cand = {}
     for d in sorted(runs_root.iterdir()) if runs_root.exists() else []:
         sj = d / "summary.json"
         if not sj.exists():
@@ -70,7 +77,18 @@ def find_mean_members(runs_root: Path, site: str, horizon: float):
         bp = m.get("optuna", {}).get("best_params")
         ck = (m.get("best_model") or {}).get("best_ckpt_path")
         if bp and ck and Path(ck).exists():
-            out[int(m["seed"])] = (bp, ck)
+            cand.setdefault(int(m["seed"]), []).append((bp, ck))
+    out = {}
+    for seed, runs in cand.items():
+        want = (prefer_ckpt or {}).get(seed)
+        match = [r for r in runs if want and Path(r[1]).resolve() == Path(want).resolve()]
+        if match:
+            out[seed] = match[0]
+        else:
+            if want and len(runs) > 1:
+                print(f"  WARNING seed {seed}: the variance net was trained on {want}, "
+                      f"which is not among the {len(runs)} runs on disk; using the newest")
+            out[seed] = runs[-1]
     return out
 
 
@@ -148,7 +166,14 @@ def main():
 
     print(f"\nCOMBINED UQ | {args.arch} {args.site} h{args.hours_ahead} optuna={args.optuna_version} dev={DEV}")
 
-    members = find_mean_members(OPTUNA_ROOT, args.site, horizon)
+    # Which mean checkpoint each variance net was fitted on; pairing the ensemble
+    # member to that run keeps mu and sigma_a coming from the same model.
+    prefer = {}
+    for s_probe in (1, 7, 13, 42):
+        got = find_variance_run(VAR_ROOT, args.site, horizon, s_probe)
+        if got and got[0].get("source_mean_ckpt"):
+            prefer[s_probe] = PROJECT_ROOT / got[0]["source_mean_ckpt"]
+    members = find_mean_members(OPTUNA_ROOT, args.site, horizon, prefer_ckpt=prefer)
     if len(members) < 2:
         raise SystemExit(f"Need >=2 mean checkpoints, found {len(members)} in {OPTUNA_ROOT}")
     seeds = sorted(members)
