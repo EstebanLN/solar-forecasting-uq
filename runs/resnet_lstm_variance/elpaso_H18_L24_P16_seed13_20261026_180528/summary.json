@@ -1,0 +1,17 @@
+{
+  "run_name": "elpaso_H18_L24_P16_seed13_20261026_180528",
+  "arch": "resnet",
+  "site": "elpaso",
+  "seed": 13,
+  "horizon_hours": 3.0,
+  "source_mean_ckpt": "runs/resnet_lstm_optuna_v2/elpaso_H18_L24_P16_seed13_20261014_044314/best_model.pt",
+  "best_epoch": 17,
+  "train_seconds_total": 16883.36499595642,
+  "test": {
+    "gamma_nll": -0.8852156937067359,
+    "sigma_a_mean": 191.2097930908203,
+    "sigma_a_std": 50.29000473022461,
+    "abs_residual_mean": 118.0260009765625,
+    "corr_sigma_a_vs_abs_residual": 0.24371211046585256
+  }
+}

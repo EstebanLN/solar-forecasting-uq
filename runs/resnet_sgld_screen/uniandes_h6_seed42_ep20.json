@@ -1,0 +1,107 @@
+{
+  "arch": "resnet",
+  "site": "uniandes",
+  "horizon_hours": 6.0,
+  "seed": 42,
+  "epochs": 20,
+  "warm_start_val_rmse_day": 275.7092138326629,
+  "persistence_val_rmse_day": 462.17602240706213,
+  "grid": [
+    {
+      "prior_precision": 1.5573582855354125e-05,
+      "sgld_lr": 1e-07,
+      "val_rmse_day": 331.84663938550676,
+      "ratio_vs_warm": 1.20361098844856,
+      "contained": false,
+      "seconds": 582.0487816333771
+    },
+    {
+      "prior_precision": 1.5573582855354125e-05,
+      "sgld_lr": 1e-08,
+      "val_rmse_day": 297.07142162253604,
+      "ratio_vs_warm": 1.0774809354134918,
+      "contained": true,
+      "seconds": 563.3641233444214
+    },
+    {
+      "prior_precision": 1.5573582855354125e-05,
+      "sgld_lr": 1e-09,
+      "val_rmse_day": 279.7966943118145,
+      "ratio_vs_warm": 1.0148253314509557,
+      "contained": true,
+      "seconds": 573.7930998802185
+    },
+    {
+      "prior_precision": 1.0,
+      "sgld_lr": 1e-07,
+      "val_rmse_day": 331.6706148939664,
+      "ratio_vs_warm": 1.2029725459058047,
+      "contained": false,
+      "seconds": 570.7098734378815
+    },
+    {
+      "prior_precision": 1.0,
+      "sgld_lr": 1e-08,
+      "val_rmse_day": 278.9825086762634,
+      "ratio_vs_warm": 1.0118722722323934,
+      "contained": true,
+      "seconds": 572.0170557498932
+    },
+    {
+      "prior_precision": 1.0,
+      "sgld_lr": 1e-09,
+      "val_rmse_day": 277.85679413290853,
+      "ratio_vs_warm": 1.007789294635431,
+      "contained": true,
+      "seconds": 568.5605072975159
+    },
+    {
+      "prior_precision": 10.0,
+      "sgld_lr": 1e-07,
+      "val_rmse_day": 331.73632457768184,
+      "ratio_vs_warm": 1.2032108755677047,
+      "contained": false,
+      "seconds": 563.4398109912872
+    },
+    {
+      "prior_precision": 10.0,
+      "sgld_lr": 1e-08,
+      "val_rmse_day": 274.5194710564555,
+      "ratio_vs_warm": 0.9956847913797704,
+      "contained": true,
+      "seconds": 569.8565566539764
+    },
+    {
+      "prior_precision": 10.0,
+      "sgld_lr": 1e-09,
+      "val_rmse_day": 280.735159307781,
+      "ratio_vs_warm": 1.0182291531184318,
+      "contained": true,
+      "seconds": 559.9516234397888
+    },
+    {
+      "prior_precision": 1000.0,
+      "sgld_lr": 1e-07,
+      "val_rmse_day": 317.83999296060955,
+      "ratio_vs_warm": 1.1528087456428542,
+      "contained": true,
+      "seconds": 557.3950252532959
+    },
+    {
+      "prior_precision": 1000.0,
+      "sgld_lr": 1e-08,
+      "val_rmse_day": 284.3853374485653,
+      "ratio_vs_warm": 1.0314683847351152,
+      "contained": true,
+      "seconds": 565.5286366939545
+    },
+    {
+      "prior_precision": 1000.0,
+      "sgld_lr": 1e-09,
+      "val_rmse_day": 282.42019851426875,
+      "ratio_vs_warm": 1.0243408067083277,
+      "contained": true,
+      "seconds": 553.2093522548676
+    }
+  ]
+}

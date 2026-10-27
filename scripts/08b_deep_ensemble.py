@@ -105,7 +105,8 @@ def main() -> None:
     p.add_argument("--site", default="uniandes", choices=["uniandes", "elpaso"])
     p.add_argument("--hours_ahead", type=int, default=6, choices=[1, 3, 6])
     p.add_argument("--patch", type=int, default=16)
-    p.add_argument("--optuna_version", default="v1", choices=["v1", "v2"])
+    p.add_argument("--optuna_version", default="v2",
+                   help="v2 is the protocol every current result uses (tuned k-NN graph, corrected El Paso data). It used to default to v1, which silently built artefacts on a different mean model from the one 08f/08e expect.", choices=["v1", "v2"])
     p.add_argument("--device", default=("cuda" if torch.cuda.is_available() else "cpu"))
     p.add_argument("--day_threshold", type=float, default=20.0)
     p.add_argument("--runs_root", default=None, help="Override output dir (default runs/{arch}_deep_ensemble)")

@@ -89,7 +89,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--hours_ahead",    type=int, default=6, choices=[1, 3, 6])
     p.add_argument("--seed",           type=int, default=42)
     p.add_argument("--patch",          type=int, default=16)
-    p.add_argument("--optuna_version", default="v1", choices=["v1", "v2"])
+    p.add_argument("--optuna_version", default="v2",
+                   help="v2 is the protocol every current result uses (tuned k-NN graph, corrected El Paso data). It used to default to v1, which silently built artefacts on a different mean model from the one 08f/08e expect.", choices=["v1", "v2"])
     p.add_argument("--epochs",         type=int, default=300,
                    help="sigma(x) modulation emerges late; see 12b_variance_net_validation.py")
     p.add_argument("--patience",       type=int, default=40,

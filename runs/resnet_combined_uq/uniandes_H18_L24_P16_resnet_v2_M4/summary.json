@@ -1,0 +1,62 @@
+{
+  "method": "combined_uq",
+  "arch": "resnet",
+  "site": "uniandes",
+  "optuna_version": "v2",
+  "temporal": {
+    "horizon_hours": 3.0,
+    "history_steps": 24,
+    "horizon_steps_H": 18
+  },
+  "ensemble_seeds": [
+    1,
+    7,
+    13,
+    42
+  ],
+  "variance_net_seeds": [
+    1,
+    7,
+    13,
+    42
+  ],
+  "baselines": {
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 200.8437982857279,
+    "mae": 153.442331968035,
+    "n_day": 5402,
+    "rmse_day": 248.3491859007395,
+    "mae_day": 197.67083235256587,
+    "day_threshold": 20.0,
+    "skill_day_vs_persistence": 0.3868116231716069,
+    "sigma_epi_day_mean": 61.7087287902832,
+    "sigma_a_day_mean": 267.6148681640625,
+    "sigma_tot_day_mean": 278.5412902832031,
+    "coverage_day_epistemic": {
+      "80": 0.22787856349500185,
+      "90": 0.29840799703813403,
+      "95": 0.353387634209552
+    },
+    "coverage_day_aleatoric": {
+      "80": 0.8765272121436505,
+      "90": 0.9581636430951499,
+      "95": 0.9833395038874491
+    },
+    "coverage_day_combined": {
+      "80": 0.8939281747500926,
+      "90": 0.9631617919289153,
+      "95": 0.985190670122177
+    }
+  }
+}

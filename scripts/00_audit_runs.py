@@ -13,6 +13,9 @@ corresponds to a defect that actually occurred in this project:
   FOREIGN   a summary that records an absolute path from the other machine
   DANGLING  a recorded checkpoint that is not on this disk
   STALE     a derived result superseded by one with more ensemble members
+  THIN      a derived result built on fewer members than are now on disk, which
+            is how the deep ensembles ended up at M=2 for one cell and M=4 for
+            the rest after the missing checkpoints were synced
   RAW_SEL   a script that picks a run by sort order instead of run_select
 
 Exit code is 1 if anything was found, so it can gate a results build:
@@ -39,7 +42,7 @@ H_FROM_STEPS = {6: 1.0, 18: 3.0, 36: 6.0}
 SEVERITY = {
     "VNET_SRC": "ERROR", "VNET_OLD": "ERROR", "DANGLING": "ERROR",
     "FOREIGN": "ERROR", "RAW_SEL": "ERROR", "BADJSON": "ERROR",
-    "STALE": "WARN", "DUP": "WARN",
+    "STALE": "WARN", "DUP": "WARN", "THIN": "WARN",
 }
 findings: list[tuple[str, str]] = []
 
@@ -174,6 +177,38 @@ def audit_stale_derived() -> None:
                                      f"table may report the thinner ensemble")
 
 
+def audit_thin_derived(canon: dict) -> None:
+    """A derived result using fewer seeds than the cell now has members for."""
+    avail = defaultdict(set)
+    for (site, h, seed) in canon:
+        avail[(site, h)].add(seed)
+    H_OF = {"H6": 1.0, "H18": 3.0, "H36": 6.0}
+    for fam, key in (("resnet_deep_ensemble", "ensemble"), ("resnet_combined_uq", "ensemble_seeds")):
+        root = PROJECT_ROOT / "runs" / fam
+        if not root.exists():
+            continue
+        for d in sorted(root.iterdir()):
+            if d.name.startswith("_"):
+                continue
+            m = load(d / "summary.json") if (d / "summary.json").exists() else None
+            if not m:
+                continue
+            used = m.get(key)
+            if isinstance(used, dict):
+                used = used.get("seeds")
+            if not used:
+                continue
+            site = m.get("site")
+            hs = next((v for k, v in H_OF.items() if f"_{k}_" in d.name), None)
+            if site is None or hs is None:
+                continue
+            have = avail.get((site, hs), set())
+            missing = sorted(have - set(used))
+            if missing:
+                add("THIN", f"{fam}/{d.name}: built on {len(used)} member(s) {sorted(used)} but "
+                            f"seeds {missing} are now on disk too; rebuild for a symmetric grid")
+
+
 def audit_raw_selection() -> None:
     bad = []
     for f in sorted((PROJECT_ROOT / "scripts").glob("*.py")):
@@ -203,6 +238,7 @@ def main() -> int:
     audit_variance(canon)
     audit_foreign_and_members(canon)
     audit_stale_derived()
+    audit_thin_derived(canon)
     audit_raw_selection()
 
     if not findings:
