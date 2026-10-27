@@ -44,6 +44,7 @@ from solar_uq.data import (
 )
 from solar_uq.metrics import eval_persistence, skill_score
 from solar_uq.train_sgld import _ensemble_metrics
+from solar_uq.run_select import pick_best
 
 # Reuse build_model + ARCH_CFG from the (digit-named) SGLD driver, so the model
 # is instantiated exactly as it was for training/SGLD.
@@ -74,8 +75,16 @@ def find_seed_runs(runs_root: Path, site: str, horizon_hours: float) -> dict[int
         seed = meta.get("seed")
         if bp is None or ckpt is None or not Path(ckpt).exists():
             continue
-        out[int(seed)] = (bp, ckpt)   # latest run per seed wins (sorted order)
-    return out
+        out.setdefault(int(seed), []).append(
+            {"run_dir": run_dir, "name": run_dir.name, "seed": int(seed),
+             "best_params": bp, "ckpt": ckpt,
+             "val_rmse_day": (meta.get("best_model") or {}).get("final_val", {}).get("rmse_day")})
+    # Canonical rule: lowest validation RMSE per seed, never sort order. elpaso h6
+    # has two runs for seed 42 and the two differ in architecture, so "latest wins"
+    # silently disagreed with the variance net and SGLD for that cell.
+    return {seed: (b["best_params"], b["ckpt"])
+            for seed, runs in sorted(out.items())
+            if (b := pick_best(runs, label=f"{site} h{horizon_hours:g}")) is not None}
 
 
 @torch.no_grad()

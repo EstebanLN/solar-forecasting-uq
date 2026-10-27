@@ -53,6 +53,7 @@ from solar_uq.models.mlp import FlatMLP
 from solar_uq.models.resnet_lstm import ResNetLSTM
 from solar_uq.train import seed_everything
 from solar_uq.variance_net import gamma_nll_loss, gamma_params, aleatoric_variance, make_variance_model
+from solar_uq.run_select import scan_cell_runs, pick_best
 
 
 # ---------------------------------------------------------------------------
@@ -110,23 +111,15 @@ def find_optuna_run(runs_root: Path, site: str, horizon_hours: float, seed: int)
     """
     if not runs_root.exists():
         raise FileNotFoundError(f"Optuna runs directory not found: {runs_root}")
-    for run_dir in sorted(runs_root.iterdir()):
-        sj = run_dir / "summary.json"
-        if not sj.exists():
-            continue
-        meta = json.loads(sj.read_text(encoding="utf-8"))
-        if (
-            meta.get("site") == site
-            and meta.get("temporal", {}).get("horizon_hours") == horizon_hours
-            and meta.get("seed") == seed
-        ):
-            if meta.get("optuna", {}).get("best_params") is None:
-                raise ValueError(f"summary.json in {run_dir} has no optuna.best_params")
-            ckpt_path = meta.get("best_model", {}).get("best_ckpt_path")
-            if not ckpt_path or not Path(ckpt_path).exists():
-                raise FileNotFoundError(f"summary.json in {run_dir} has no usable best_ckpt_path")
-            print(f"  Optuna source: {run_dir.name}")
-            return meta
+    # Canonical rule: lowest validation RMSE. This used to take the FIRST match in
+    # sorted order, which for elpaso h6 seed 42 is the worse of two runs
+    # (val_rmse_day 260.2 against 250.3) and fitted the variance net to a model no
+    # other consumer of this cell used.
+    best = pick_best(scan_cell_runs(runs_root, site, horizon_hours, seed=seed),
+                     label=f"{site} h{horizon_hours:g}")
+    if best is not None:
+        print(f"  Optuna source: {best['name']}")
+        return json.loads((best["run_dir"] / "summary.json").read_text(encoding="utf-8"))
     raise FileNotFoundError(
         f"No completed Optuna run with a saved checkpoint found in {runs_root} "
         f"for site={site}, horizon_hours={horizon_hours}, seed={seed}."

@@ -49,47 +49,13 @@ from solar_uq.data import (
 )
 from solar_uq.metrics import eval_persistence, metrics_from_arrays, skill_score
 from solar_uq.variance_net import gamma_params, aleatoric_variance, make_variance_model
+from solar_uq.run_select import best_members
 
 _spec = importlib.util.spec_from_file_location("_sgld_driver", PROJECT_ROOT / "scripts" / "08_sgld.py")
 _sgld = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_sgld)
 build_model, ARCH_CFG = _sgld.build_model, _sgld.ARCH_CFG
 
 Z = {"80": 1.281552, "90": 1.644854, "95": 1.959964}
-
-
-def find_mean_members(runs_root: Path, site: str, horizon: float, prefer_ckpt=None):
-    """{seed: (best_params, ckpt)} for runs with a checkpoint on disk.
-
-    A seed can have more than one tuned run (elpaso h6 has two, with hidden_t 256
-    and 128). Picking the last one in sort order silently pairs a mean model with
-    a variance net trained on the OTHER architecture, which fails at load time.
-    prefer_ckpt maps seed -> the checkpoint the variance net was trained on, so
-    the pair stays coherent; without it the newest run still wins.
-    """
-    cand = {}
-    for d in sorted(runs_root.iterdir()) if runs_root.exists() else []:
-        sj = d / "summary.json"
-        if not sj.exists():
-            continue
-        m = json.loads(sj.read_text(encoding="utf-8"))
-        if m.get("site") != site or m.get("temporal", {}).get("horizon_hours") != horizon:
-            continue
-        bp = m.get("optuna", {}).get("best_params")
-        ck = (m.get("best_model") or {}).get("best_ckpt_path")
-        if bp and ck and Path(ck).exists():
-            cand.setdefault(int(m["seed"]), []).append((bp, ck))
-    out = {}
-    for seed, runs in cand.items():
-        want = (prefer_ckpt or {}).get(seed)
-        match = [r for r in runs if want and Path(r[1]).resolve() == Path(want).resolve()]
-        if match:
-            out[seed] = match[0]
-        else:
-            if want and len(runs) > 1:
-                print(f"  WARNING seed {seed}: the variance net was trained on {want}, "
-                      f"which is not among the {len(runs)} runs on disk; using the newest")
-            out[seed] = runs[-1]
-    return out
 
 
 def find_variance_run(var_root: Path, site: str, horizon: float, seed: int):
@@ -166,14 +132,8 @@ def main():
 
     print(f"\nCOMBINED UQ | {args.arch} {args.site} h{args.hours_ahead} optuna={args.optuna_version} dev={DEV}")
 
-    # Which mean checkpoint each variance net was fitted on; pairing the ensemble
-    # member to that run keeps mu and sigma_a coming from the same model.
-    prefer = {}
-    for s_probe in (1, 7, 13, 42):
-        got = find_variance_run(VAR_ROOT, args.site, horizon, s_probe)
-        if got and got[0].get("source_mean_ckpt"):
-            prefer[s_probe] = PROJECT_ROOT / got[0]["source_mean_ckpt"]
-    members = find_mean_members(OPTUNA_ROOT, args.site, horizon, prefer_ckpt=prefer)
+    # Canonical member per seed: lowest validation RMSE, never sort order.
+    members = best_members(OPTUNA_ROOT, args.site, horizon)
     if len(members) < 2:
         raise SystemExit(f"Need >=2 mean checkpoints, found {len(members)} in {OPTUNA_ROOT}")
     seeds = sorted(members)
@@ -212,7 +172,17 @@ def main():
         if not found:
             continue
         vmeta, vck = found
-        bp, _ = members[s]
+        bp, mck = members[s]
+        # The variance net is a swapped head on ONE specific mean model. If it was
+        # fitted on a different run of this seed its shapes will not match, so skip
+        # it loudly instead of dying on a shape mismatch halfway through the grid.
+        src = vmeta.get("source_mean_ckpt")
+        if src and Path(src).resolve() != Path(mck).resolve():
+            print(f"  SKIP variance net for seed {s}: fitted on {Path(src).parent.name}, "
+                  f"but the canonical member is {Path(mck).parent.name}. Retrain with "
+                  f"scripts/12_variance_net.py --site {args.site} --hours_ahead "
+                  f"{args.hours_ahead} --seed {s}")
+            continue
         vm = make_variance_model(build_model(args.arch, bp, args.patch, L, DEV)).to(DEV)  # swapped head starts on CPU
         st = torch.load(vck, map_location=DEV, weights_only=False)
         vm.load_state_dict(st.get("model_state", st)); vm.eval()

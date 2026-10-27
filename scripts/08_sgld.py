@@ -59,6 +59,7 @@ from solar_uq.models.mlp import FlatMLP
 from solar_uq.models.resnet_lstm import ResNetLSTM
 from solar_uq.train import seed_everything, eval_model
 from solar_uq.train_sgld import train_sgld
+from solar_uq.run_select import scan_cell_runs, pick_best
 
 
 # ---------------------------------------------------------------------------
@@ -195,11 +196,24 @@ def find_optuna_best_params(
 ) -> tuple[dict, str | None]:
     """Scan runs_root for a summary.json matching (site, horizon_hours, seed).
 
-    Returns ``(optuna.best_params, best_ckpt_path)`` from the first matching
-    run. ``best_ckpt_path`` is the trained mean-network checkpoint used for
-    warm-starting SGLD (None if the run has no usable checkpoint).
-    Raises FileNotFoundError if no matching run is found.
+    Returns ``(optuna.best_params, best_ckpt_path)`` from the CANONICAL run for
+    the cell: the one with the lowest validation RMSE. ``best_ckpt_path`` is the
+    trained mean-network checkpoint used for warm-starting SGLD (None if the run
+    has no usable checkpoint). Raises FileNotFoundError if no matching run is
+    found.
+
+    This used to return the first match in sorted order. elpaso h6 has two runs
+    for seed 42 with different architectures, so that rule warm-started SGLD from
+    the worse one (val_rmse_day 260.2 against 250.3) while the deep ensemble used
+    the better one.
     """
+    best = pick_best(scan_cell_runs(runs_root, site, horizon_hours, seed=seed),
+                     label=f"{site} h{horizon_hours:g}")
+    if best is not None:
+        print(f"  Optuna source: {best['name']}")
+        print(f"  best_params:   {best['best_params']}")
+        print(f"  checkpoint:    {best['ckpt']}")
+        return best["best_params"], best["ckpt"]
     if not runs_root.exists():
         raise FileNotFoundError(
             f"Optuna runs directory not found: {runs_root}\n"
