@@ -22,6 +22,10 @@ corresponds to a defect that actually occurred in this project:
   V2GAP     a family not yet complete in the v2 protocol for all four seeds at
             both sites, which is the condition 10_paper_figures.py's site-aware
             v1/v2 selection waits on before it can be removed
+  FIGORPHAN a figure cited by a .tex that no script in scripts/ mentions, so the
+            repo cannot rebuild it. Dropping 09b/09c as "superseded" left the SGLD
+            methodology note citing two such figures
+  FIGMISS   a figure cited by a .tex that is not on disk at all
   RAW_SEL   a script that picks a run by sort order instead of run_select
 
 Exit code is 1 if anything was found, so it can gate a results build:
@@ -49,6 +53,7 @@ SEVERITY = {
     "VNET_SRC": "ERROR", "VNET_OLD": "ERROR", "DANGLING": "ERROR",
     "FOREIGN": "ERROR", "RAW_SEL": "ERROR", "BADJSON": "ERROR",
     "STALE": "WARN", "DUP": "WARN", "THIN": "WARN", "NESTED": "ERROR", "V2GAP": "WARN",
+    "FIGORPHAN": "ERROR", "FIGMISS": "ERROR",
 }
 findings: list[tuple[str, str]] = []
 
@@ -268,6 +273,48 @@ def audit_nested_runs() -> None:
                       f"delete the inner copy so inventories do not double-count it")
 
 
+def audit_figures() -> None:
+    """Every figure our own .tex files cite must exist and be rebuildable.
+
+    A public repo for reproducing results cannot cite a figure whose generator was
+    deleted; that is how the SGLD methodology note ended up pointing at two PNGs
+    nothing in scripts/ could produce.
+
+    Scope is what this repo regenerates: the article and the methodology notes.
+    docs/background/ archives earlier theses and docs/presentations/ holds slide
+    assets carried over from them; neither is rebuilt here, and including them
+    buried the two real findings under 151 false ones. Paths resolve by basename
+    anywhere under docs/, which covers \\graphicspath{{figures/}} without parsing
+    LaTeX.
+    """
+    docs = PROJECT_ROOT / "docs"
+    if not docs.exists():
+        return
+    on_disk = {}
+    for f in docs.rglob("*"):
+        if f.is_file() and f.suffix.lower() in (".png", ".pdf", ".jpg", ".jpeg", ".eps"):
+            on_disk.setdefault(f.stem, f)
+    scripts_text = [sp.read_text(encoding="utf-8", errors="replace")
+                    for sp in sorted((PROJECT_ROOT / "scripts").glob("*.py"))]
+    for tex in sorted(docs.rglob("*.tex")):
+        parts = tex.relative_to(docs).parts
+        if "background" in parts or "presentations" in parts:
+            continue
+        try:
+            body = tex.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        where = tex.relative_to(PROJECT_ROOT)
+        for ref in sorted(set(re.findall(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", body))):
+            stem = Path(ref).stem
+            if stem not in on_disk:
+                add("FIGMISS", f"{where} cites {ref}, which is not under docs/")
+                continue
+            if not any(stem in t for t in scripts_text):
+                add("FIGORPHAN", f"{where} cites {stem} ({on_disk[stem].relative_to(PROJECT_ROOT)}), "
+                                 f"which no script in scripts/ mentions: the repo cannot rebuild it")
+
+
 def audit_raw_selection() -> None:
     bad = []
     for f in sorted((PROJECT_ROOT / "scripts").glob("*.py")):
@@ -300,6 +347,7 @@ def main() -> int:
     audit_thin_derived(canon)
     audit_nested_runs()
     audit_v2_coverage()
+    audit_figures()
     audit_raw_selection()
 
     if not findings:
