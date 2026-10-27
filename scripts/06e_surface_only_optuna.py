@@ -46,7 +46,10 @@ def main() -> None:
     p.add_argument("--hours_ahead", type=int, default=6, choices=[1, 3, 6])
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--patch", type=int, default=16)
-    p.add_argument("--n_trials", type=int, default=40)
+    p.add_argument("--n_trials", type=int, default=75,
+                   help="Matches the 75 trials the satellite models get. A baseline tuned "
+                        "with a smaller budget inflates skill(fusion) - skill(surface-only), "
+                        "which is exactly the quantity this baseline exists to measure.")
     p.add_argument("--epochs", type=int, default=60)
     p.add_argument("--patience", type=int, default=8)
     p.add_argument("--day_threshold", type=float, default=20.0)
