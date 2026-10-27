@@ -49,7 +49,7 @@ from solar_uq.data import (
 )
 from solar_uq.metrics import eval_persistence, skill_score
 from solar_uq.train_sgld import _ensemble_metrics
-from solar_uq.run_select import pick_best
+from solar_uq.run_select import best_members
 
 _spec = importlib.util.spec_from_file_location("_sgld_driver", PROJECT_ROOT / "scripts" / "08_sgld.py")
 _sgld = importlib.util.module_from_spec(_spec)
@@ -163,10 +163,14 @@ def main() -> None:
     if len(match) > 1:
         # Canonical rule: lowest validation RMSE, never sort order. elpaso h6 has
         # two runs for seed 42 and "last wins" disagreed with the variance net.
-        best = pick_best([{"name": str(r[6]), "seed": r[2], "best_params": r[5],
-                           "ckpt": r[6], "val_rmse_day": r[7] if len(r) > 7 else None}
-                          for r in match], label=f"{args.site} h{args.hours_ahead}")
-        match = [r for r in match if r[6] == best["ckpt"]]
+        # Ask run_select rather than rebuilding the rule from scan_runs' tuples:
+        # those carry no validation score, so an earlier attempt here silently
+        # fell back to sort order while printing that it had compared scores.
+        canon = best_members(OPTUNA_ROOT, args.site, horizon_hours).get(args.seed)
+        if canon is None:
+            raise SystemExit(f"No usable run for seed {args.seed} in {OPTUNA_ROOT}")
+        want = Path(canon[1]).resolve()
+        match = [r for r in match if Path(r[6]).resolve() == want] or match[-1:]
     _, _, _, dropout, has_ckpt, bp, ckpt = match[-1]
     if not has_ckpt:
         raise SystemExit(f"Checkpoint missing for that cell ({ckpt}).")
