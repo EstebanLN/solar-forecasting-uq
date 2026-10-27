@@ -25,8 +25,16 @@ Design notes:
   over 1000+ epochs and it diverges. Use scripts/08_sgld.py's
   --sgld_prior_precision (default 100.0) instead — see that script's help
   text for the relaxation-timescale argument and the empirical verification.
-- n_train scaling: we do NOT rescale the gradient by N/batch_size here;
-  the LR absorbs that factor, consistent with the existing train_one_model loop.
+- n_train scaling: the CALLER must hand in the negative log-posterior, i.e.
+  loss = N/(2*sigma^2) * MSE_minibatch, together with weight_decay = prior
+  precision. An earlier version of this note claimed the learning rate could
+  "absorb" the factor N. That is wrong: Langevin dynamics
+  dtheta = -grad U dt + sqrt(2) dW has stationary distribution exp(-U) for ANY
+  step size, so epsilon controls discretisation error and mixing speed but not
+  the target distribution. Feeding a mean-reduced MSE therefore samples a
+  distribution whose likelihood term is under-weighted by a factor N (here
+  ~5.5e4), which is close to the prior rather than the posterior -- the chain
+  then wanders, as observed. See scripts/08d_sgld_multichain.py.
 """
 from __future__ import annotations
 

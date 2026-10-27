@@ -91,8 +91,17 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--sgld_lr_final", type=float, default=1e-8)
     p.add_argument("--sgld_schedule", default="poly", choices=["poly", "geom"])
     p.add_argument("--sgld_gamma", type=float, default=0.55)
+    p.add_argument("--sgld_sigma2", type=float, default=1.0,
+                   help="observation noise variance in NORMALISED target units; the loss is "
+                        "scaled by n_train/(2*sigma2) so the chain samples the posterior")
+    p.add_argument("--clip_grad_norm", type=float, default=0.0,
+                   help="0 = off. Clipping biases a Langevin sampler and, once the loss is "
+                        "correctly scaled by n_train, a threshold of 1.0 would clip every step")
     p.add_argument("--sgld_prior_precision", type=float, default=100.0,
                    help="100.0 sentinel = reuse Adam weak weight_decay (warm-start); else this precision")
+    p.add_argument("--ckpt_every", type=int, default=25,
+                   help="write a partial chain_{i}.npz every N epochs so a crash cannot "
+                        "discard days of sampling; 0 = only save when the chain finishes")
     p.add_argument("--num_workers", type=int, default=0)
     p.add_argument("--day_threshold", type=float, default=20.0)
     p.add_argument("--runs_root", default=None)
@@ -108,7 +117,7 @@ def _predict_subset(model, x_mon, normalizer, device):
 
 
 def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
-              train_loader, val_loader, x_mon, normalizer):
+              train_loader, val_loader, x_mon, normalizer, n_train, run_dir=None):
     """Run one SGLD chain; return per-epoch monitored preds + scalar traces."""
     seed_everything(args.seed * 1000 + 17 * (chain_idx + 1))   # chain-specific RNG
     model = build_model(args.arch, best_params, args.patch, L, DEVICE)
@@ -124,6 +133,9 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
                lr_final=args.sgld_lr_final, total_steps=total_steps,
                schedule=args.sgld_schedule, gamma=args.sgld_gamma)
     loss_fn = nn.MSELoss()
+    # Negative log-posterior: the likelihood term carries the FULL dataset.
+    # Without this factor the sampled density is ~prior, not posterior.
+    lik_scale = n_train / (2.0 * args.sgld_sigma2)
 
     mon_preds = np.empty((args.epochs, x_mon.shape[0]), dtype=np.float64)
     val_rmse_day = []   # (epoch_recorded, value)
@@ -135,13 +147,15 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
             x_seq = x_seq.to(DEVICE, non_blocking=True)
             y = y.to(DEVICE, non_blocking=True)
             opt.zero_grad(set_to_none=True)
-            loss = loss_fn(model(x_seq), y)
+            mse = loss_fn(model(x_seq), y)              # mean MSE, normalised units
+            loss = lik_scale * mse                        # -log likelihood over the dataset
             if l1_reg > 0.0:
                 loss = loss + l1_reg * sum(p.abs().sum() for p in model.parameters())
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            if args.clip_grad_norm > 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
             opt.step()
-            tl.append(loss.item())
+            tl.append(mse.item())                         # log the raw MSE, comparable across runs
         mon_preds[ep] = _predict_subset(model, x_mon, normalizer, DEVICE)
         if ep % args.val_every == 0 or ep == args.epochs - 1:
             vm = eval_model(model, val_loader, normalizer, args.day_threshold, DEVICE)
@@ -149,15 +163,28 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
             print(f"    [chain {chain_idx}] ep {ep:04d}/{args.epochs} "
                   f"train={np.mean(tl):.4f} val_rmse_day={vm['rmse_day']:.1f} "
                   f"({time.time()-t0:.0f}s)", flush=True)
+        # Partial checkpoint: the sampled trace is the result here, and it used to live
+        # only in RAM until all chains were done (days). Writing it as we go means a
+        # crash costs at most ckpt_every epochs of one chain.
+        if run_dir is not None and args.ckpt_every > 0 and (ep + 1) % args.ckpt_every == 0:
+            _save_chain_npz(run_dir, chain_idx,
+                            {"mon_preds": mon_preds[:ep + 1], "val_rmse_day": val_rmse_day,
+                             "seconds": time.time() - t0}, done=False)
     return {"mon_preds": mon_preds, "val_rmse_day": val_rmse_day,
             "seconds": time.time() - t0}
 
 
-def _save_chain_npz(run_dir: Path, idx: int, res: dict) -> None:
+def _save_chain_npz(run_dir: Path, idx: int, res: dict, done: bool = True) -> None:
+    """Write chain_{idx}.npz atomically. done=False marks a partial (still-running) trace."""
     eps = np.array([e for e, _ in res["val_rmse_day"]], dtype=np.int64)
     vals = np.array([v for _, v in res["val_rmse_day"]], dtype=np.float64)
-    np.savez_compressed(run_dir / f"chain_{idx}.npz", mon_preds=res["mon_preds"],
-                        val_eps=eps, val_vals=vals, seconds=np.array([res["seconds"]]))
+    mon = np.asarray(res["mon_preds"])
+    tmp = run_dir / f"chain_{idx}.tmp.npz"   # must end in .npz: savez appends it otherwise
+    np.savez_compressed(tmp, mon_preds=mon, val_eps=eps, val_vals=vals,
+                        seconds=np.array([res["seconds"]]),
+                        epochs_done=np.array([mon.shape[0]]),
+                        complete=np.array([bool(done)]))
+    tmp.replace(run_dir / f"chain_{idx}.npz")   # rename -> never a half-written npz
 
 
 def _load_chains(run_dir: Path, n_chains: int) -> list:
@@ -168,7 +195,11 @@ def _load_chains(run_dir: Path, n_chains: int) -> list:
             print(f"  [combine] missing {f.name}, skipping")
             continue
         d = np.load(f)
-        chains.append({"mon_preds": d["mon_preds"],
+        mon = d["mon_preds"]
+        if "complete" in d and not bool(d["complete"][0]):
+            print(f"  [combine] WARNING {f.name} is a PARTIAL trace "
+                  f"({mon.shape[0]} epochs) - the chain did not finish", flush=True)
+        chains.append({"mon_preds": mon,
                        "val_rmse_day": list(zip(d["val_eps"].tolist(), d["val_vals"].tolist())),
                        "seconds": float(d["seconds"][0])})
     return chains
@@ -352,7 +383,8 @@ def main():
     # ---- parallel: run ONLY one chain, save its npz, exit ----
     if args.chain_only >= 0:
         res = run_chain(args.chain_only, args, best_params, mean_ckpt_path, L, DEVICE,
-                        train_loader, val_loader, x_mon, normalizer)
+                        train_loader, val_loader, x_mon, normalizer, len(train_ds),
+                        run_dir=run_dir)
         _save_chain_npz(run_dir, args.chain_only, res)
         print(f"[chain {args.chain_only}] done in {res['seconds']:.0f}s → {run_dir}/chain_{args.chain_only}.npz",
               flush=True)
@@ -362,8 +394,11 @@ def main():
     chains = []
     for c in range(args.n_chains):
         print(f"\n  === chain {c+1}/{args.n_chains} ===", flush=True)
-        chains.append(run_chain(c, args, best_params, mean_ckpt_path, L, DEVICE,
-                                train_loader, val_loader, x_mon, normalizer))
+        res = run_chain(c, args, best_params, mean_ckpt_path, L, DEVICE,
+                        train_loader, val_loader, x_mon, normalizer, len(train_ds),
+                        run_dir=run_dir)
+        _save_chain_npz(run_dir, c, res)      # on disk before the next chain starts
+        chains.append(res)
     diagnose(args, chains, baseline_val["rmse_day"], run_dir, n_mon, L, H, horizon_hours, mean_ckpt_path)
 
 

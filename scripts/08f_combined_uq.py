@@ -188,7 +188,7 @@ def main():
             continue
         vmeta, vck = found
         bp, _ = members[s]
-        vm = make_variance_model(build_model(args.arch, bp, args.patch, L, DEV))
+        vm = make_variance_model(build_model(args.arch, bp, args.patch, L, DEV)).to(DEV)  # swapped head starts on CPU
         st = torch.load(vck, map_location=DEV, weights_only=False)
         vm.load_state_dict(st.get("model_state", st)); vm.eval()
         sig_a_list.append(predict_sigma_a(vm, test_loader, normalizer, DEV))

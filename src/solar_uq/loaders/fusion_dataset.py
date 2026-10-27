@@ -472,3 +472,74 @@ class FusionGraphSeqDataset(Dataset):
             n_samples=n_samples,
             seed=seed,
         )
+
+
+class SurfaceSeqDataset(Dataset):
+    """Surface-only counterpart of FusionPatchSeqDataset: returns (tab_seq, y).
+
+    Why this exists: the fusion models beat the satellite-only ones at every
+    site and horizon, but their tabular vector contains ghi at history step t,
+    which is exactly the persistence predictor. Without a surface-only
+    baseline, "satellite and surface are complementary" cannot be separated
+    from "the surface channel alone already carries most of the signal".
+
+    Fairness: this still calls filter_missing_patches, so the sample set is
+    IDENTICAL to the fusion dataset's even though no patch is ever read. Only
+    then is the comparison like-for-like. Skipping the patch I/O also makes
+    this baseline very cheap to train.
+    """
+
+    def __init__(
+        self,
+        manifest: pd.DataFrame,
+        patches_root: Path,
+        normalizer: TargetNormalizer,
+        surface_parquet: Path,
+        feature_cols: Optional[List[str]] = None,
+        tab_stats: Optional[Dict] = None,
+        normalize_tab: bool = True,
+    ) -> None:
+        self.patches_root = Path(patches_root)
+        self.man = filter_missing_patches(manifest, self.patches_root)
+        self.normalizer = normalizer
+        self.feature_cols: List[str] = list(feature_cols or DEFAULT_FEATURE_COLS)
+        self.normalize_tab = normalize_tab
+
+        surface_df = _load_surface(Path(surface_parquet))
+        self.available_cols: List[str] = [
+            c for c in self.feature_cols if c != "hour_of_day" and c in surface_df.columns
+        ]
+        self.surface_df = surface_df[self.available_cols] if self.available_cols else surface_df[[]]
+        if tab_stats is not None and "medians" in tab_stats:
+            self.tab_medians = dict(tab_stats["medians"])
+        else:
+            self.tab_medians = _compute_medians(self.surface_df, self.available_cols)
+
+        if normalize_tab:
+            if tab_stats is None:
+                raise ValueError("tab_stats required when normalize_tab=True")
+            self._tab_mean = np.array(tab_stats["mean"], dtype=np.float32)
+            self._tab_std = np.array(tab_stats["std"], dtype=np.float32)
+        else:
+            self._tab_mean = self._tab_std = None
+
+    @property
+    def d_tab(self) -> int:
+        return n_tab_features(self.feature_cols)
+
+    def __len__(self) -> int:
+        return len(self.man)
+
+    def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        row = self.man.iloc[i]
+        y_norm = self.normalizer.normalize(float(row["y"]))
+        tab_vecs = [
+            _build_tab_vector(pd.to_datetime(ts, utc=True), self.surface_df,
+                              self.available_cols, self.feature_cols,
+                              self.tab_medians, self.normalizer)
+            for ts in _parse_history_ts(row["history_ts"])
+        ]
+        tab_seq = np.stack(tab_vecs, axis=0)                     # (L, D_tab)
+        if self.normalize_tab and self._tab_mean is not None:
+            tab_seq = (tab_seq - self._tab_mean) / self._tab_std
+        return torch.from_numpy(tab_seq), torch.tensor(y_norm, dtype=torch.float32)
