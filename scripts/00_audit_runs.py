@@ -19,6 +19,9 @@ corresponds to a defect that actually occurred in this project:
   NESTED    a run directory inside another run directory, which rsync --relative
             produces when the source path carries a ./ marker, and which makes a
             run appear twice in any inventory
+  V2GAP     a family not yet complete in the v2 protocol for all four seeds at
+            both sites, which is the condition 10_paper_figures.py's site-aware
+            v1/v2 selection waits on before it can be removed
   RAW_SEL   a script that picks a run by sort order instead of run_select
 
 Exit code is 1 if anything was found, so it can gate a results build:
@@ -45,7 +48,7 @@ H_FROM_STEPS = {6: 1.0, 18: 3.0, 36: 6.0}
 SEVERITY = {
     "VNET_SRC": "ERROR", "VNET_OLD": "ERROR", "DANGLING": "ERROR",
     "FOREIGN": "ERROR", "RAW_SEL": "ERROR", "BADJSON": "ERROR",
-    "STALE": "WARN", "DUP": "WARN", "THIN": "WARN", "NESTED": "ERROR",
+    "STALE": "WARN", "DUP": "WARN", "THIN": "WARN", "NESTED": "ERROR", "V2GAP": "WARN",
 }
 findings: list[tuple[str, str]] = []
 
@@ -212,6 +215,43 @@ def audit_thin_derived(canon: dict) -> None:
                             f"seeds {missing} are now on disk too; rebuild for a symmetric grid")
 
 
+V2_FAMILIES = ("resnet_lstm_optuna_v2", "graphsage_lstm_optuna_v2",
+               "fusion_resnet_lstm", "fusion_graphsage_lstm")
+SEEDS = (1, 7, 13, 42)
+
+
+def audit_v2_coverage() -> None:
+    """Which cells are still missing from the v2 protocol.
+
+    10_paper_figures.py still selects Uniandes from the v1 study and El Paso from
+    v2 (its src_by_site map). That asymmetry can only be removed once a family is
+    complete in v2 for both sites, all three horizons and all four seeds, so make
+    the remaining gap explicit instead of relying on memory.
+    """
+    for fam in V2_FAMILIES:
+        root = PROJECT_ROOT / "runs" / fam
+        if not root.exists():
+            continue
+        have = defaultdict(set)
+        for d in sorted(root.iterdir()):
+            if d.name.startswith("_"):
+                continue
+            m = load(d / "summary.json") if (d / "summary.json").exists() else None
+            if not m:
+                continue
+            site, h = m.get("site"), m.get("temporal", {}).get("horizon_hours")
+            if site and h is not None:
+                have[(site, float(h))].add(int(m["seed"]))
+        gaps = []
+        for site in ("uniandes", "elpaso"):
+            for h in (1.0, 3.0, 6.0):
+                miss = [s for s in SEEDS if s not in have.get((site, h), set())]
+                if miss:
+                    gaps.append(f"{site} h{h:g} missing {miss}")
+        if gaps:
+            add("V2GAP", f"{fam}: {len(gaps)} incomplete cell(s) -> " + "; ".join(gaps))
+
+
 def audit_nested_runs() -> None:
     """runs/<family>/<run>/summary.json is depth 3; anything deeper is a copy of a
     run inside a run, unless it sits under a retired, underscore-prefixed group."""
@@ -259,6 +299,7 @@ def main() -> int:
     audit_stale_derived()
     audit_thin_derived(canon)
     audit_nested_runs()
+    audit_v2_coverage()
     audit_raw_selection()
 
     if not findings:
