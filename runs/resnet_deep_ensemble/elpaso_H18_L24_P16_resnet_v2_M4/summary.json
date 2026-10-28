@@ -1,0 +1,91 @@
+{
+  "run_name": "elpaso_H18_L24_P16_resnet_v2_M4",
+  "method": "deep_ensemble",
+  "arch": "resnet",
+  "site": "elpaso",
+  "optuna_version": "v2",
+  "device": "cuda",
+  "day_threshold": 20.0,
+  "temporal": {
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "horizon_hours": 3.0,
+    "freq_min": 10
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "channels": 16
+  },
+  "ensemble": {
+    "n_members": 4,
+    "seeds": [
+      1,
+      7,
+      13,
+      42
+    ],
+    "member_ckpts": [
+      "runs/resnet_lstm_optuna_v2/elpaso_H18_L24_P16_seed1_20260808_120958/best_model.pt",
+      "runs/resnet_lstm_optuna_v2/elpaso_H18_L24_P16_seed7_20261012_170434/best_model.pt",
+      "runs/resnet_lstm_optuna_v2/elpaso_H18_L24_P16_seed13_20261014_044314/best_model.pt",
+      "runs/resnet_lstm_optuna_v2/elpaso_H18_L24_P16_seed42_20260802_162240/best_model.pt"
+    ]
+  },
+  "baselines": {
+    "persistence_test": {
+      "n": 17447,
+      "rmse": 314.8944902387177,
+      "mae": 206.87813718117727,
+      "n_day": 8657,
+      "rmse_day": 412.39159651553086,
+      "mae_day": 345.75723107312,
+      "day_threshold": 20.0
+    }
+  },
+  "best_model": {
+    "inference_method": "deep_ensemble_mean",
+    "final_test": {
+      "n": 17447,
+      "rmse": 146.2495384977341,
+      "mae": 113.61136307953872,
+      "n_day": 8657,
+      "rmse_day": 176.03296823619797,
+      "mae_day": 129.28948491658213,
+      "day_threshold": 20.0,
+      "ensemble_std_mean": 59.59848403930664,
+      "ensemble_std_day_mean": 72.95962524414062,
+      "n_checkpoints": 4,
+      "coverage_80": 0.2678970596664183,
+      "coverage_day_80": 0.4521196719417812,
+      "coverage_90": 0.38860549091534363,
+      "coverage_day_90": 0.5459165992838165,
+      "coverage_95": 0.5280563993809824,
+      "coverage_day_95": 0.622502021485503,
+      "ensemble_median_day_mean": 440.1910705566406,
+      "coverage_pct_80": 0.18564796240041267,
+      "coverage_day_pct_80": 0.3412267529167148,
+      "coverage_pct_90": 0.21270132400985842,
+      "coverage_day_pct_90": 0.3766893843132725,
+      "coverage_pct_95": 0.23058405456525477,
+      "coverage_day_pct_95": 0.39540256439875243,
+      "band_pct95_width_day_mean": 175.30650329589844,
+      "nll_day": 12.643296241760254,
+      "crps_day": 102.93851391641056,
+      "err_by_sigma_quartile_day": [
+        111.77810668945312,
+        126.35002899169922,
+        120.30497741699219,
+        158.73292541503906
+      ],
+      "sigma_by_quartile_day": [
+        29.654769897460938,
+        51.25886535644531,
+        71.14542388916016,
+        139.79946899414062
+      ],
+      "skill_vs_persistence": 0.5355601859312825,
+      "skill_day_vs_persistence": 0.5731412334209189
+    }
+  }
+}

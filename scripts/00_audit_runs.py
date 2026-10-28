@@ -120,7 +120,11 @@ def audit_variance(canon: dict) -> None:
     root = PROJECT_ROOT / "runs" / "resnet_lstm_variance"
     if not root.exists():
         return
-    newest_per_cell: dict[tuple, tuple[int, Path]] = {}
+    # Only the net 08f would actually SELECT matters, and find_variance_run takes
+    # the newest per (site, horizon, seed). An earlier version checked every net on
+    # disk, so a retrained cell kept reporting the superseded net as an active
+    # error long after the defect was fixed.
+    newest_per_cell: dict[tuple, tuple[int, Path, dict]] = {}
     for d in sorted(root.iterdir()):
         m = load(d / "summary.json") if (d / "summary.json").exists() else None
         if not m:
@@ -129,19 +133,19 @@ def audit_variance(canon: dict) -> None:
         dt = run_date(d.name) or 0
         prev = newest_per_cell.get(key)
         if prev is None or dt > prev[0]:
-            newest_per_cell[key] = (dt, d)
-        src = m.get("source_mean_ckpt")
-        want = canon.get(key)
-        if dt >= VNET_UNIT_CUTOFF and src and want:
-            if Path(src).name != want.name or Path(src).parent.name != want.parent.name:
-                add("VNET_SRC", f"{d.name}: fitted on {Path(src).parent.name}, canonical member is "
-                               f"{want.parent.name} -> retrain: scripts/12_variance_net.py --arch resnet "
-                               f"--site {key[0]} --hours_ahead {int(key[1])} --seed {key[2]} "
-                               f"--optuna_version v2")
-    for key, (dt, d) in sorted(newest_per_cell.items(), key=str):
+            newest_per_cell[key] = (dt, d, m)
+    for key, (dt, d, m) in sorted(newest_per_cell.items(), key=str):
         if dt < VNET_UNIT_CUTOFF:
             add("VNET_OLD", f"{key[0]} h{key[1]:g} seed {key[2]}: newest variance net is {d.name} "
                             f"(pre-{VNET_UNIT_CUTOFF} physical-unit convention); 08f will refuse it")
+            continue
+        src, want = m.get("source_mean_ckpt"), canon.get(key)
+        if src and want and (Path(src).name != want.name
+                             or Path(src).parent.name != want.parent.name):
+            add("VNET_SRC", f"{d.name}: fitted on {Path(src).parent.name}, canonical member is "
+                           f"{want.parent.name} -> retrain: scripts/12_variance_net.py --arch resnet "
+                           f"--site {key[0]} --hours_ahead {int(key[1])} --seed {key[2]} "
+                           f"--optuna_version v2")
 
 
 def audit_foreign_and_members(canon: dict) -> None:

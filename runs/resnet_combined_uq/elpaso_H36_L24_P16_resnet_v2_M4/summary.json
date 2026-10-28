@@ -17,7 +17,8 @@
   "variance_net_seeds": [
     1,
     7,
-    13
+    13,
+    42
   ],
   "baselines": {
     "persistence_test": {
@@ -40,22 +41,35 @@
     "day_threshold": 20.0,
     "skill_day_vs_persistence": 0.6040873880409694,
     "sigma_epi_day_mean": 82.48023223876953,
-    "sigma_a_day_mean": 273.3147888183594,
-    "sigma_tot_day_mean": 287.70196533203125,
+    "sigma_a_day_mean": 267.5295104980469,
+    "sigma_tot_day_mean": 282.2767028808594,
     "coverage_day_epistemic": {
       "80": 0.3631380609797876,
       "90": 0.4673975105629782,
       "95": 0.5463058124928628
     },
     "coverage_day_aleatoric": {
-      "80": 0.9111567888546306,
-      "90": 0.9728217426059153,
-      "95": 0.9882379810437364
+      "80": 0.9043051273267101,
+      "90": 0.9698526892771497,
+      "95": 0.987324426173347
     },
     "coverage_day_combined": {
-      "80": 0.9285143313920292,
-      "90": 0.9772753225990636,
-      "95": 0.9900650907845152
+      "80": 0.9234897796048875,
+      "90": 0.9755624072170834,
+      "95": 0.9898367020669179
+    },
+    "sharpness_day_combined": {
+      "level": "90",
+      "interval_score_model": 968.5568237304688,
+      "interval_score_constant_width": 912.9482421875,
+      "interval_score_skill_vs_constant": -0.06091099032046543,
+      "constant_width": 381.17205810546875,
+      "mean_width": 464.3039245605469,
+      "width_cv": 0.24880506098270416,
+      "corr_sigma_vs_abs_error": 0.4408636659376143,
+      "r2_sigma_vs_abs_error": 0.19436077194395235,
+      "corr_ceiling_if_perfectly_specified": 0.3044104014520684,
+      "corr_fraction_of_ceiling": 1.4482542772344507
     }
   }
 }
