@@ -237,24 +237,39 @@ def main() -> None:
         test_ds  = PatchSeqDataset(test_man,  PATCHES_ROOT, normalizer)
 
     # Optuna study
+    # Study on disk, named per (site, horizon, seed) so different combos never
+    # share one. The in-memory version lost a 30-hour El Paso h1 seed-13 study
+    # when the machine rebooted for a kernel upgrade on 2026-10-29; that was the
+    # fifth unattended reboot since August.
     prefix     = "fusion_resnet_lstm" if args.fusion else "resnet_lstm"
-    STUDY_NAME = f"{prefix}_{args.site}_P{args.patch}"
+    STUDY_NAME = f"{prefix}_{args.site}_h{args.hours_ahead}_s{args.seed}_P{args.patch}"
+    storage_dir = PROJECT_ROOT / "runs" / "optuna_storage"
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    storage_url = f"sqlite:///{storage_dir / (STUDY_NAME + '.db')}"
     study = optuna.create_study(
         study_name=STUDY_NAME,
+        storage=storage_url,
+        load_if_exists=True,
         direction="minimize",
         sampler=optuna.samplers.TPESampler(seed=args.seed),
         pruner=optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=5),
     )
 
-    print(f"\nStarting Optuna ({args.n_trials} trials) ...")
-    study.optimize(
-        make_objective(train_ds, val_ds, normalizer, DEVICE, args.seed, args.day_threshold, USE_AMP,
-                       fusion=args.fusion, d_tab=D_TAB),
-        n_trials=args.n_trials,
-        n_jobs=args.optuna_jobs,
-        show_progress_bar=True,
-        catch=(AssertionError,),
-    )
+    # Only count finished trials toward the budget, so a resumed study runs the
+    # remaining trials (not n_trials more), and stale RUNNING trials don't inflate it.
+    _done_states = (optuna.trial.TrialState.COMPLETE, optuna.trial.TrialState.PRUNED)
+    n_done = sum(1 for t in study.trials if t.state in _done_states)
+    n_remaining = max(0, args.n_trials - n_done)
+    print(f"\nStarting Optuna ({n_done} finished in storage, {n_remaining} remaining of {args.n_trials}) ...")
+    if n_remaining > 0:
+        study.optimize(
+            make_objective(train_ds, val_ds, normalizer, DEVICE, args.seed, args.day_threshold, USE_AMP,
+                           fusion=args.fusion, d_tab=D_TAB),
+            n_trials=n_remaining,
+            n_jobs=args.optuna_jobs,
+            show_progress_bar=True,
+            catch=(AssertionError,),
+        )
 
     best = study.best_trial
     print(f"\nBest trial #{best.number}: val_rmse_day={best.value:.2f}")

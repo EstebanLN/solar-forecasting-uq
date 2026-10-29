@@ -135,14 +135,31 @@ def main() -> None:
                    args.epochs, args.patience)
 
     t0 = time.time()
-    study = optuna.create_study(direction="minimize",
+    # Study on disk, named per (site, horizon, seed). The in-memory version lost
+    # three ~19-hour Uniandes studies when the machine rebooted for a kernel
+    # upgrade on 2026-10-29; nothing of a killed in-memory study is recoverable.
+    STUDY_NAME = f"surface_only_{args.site}_h{args.hours_ahead}_s{args.seed}"
+    storage_dir = PROJECT_ROOT / "runs" / "optuna_storage"
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    storage_url = f"sqlite:///{storage_dir / (STUDY_NAME + '.db')}"
+    study = optuna.create_study(study_name=STUDY_NAME,
+                                storage=storage_url,
+                                load_if_exists=True,
+                                direction="minimize",
                                 sampler=optuna.samplers.TPESampler(seed=args.seed))
     # A progress bar is for a terminal; a log file wants one line per trial. Optuna
     # silences its per-trial INFO records whenever the bar is on, which is how a
     # 26-hour run ended up with zero visible progress in its log.
     interactive = sys.stderr.isatty()
     optuna.logging.set_verbosity(optuna.logging.WARNING if interactive else optuna.logging.INFO)
-    study.optimize(objective, n_trials=args.n_trials, show_progress_bar=interactive)
+    # Only finished trials count toward the budget, so a resumed study runs what
+    # is left instead of another full n_trials.
+    _done_states = (optuna.trial.TrialState.COMPLETE, optuna.trial.TrialState.PRUNED)
+    n_done = sum(1 for t in study.trials if t.state in _done_states)
+    n_remaining = max(0, args.n_trials - n_done)
+    print(f"  optuna: {n_done} finished in storage, {n_remaining} remaining of {args.n_trials}", flush=True)
+    if n_remaining > 0:
+        study.optimize(objective, n_trials=n_remaining, show_progress_bar=interactive)
     bp = study.best_params
     print(f"\n  best val RMSE_day={study.best_value:.2f} | {bp}")
 
