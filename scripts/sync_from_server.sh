@@ -45,19 +45,21 @@ if [ "$APPLY" -eq 0 ]; then
 fi
 
 fail=0
-while IFS= read -r run; do
+processed=0
+while IFS= read -r run <&3; do
   [ -n "$run" ] || continue
+  processed=$((processed+1))
   case "$run" in
     *..*|/*) echo "  RECHAZADA ruta sospechosa: $run" >&2; fail=1; continue;;
   esac
   echo "--- $run"
   mkdir -p "runs/$run"
   # Trailing slash on BOTH sides, no --relative: contents land directly in place.
-  if ! rsync -a "$HOST:$RDIR/runs/$run/" "runs/$run/"; then
+  if ! rsync -a "$HOST:$RDIR/runs/$run/" "runs/$run/" < /dev/null; then
     echo "  rsync fallo" >&2; fail=1; continue
   fi
   # Verify: every remote file must exist here with the same checksum.
-  ssh "$HOST" "cd $RDIR/runs/$run && find . -type f -exec md5sum {} + | sort -k2" \
+  ssh -n "$HOST" "cd $RDIR/runs/$run && find . -type f -exec md5sum {} + | sort -k2" \
     > "$TMP/rsum" 2>/dev/null
   (cd "runs/$run" && find . -type f -exec md5sum {} + | sort -k2) > "$TMP/lsum" 2>/dev/null
   if diff -q "$TMP/rsum" "$TMP/lsum" >/dev/null 2>&1; then
@@ -71,7 +73,16 @@ while IFS= read -r run; do
   if find "runs/$run" -mindepth 2 -name summary.json | grep -q .; then
     echo "  ANIDAMIENTO detectado dentro de runs/$run" >&2; fail=1
   fi
-done < "$TMP/missing.txt"
+done 3< "$TMP/missing.txt"
+
+# Every line of missing.txt must have been read. On 2026-10-29 the loop body's
+# ssh inherited the loop's stdin and swallowed the rest of the list, so a sync
+# with 2 missing runs transferred 1 and still printed "todo verificado"; the
+# El Paso h3 UQ then ran with 3 variance nets instead of 4. The <&3/3< pair
+# fixes the cause, and this counter makes the symptom impossible to miss again.
+if [ "$processed" -ne "$n" ]; then
+  echo "  INCOMPLETO: $processed de $n corridas procesadas" >&2; fail=1
+fi
 
 echo
 if [ "$fail" -eq 0 ]; then
