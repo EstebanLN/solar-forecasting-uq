@@ -57,6 +57,19 @@
       "80": 0.8793585679656909,
       "90": 0.9699794890919261,
       "95": 0.9934738019765057
+    },
+    "sharpness_day_combined": {
+      "level": "90",
+      "interval_score_model": 879.7410278320312,
+      "interval_score_constant_width": 987.1044921875,
+      "interval_score_skill_vs_constant": 0.10876605790491645,
+      "constant_width": 401.3751220703125,
+      "mean_width": 420.487548828125,
+      "width_cv": 0.28803253173828125,
+      "corr_sigma_vs_abs_error": 0.5796988579869237,
+      "r2_sigma_vs_abs_error": 0.3360507659513435,
+      "corr_ceiling_if_perfectly_specified": 0.3439913413293017,
+      "corr_fraction_of_ceiling": 1.6852135165576159
     }
   }
 }
