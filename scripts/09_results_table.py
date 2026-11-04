@@ -33,6 +33,7 @@ MODEL_ORDER = [
     "ResNet+LSTM (Optuna v2)",
     "GraphSAGE+LSTM (Optuna v2)",
     "ConvGraph+LSTM",
+    "Surface-only LSTM (Optuna)",
     "Fusion ResNet+LSTM",
     "Fusion GraphSAGE+LSTM",
     "ResNet+LSTM (SGLD)",
@@ -52,6 +53,7 @@ EXPECTED_SEEDS: dict[str, int] = {
     "ResNet+LSTM (Optuna v2)":     2,
     "GraphSAGE+LSTM (Optuna v2)":  2,
     "ConvGraph+LSTM":              2,
+    "Surface-only LSTM (Optuna)":  1,   # ground-only grid runs seed 42 alone
     "Fusion ResNet+LSTM":          2,
     "Fusion GraphSAGE+LSTM":       2,
 }
@@ -85,7 +87,13 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
             d = json.load(f)
 
         ms   = d.get("best_model") or d.get("model") or {}
-        test = ms.get("final_test")
+        # 06e_surface_only_optuna.py writes "model" as a label string and puts the
+        # metrics at the top level, unlike the Optuna runs that nest them under
+        # "best_model". Without this the surface-only baseline is silently absent
+        # from the table, which is exactly the row the fusion gain is measured against.
+        if not isinstance(ms, dict):
+            ms = {}
+        test = ms.get("final_test") or d.get("final_test")
         if not test:
             continue
 
@@ -465,6 +473,7 @@ def main() -> None:
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_optuna_v2",      "ResNet+LSTM (Optuna v2)")
     all_records += _load_nn_runs(RUNS_ROOT / "graphsage_lstm_optuna_v2",   "GraphSAGE+LSTM (Optuna v2)")
     all_records += _load_nn_runs(RUNS_ROOT / "convgraph_lstm",             "ConvGraph+LSTM")
+    all_records += _load_nn_runs(RUNS_ROOT / "surface_only",               "Surface-only LSTM (Optuna)")
     all_records += _load_nn_runs(RUNS_ROOT / "fusion_resnet_lstm",         "Fusion ResNet+LSTM")
     all_records += _load_nn_runs(RUNS_ROOT / "fusion_graphsage_lstm",      "Fusion GraphSAGE+LSTM")
     all_records += _load_nn_runs(RUNS_ROOT / "resnet_lstm_sgld",           "ResNet+LSTM (SGLD)")
