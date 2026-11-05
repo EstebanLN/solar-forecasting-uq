@@ -103,6 +103,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--min_gap_pct", type=float, default=None,
                    help="with --all, skip cells whose stored refit is already "
                         "within this %% of the search value")
+    p.add_argument("--skip", action="append", default=[], metavar="SITE:H:SEED",
+                   help="skip this cell (repeatable). Use it for cells that "
+                        "already have their extra draws, so every cell ends up "
+                        "with the same number and the protocol stays uniform.")
     p.add_argument("--dry_run", action="store_true")
     return p.parse_args()
 
@@ -382,6 +386,19 @@ def main() -> None:
     cells = source_runs(args.family)
     if not cells:
         raise SystemExit(f"no hay corridas con best_params en runs/{args.family}")
+
+    skip: set[tuple] = set()
+    for spec in args.skip:
+        try:
+            s_, h_, d_ = spec.split(":")
+            skip.add((s_, int(h_), int(d_)))
+        except ValueError:
+            raise SystemExit(f"--skip mal formado: {spec!r}, usa SITE:H:SEED")
+    if skip:
+        before = len(cells)
+        cells = [c for c in cells if (c["site"], c["hours"], c["seed"]) not in skip]
+        print(f"omitidas {before - len(cells)} celdas por --skip: "
+              + ", ".join(f"{s}:{h}:{d}" for s, h, d in sorted(skip)))
 
     if not args.all:
         if args.site is None or args.hours_ahead is None or args.seed is None:

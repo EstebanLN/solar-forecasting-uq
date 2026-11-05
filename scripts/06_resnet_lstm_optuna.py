@@ -53,6 +53,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seed",          type=int, default=42)
     p.add_argument("--patch",         type=int, default=16)
     p.add_argument("--n_trials",      type=int, default=75)
+    p.add_argument("--refit_draws",   type=int, default=3,
+                   help="draws of the final retraining; the one with the lowest "
+                        "validation RMSE_day is kept. 1 restores the old "
+                        "single-draw behaviour.")
     p.add_argument("--debug",         action="store_true")
     p.add_argument("--num_workers",   type=int, default=0)
     p.add_argument("--optuna_jobs", type=int, default=2,
@@ -287,8 +291,22 @@ def main() -> None:
     print("\nTop-5 trials:")
     print(trials_df.head(5).to_string(index=False))
 
-    # Final retraining with best params
-    print("\nRetraining with best params (epochs=30, patience=8) ...")
+    # Final retraining with best params.
+    #
+    # Drawn more than once on purpose. study.best_value is the MINIMUM over
+    # n_trials draws, so retraining once and reporting that single draw has a
+    # positive expected gap against it: across the 110 runs that stored both
+    # numbers the median refit was 1.42% worse than its own search. That part is
+    # the winner's curse. The tail was not: 23 of them missed by over 5% or
+    # stopped by epoch 2, and resnet v2 uniandes h1 seed 42 stopped at epoch 1
+    # and reported 0.038 test skill where its sibling seeds reported 0.137,
+    # 0.150 and 0.168. Redrawing that cell reached 243.03 against the search's
+    # 241.55 and 0.168 test skill, so the configuration had been fine all along
+    # and one trajectory was simply unlucky.
+    #
+    # Keeping the best draw ON VALIDATION is the criterion the search itself
+    # minimises and the one solar_uq.run_select applies, so the test split never
+    # decides which draw is reported.
     bp = best.params
 
     best_batch = bp["batch_size"]
@@ -296,19 +314,19 @@ def main() -> None:
     val_loader   = make_loader(val_ds,   best_batch, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
     test_loader  = make_loader(test_ds,  best_batch, shuffle=False, num_workers=0,               seed=args.seed, device=DEVICE)
 
-    if args.fusion:
-        best_model = FusionResNetLSTM(
-            in_ch=16,
-            base=bp["base"],
-            emb_dim=bp["emb_dim"],
-            d_tab=D_TAB,
-            tab_hidden=bp.get("tab_hidden", 64),
-            hidden_t=bp["hidden_t"],
-            dropout=bp["dropout"],
-            n_lstm_layers=bp.get("n_lstm_layers", 1),
-        ).to(DEVICE)
-    else:
-        best_model = ResNetLSTM(
+    def _build_best_model():
+        if args.fusion:
+            return FusionResNetLSTM(
+                in_ch=16,
+                base=bp["base"],
+                emb_dim=bp["emb_dim"],
+                d_tab=D_TAB,
+                tab_hidden=bp.get("tab_hidden", 64),
+                hidden_t=bp["hidden_t"],
+                dropout=bp["dropout"],
+                n_lstm_layers=bp.get("n_lstm_layers", 1),
+            ).to(DEVICE)
+        return ResNetLSTM(
             in_ch=16,
             base=bp["base"],
             emb_dim=bp["emb_dim"],
@@ -317,21 +335,43 @@ def main() -> None:
             n_lstm_layers=bp.get("n_lstm_layers", 1),
         ).to(DEVICE)
 
-    out = train_one_model(
-        model=best_model,
-        train_loader=train_loader,
-        val_loader=val_loader,
-        normalizer=normalizer,
-        lr=bp["lr"],
-        weight_decay=bp["weight_decay"],
-        l1_reg=bp.get("l1_reg", 0.0),
-        use_amp=USE_AMP,
-        epochs=30,
-        patience=8,
-        day_threshold=args.day_threshold,
-        device=DEVICE,
-        fusion=args.fusion,
-    )
+    n_draws = max(1, args.refit_draws)
+    print(f"\nRetraining with best params (epochs=30, patience=8, draws={n_draws}) ...")
+    best_model = None
+    out = None
+    refit_log = []
+    for draw in range(1, n_draws + 1):
+        # Offset the seed per draw so each draw is reproducible on its own. The
+        # single-draw version inherited whatever RNG state the search left
+        # behind, which is why its result could never be reproduced.
+        if n_draws > 1:
+            seed_everything(args.seed + 1000 * draw)
+        cand = _build_best_model()
+        cand_out = train_one_model(
+            model=cand,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            normalizer=normalizer,
+            lr=bp["lr"],
+            weight_decay=bp["weight_decay"],
+            l1_reg=bp.get("l1_reg", 0.0),
+            use_amp=USE_AMP,
+            epochs=30,
+            patience=8,
+            day_threshold=args.day_threshold,
+            device=DEVICE,
+            fusion=args.fusion,
+        )
+        cand_val = cand_out["final_val"]["rmse_day"]
+        keep = out is None or cand_val < out["final_val"]["rmse_day"]
+        gap = 100.0 * (cand_val - best.value) / best.value if best.value else float("nan")
+        print(f"  draw {draw}/{n_draws}: val_rmse_day={cand_val:.2f} ({gap:+.2f}% vs search) "
+              f"ep={cand_out['best_epoch']} -> {'KEEP' if keep else 'discard'}")
+        refit_log.append({"draw": draw, "rng_seed": args.seed + 1000 * draw,
+                          "val_rmse_day": cand_val, "best_epoch": cand_out["best_epoch"],
+                          "gap_pct_vs_search": gap, "kept": keep})
+        if keep:
+            best_model, out = cand, cand_out
 
     final_val  = out["final_val"]
     final_test = eval_model(best_model, test_loader, normalizer, args.day_threshold, DEVICE, fusion=args.fusion)
@@ -425,6 +465,15 @@ def main() -> None:
             "best_trial_number":       int(best.number),
             "best_value_val_rmse_day": float(best.value),
             "best_params":             best.params,
+        },
+        # Every draw is recorded, not just the winner, so the spread of the
+        # final retraining stays auditable from the run itself.
+        "refit": {
+            "draws":      n_draws,
+            "kept_draw":  min(refit_log, key=lambda r: r["val_rmse_day"])["draw"],
+            "epochs":     30,
+            "patience":   8,
+            "all_draws":  [{k: v for k, v in r.items() if k != "kept"} for r in refit_log],
         },
         "best_model": {
             "arch":               "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
