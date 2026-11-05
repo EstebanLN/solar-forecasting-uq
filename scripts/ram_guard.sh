@@ -56,3 +56,53 @@ ram_wait() {
   echo "[ram_guard] ok: $RAM_GUARD_STATE" >&2
   return 0
 }
+
+# ──────────────────────────────────────────────────────────────────────
+# GPU memory admission control
+# ──────────────────────────────────────────────────────────────────────
+# ram_ok/ram_wait watch system RAM, which says nothing about VRAM. On
+# 2026-11-05 Daniel was at 11.3 of 16.3 GB of VRAM with six jobs, and the
+# queued El Paso GraphSAGE studies ask ~4 GB each while the job they were
+# chained behind (SGLD) only holds 710 MB. Waiting on a PID guesses which job
+# frees enough; asking the GPU does not need to guess, and it re-checks between
+# cells, so it also covers jobs that start later.
+#
+#     source scripts/ram_guard.sh
+#     gpu_wait 6000 || exit 1      # >=6 GB of VRAM free, give up after 6 h
+#
+# A machine with no nvidia-smi, or a driver that does not answer, passes: these
+# scripts must still run on CPU-only hosts, and after the 2026-10-29 kernel
+# upgrade local spent days without an NVIDIA module. Blocking there would stall
+# a queue that would otherwise make progress.
+
+gpu_ok() {
+  local min_free_mb=${1:-6000}
+  local free total used
+  command -v nvidia-smi >/dev/null 2>&1 || { GPU_GUARD_STATE="no nvidia-smi: skipping"; return 0; }
+  free=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits 2>/dev/null | head -1)
+  total=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1)
+  case "$free" in
+    ''|*[!0-9]*) GPU_GUARD_STATE="nvidia-smi gave no number: skipping"; return 0;;
+  esac
+  used=$(( total - free ))
+  GPU_GUARD_STATE="vram free=${free}MB used=${used}MB of ${total}MB"
+  [ "$free" -ge "$min_free_mb" ]
+}
+
+gpu_wait() {
+  local min_free_mb=${1:-6000} max_wait_s=${2:-21600}
+  local waited=0 interval=120
+  while ! gpu_ok "$min_free_mb"; do
+    if [ "$waited" -ge "$max_wait_s" ]; then
+      echo "[gpu_guard] GIVING UP after ${waited}s: $GPU_GUARD_STATE" \
+           "(need >=${min_free_mb}MB free)" >&2
+      return 1
+    fi
+    [ "$waited" -eq 0 ] && echo "[gpu_guard] waiting for VRAM: $GPU_GUARD_STATE" \
+      "(need >=${min_free_mb}MB free)" >&2
+    sleep "$interval"
+    waited=$(( waited + interval ))
+  done
+  echo "[gpu_guard] ok: $GPU_GUARD_STATE" >&2
+  return 0
+}
