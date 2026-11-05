@@ -63,16 +63,64 @@ EXPECTED_SEEDS: dict[str, int] = {
 # Loaders
 # ──────────────────────────────────────────────────────────────────────
 
+def _val_rmse_day_tier(d: dict) -> tuple[int, float | None]:
+    """Validation RMSE_day for canonical selection, with the tier it came from.
+
+    A cell can hold several runs of the same seed, and since 06r_refit_draws.py
+    there are deliberately several: it redraws the final retraining and lets the
+    best draw win. The criterion has to be the one the rest of the repo uses
+    (solar_uq.run_select): lowest validation RMSE_day, never run order.
+
+    The number lives in three different places depending on the family, and the
+    tier is returned alongside it so runs are only ever compared against others
+    measured the same way:
+
+      0  best_model.final_val.rmse_day  — Optuna families, the refit's own val
+      1  final_val.rmse_day             — pre-Optuna baselines, top level
+      2  optuna.best_value / best_val_rmse_day — convgraph and surface_only
+                                           store no refit val at all, only the
+                                           search's best; comparable among
+                                           themselves but NOT against a tier-0
+                                           refit value
+      3  nothing numeric                — fall back to run order
+
+    solar_uq.run_select is not reused directly because it requires best_params
+    and a checkpoint on disk, and several cells have lost their checkpoint or
+    (surface_only, the pre-Optuna baselines) never stored best_params. Those are
+    rows the table must still show.
+    """
+    bm = d.get("best_model")
+    if isinstance(bm, dict):
+        fv = bm.get("final_val")
+        if isinstance(fv, dict) and isinstance(fv.get("rmse_day"), (int, float)):
+            return 0, float(fv["rmse_day"])
+    fv = d.get("final_val")
+    if isinstance(fv, dict) and isinstance(fv.get("rmse_day"), (int, float)):
+        return 1, float(fv["rmse_day"])
+    opt = d.get("optuna")
+    if isinstance(opt, dict):
+        for k in ("best_value_val_rmse_day", "best_val_rmse_day", "best_value"):
+            v = opt.get(k)
+            if isinstance(v, (int, float)):
+                return 2, float(v)
+    return 3, None
+
+
 def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
     """Load summary.json files from a neural-net runs directory.
 
     Optuna runs store metrics under 'best_model'; baselines under 'model'.
     """
-    # Keyed by (site, horizon, seed) so a re-run of the same seed supersedes the
-    # earlier one instead of being double-counted: sorted() yields the run dirs
-    # in timestamped (chronological) order, so the last write wins. This keeps
-    # the aggregate on one run per seed and matches the paper's reported means.
+    # One record per (site, horizon, seed). A cell holding several runs is
+    # resolved by lowest validation RMSE_day, the same rule as
+    # solar_uq.run_select, so the test split never decides which run is
+    # reported. This used to keep whichever run came last in timestamp order,
+    # which was fine while duplicates were accidents but silently wrong once
+    # 06r_refit_draws.py started adding extra refit draws on purpose: a draw
+    # that is WORSE on validation would have replaced a better one just for
+    # being newer, and results/summary.csv feeds every table and figure.
     latest: dict[tuple, dict] = {}
+    rank: dict[tuple, tuple[int, float]] = {}
     if not runs_dir.exists():
         return list(latest.values())
 
@@ -102,6 +150,20 @@ def _load_nn_runs(runs_dir: Path, model_label: str) -> list[dict]:
 
         optuna = d.get("optuna", {})
         key = (d.get("site"), temporal.get("horizon_hours"), d.get("seed"))
+
+        # Canonical pick: better tier wins; inside a tier, lower validation
+        # RMSE_day wins; a tier with no number keeps run order (last wins),
+        # which is the old behaviour and the only option for those runs.
+        tier, val = _val_rmse_day_tier(d)
+        score = (tier, val if val is not None else float("inf"))
+        prev = rank.get(key)
+        if prev is not None:
+            if tier == 3 and prev[0] == 3:
+                pass                      # neither is measurable: keep newest
+            elif score >= prev:
+                continue                  # the run already held is better
+        rank[key] = score
+
         latest[key] = {
             "model":         model_label,
             "site":          d.get("site"),
