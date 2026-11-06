@@ -379,6 +379,13 @@ def refit_cell(args, cfg: dict, rec: dict) -> None:
             (RUN_DIR / "trials.csv").write_bytes(src_trials.read_bytes())
         print(f"    guardado en {RUN_DIR.name}")
 
+        # Suelta la VRAM de esta tirada antes de la siguiente: el caching
+        # allocator conserva lo que reservo y, con varias tiradas por celda y
+        # 35 celdas, el maximo historico se arrastra toda la cola.
+        del model
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
 
 def main() -> None:
     args = parse_args()

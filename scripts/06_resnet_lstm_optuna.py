@@ -152,7 +152,16 @@ def make_objective(
         trial.set_user_attr("train_seconds_total",  float(out["train_seconds_total"]))
         trial.set_user_attr("n_params",             int(sum(p.numel() for p in model.parameters())))
 
-        return float(vm["rmse_day"])
+        # Suelta la VRAM del trial antes del siguiente. Sin esto el caching
+        # allocator conserva cada bloque que llego a reservar, asi que un
+        # estudio sube al maximo historico de su trial mas grande y lo mantiene
+        # durante dias: el 2026-11-06 un estudio ocupaba 8.4 GB de una GPU de
+        # 16.3 GB y dejaba el resto de la maquina sin sitio. empty_cache solo
+        # se alcanzaba por la rama de CUDA OOM, es decir cuando ya era tarde.
+        result = float(vm["rmse_day"])
+        del model, out
+        torch.cuda.empty_cache()
+        return result
 
     return objective
 
