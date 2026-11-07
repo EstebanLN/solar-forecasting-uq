@@ -1,0 +1,1 @@
+{"persistence_val_rmse_day": 462.17602240706213, "n_monitor": 64, "L": 24, "H": 36, "horizon_hours": 6.0, "warm_start_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H36_L24_P16_seed42_20260704_075716/best_model.pt"}

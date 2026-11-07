@@ -1,0 +1,42 @@
+{
+  "arch": "resnet",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "n_chains_used": 4,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "protocol": {
+    "n_chains": 4,
+    "epochs": 500,
+    "burn_in": 100,
+    "n_monitor": 64,
+    "val_every": 25,
+    "sgld_lr": 1e-08,
+    "sgld_lr_final": 1e-09,
+    "sgld_schedule": "poly",
+    "sgld_gamma": 0.55,
+    "warm_start_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H36_L24_P16_seed42_20260704_075716/best_model.pt",
+    "parallel": true
+  },
+  "diagnostics": {
+    "pred_rhat_max": 1.3082583957983982,
+    "pred_rhat_median": 1.2162849023907065,
+    "pred_ess_min": 5.789777093784076,
+    "pred_ess_median": 7.942531466545589,
+    "val_rmse_day_rhat": 1.4733296017732003,
+    "val_rmse_day_ess": 11.631269133155305,
+    "val_rmse_day_drift": 43.671927254775866,
+    "persistence_val_rmse_day": 462.17602240706213,
+    "all_rhat_below_1p1": false
+  },
+  "chain_seconds": [
+    158451.30360293388,
+    158078.4484848976,
+    151018.0899333954,
+    169943.6814711094
+  ]
+}
