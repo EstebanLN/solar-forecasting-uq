@@ -103,6 +103,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--min_gap_pct", type=float, default=None,
                    help="with --all, skip cells whose stored refit is already "
                         "within this %% of the search value")
+    p.add_argument("--min_draws", type=int, default=3,
+                   help="deja en paz las celdas que ya tengan al menos este "
+                        "numero de tiradas, para no acabar con unas de cinco y "
+                        "otras de tres. 0 lo desactiva.")
     p.add_argument("--skip", action="append", default=[], metavar="SITE:H:SEED",
                    help="skip this cell (repeatable). Use it for cells that "
                         "already have their extra draws, so every cell ends up "
@@ -120,6 +124,7 @@ def source_runs(family: str) -> list[dict]:
     """
     root = PROJECT_ROOT / "runs" / family
     by_cell: dict[tuple, dict] = {}
+    tally: dict[tuple, tuple[int, int]] = {}   # celda -> (n_corridas, draws declarados)
     if not root.exists():
         return []
     for d in sorted(root.iterdir()):
@@ -142,13 +147,25 @@ def source_runs(family: str) -> list[dict]:
         if h is None:
             continue
         cell = (s.get("site"), int(round(float(h))), int(s.get("seed")))
+        declared = int((s.get("refit") or {}).get("draws", 1) or 1)
         rec = dict(run_dir=d, site=cell[0], hours=cell[1], seed=cell[2],
                    best_params=bp, val_rmse_day=float(fv["rmse_day"]),
                    search_best=opt.get("best_value_val_rmse_day"),
                    best_epoch=bm.get("best_epoch"), summary=s)
+        # Cuantas tiradas tiene ya la celda. Dos formas de llegar a tres, y hay
+        # que contar las dos: una corrida vieja de una tirada mas dos de 06r son
+        # TRES directorios, mientras que una corrida nacida despues de d13eabb
+        # es UN solo directorio que declara draws=3 en su bloque refit. Sin
+        # mirar ambas, al sincronizar las celdas nuevas de Daniel esta pasada
+        # les anadiria dos tiradas mas y acabarian con cinco frente a tres.
+        tally[cell] = (tally.get(cell, (0, 1))[0] + 1,
+                       max(tally.get(cell, (0, 1))[1], declared))
         prev = by_cell.get(cell)
         if prev is None or rec["val_rmse_day"] < prev["val_rmse_day"]:
             by_cell[cell] = rec
+    for cell, rec in by_cell.items():
+        n_runs, declared = tally.get(cell, (1, 1))
+        rec["draws_so_far"] = max(n_runs, declared)
     return [by_cell[k] for k in sorted(by_cell, key=lambda c: (c[0], c[1], c[2]))]
 
 
@@ -393,6 +410,15 @@ def main() -> None:
     cells = source_runs(args.family)
     if not cells:
         raise SystemExit(f"no hay corridas con best_params en runs/{args.family}")
+
+    if args.min_draws > 0:
+        before = len(cells)
+        enough = [c for c in cells if c.get("draws_so_far", 1) >= args.min_draws]
+        cells = [c for c in cells if c.get("draws_so_far", 1) < args.min_draws]
+        if enough:
+            print(f"omitidas {len(enough)} celdas que ya tienen >= {args.min_draws} tiradas: "
+                  + ", ".join(f"{c['site']}:h{c['hours']}:s{c['seed']}({c['draws_so_far']})"
+                              for c in enough))
 
     skip: set[tuple] = set()
     for spec in args.skip:
