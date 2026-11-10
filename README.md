@@ -11,10 +11,15 @@ against a **FlatMLP** spatial-ablation baseline, **SARIMA**, and **persistence**
 **multisource residual-fusion** variant augments the satellite encoder with co-located
 surface features, and a satellite-only **ConvGraph-LSTM** hybrid encodes the central
 patch convolutionally while representing randomly-sampled neighbouring patches as
-GraphSAGE nodes, probing the value of wider spatial context. On top of the best
-backbone, an **SGLD posterior-sampling layer**
-provides epistemic uncertainty intended to flag forecasts produced under data-scarce
-conditions (under validation).
+GraphSAGE nodes, probing the value of wider spatial context. A **surface-only LSTM**
+trained on the ground variables alone attributes how much of the fusion skill comes
+from the satellite.
+
+Predictive uncertainty is decomposed into an epistemic share (a **deep ensemble**) and
+an aleatoric share (a **Gamma-likelihood variance network**). **SGLD posterior
+sampling**, the estimator originally planned, is reported as a negative result: the
+implementation recovers a closed-form posterior (split-R-hat 1.008) but four chains do
+not mix on these networks (R-hat about 1.2, bulk-ESS about 8).
 
 This repository accompanies the manuscript *"Short-Term Solar Irradiance Forecasting
 at Contrasting Colombian Sites: Graph and Convolutional Deep Learning with Multisource
@@ -98,8 +103,9 @@ for one `(site, horizon, seed)` combination and writes a run directory under `ru
 .venv/bin/python scripts/06_convgraph_lstm_optuna.py \
   --site elpaso --hours_ahead 6 --seed 42 --n_trials 25 --num_workers 4
 
-# SGLD epistemic-uncertainty layer, warm-started from the tuned backbone
-.venv/bin/python scripts/08_sgld.py --arch resnet --site uniandes --hours_ahead 1 --seed 42
+# Uncertainty: deep ensemble + per-member variance network, then the combined band
+.venv/bin/python scripts/12_variance_net.py --arch resnet --site uniandes --hours_ahead 1 --seed 42 --optuna_version v2
+.venv/bin/python scripts/08f_combined_uq.py --arch resnet --site uniandes --hours_ahead 1 --optuna_version v2
 ```
 
 Aggregate all completed runs into the results table, and run the tests:
@@ -111,6 +117,11 @@ Aggregate all completed runs into the results table, and run the tests:
 ---
 
 ## Key results (test set, skill vs. persistence)
+
+> **Status, 2026-11-10:** the table below predates the completion of the four-seed
+> ResNet-LSTM grid and the multi-draw retraining protocol and is being regenerated;
+> treat it as superseded. In particular a surface-only LSTM reaches 0.756 at El Paso
+> 6 h, above every satellite-only model.
 
 | Model | Site | Horizon | skill_day |
 |-------|------|---------|-----------|
@@ -129,9 +140,8 @@ ConvGraph-LSTM hybrid gives the highest satellite-only skill at El Paso but no
 gain at Uniandes — the value of wider spatial context is itself site-dependent.
 Full table: [`results/summary.md`](results/summary.md).
 
-> The codebase also contains exploratory uncertainty components — a Gamma-likelihood
-> variance network (`src/solar_uq/variance_net.py`) and split conformal prediction
-> (`src/solar_uq/conformal.py`) — that are outside the current manuscript scope.
+> `src/solar_uq/conformal.py` (split conformal prediction) is exploratory and outside
+> the manuscript scope.
 
 ---
 

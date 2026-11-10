@@ -498,12 +498,15 @@ class SurfaceSeqDataset(Dataset):
         feature_cols: Optional[List[str]] = None,
         tab_stats: Optional[Dict] = None,
         normalize_tab: bool = True,
+        precompute: bool = True,
     ) -> None:
         self.patches_root = Path(patches_root)
         self.man = filter_missing_patches(manifest, self.patches_root)
         self.normalizer = normalizer
         self.feature_cols: List[str] = list(feature_cols or DEFAULT_FEATURE_COLS)
         self.normalize_tab = normalize_tab
+        self._tab_cache: Optional[torch.Tensor] = None
+        self._y_cache: Optional[torch.Tensor] = None
 
         surface_df = _load_surface(Path(surface_parquet))
         self.available_cols: List[str] = [
@@ -523,6 +526,9 @@ class SurfaceSeqDataset(Dataset):
         else:
             self._tab_mean = self._tab_std = None
 
+        if precompute:
+            self._build_cache()
+
     @property
     def d_tab(self) -> int:
         return n_tab_features(self.feature_cols)
@@ -530,7 +536,7 @@ class SurfaceSeqDataset(Dataset):
     def __len__(self) -> int:
         return len(self.man)
 
-    def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _item_uncached(self, i: int) -> Tuple[torch.Tensor, torch.Tensor]:
         row = self.man.iloc[i]
         y_norm = self.normalizer.normalize(float(row["y"]))
         tab_vecs = [
@@ -543,3 +549,52 @@ class SurfaceSeqDataset(Dataset):
         if self.normalize_tab and self._tab_mean is not None:
             tab_seq = (tab_seq - self._tab_mean) / self._tab_std
         return torch.from_numpy(tab_seq), torch.tensor(y_norm, dtype=torch.float32)
+
+    def _build_cache(self) -> None:
+        """Materialise every sample once, through the SAME code path as before.
+
+        __getitem__ used to rebuild all L tabular rows of a sample on every
+        access, with one pandas .at lookup per column per timestamp. For a
+        tabular LSTM that lookup was nearly the whole cost: a 75-trial study
+        took about six days, which is why the ground-only baseline -- the row
+        every satellite and fusion model is measured against -- was only ever
+        run with a single seed.
+
+        The feature vector depends on the timestamp alone, never on the sample,
+        and consecutive samples share all but one of their history rows. So it
+        is built once per distinct timestamp by the unchanged
+        _build_tab_vector, and each sample is assembled by lookup. Values are
+        identical to the uncached path by construction; _item_uncached is kept
+        so that equality can be asserted (tests/test_surface_cache.py).
+        """
+        memo: Dict[str, np.ndarray] = {}
+        hist = self.man["history_ts"].tolist()
+        ys = self.man["y"].astype(float).to_numpy()
+        out: Optional[np.ndarray] = None
+        for i in range(len(hist)):
+            vecs = []
+            for ts in _parse_history_ts(hist[i]):
+                key = str(ts)
+                v = memo.get(key)
+                if v is None:
+                    v = _build_tab_vector(pd.to_datetime(ts, utc=True), self.surface_df,
+                                          self.available_cols, self.feature_cols,
+                                          self.tab_medians, self.normalizer)
+                    memo[key] = v
+                vecs.append(v)
+            seq = np.stack(vecs, axis=0)
+            if self.normalize_tab and self._tab_mean is not None:
+                seq = (seq - self._tab_mean) / self._tab_std
+            if out is None:
+                out = np.empty((len(hist),) + seq.shape, dtype=seq.dtype)
+            out[i] = seq
+        if out is None:
+            return
+        self._tab_cache = torch.from_numpy(out)
+        self._y_cache = torch.tensor(
+            [self.normalizer.normalize(float(v)) for v in ys], dtype=torch.float32)
+
+    def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor]:
+        if self._tab_cache is not None:
+            return self._tab_cache[i], self._y_cache[i]
+        return self._item_uncached(i)
