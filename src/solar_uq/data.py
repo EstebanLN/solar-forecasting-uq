@@ -418,3 +418,32 @@ class NeighborPoolDataset(Dataset):
         return (torch.from_numpy(center_seq),
                 torch.from_numpy(neigh_seq),
                 torch.tensor(y, dtype=torch.float32))
+
+
+class MeanPatchCache(Dataset):
+    """A patch dataset reduced once to its per-channel spatial mean, held in RAM.
+
+    FlatMLP begins by averaging each patch over its pixels, so all it ever
+    consumes is an (L, C) array per sample. Reading and decoding L full patches
+    per sample per epoch to then average them made an MLP epoch cost as much as
+    a convolutional one: about 500 s, which put a 4-chain, 2500-epoch SGLD run
+    at two months. One pass builds the means; afterwards an epoch is a tensor
+    lookup. The mean is returned with trailing 1x1 spatial dims so FlatMLP's own
+    averaging is a no-op and the model code is untouched. Equal to the uncached
+    path up to float rounding in the order of summation.
+    """
+
+    def __init__(self, base: Dataset, batch_size: int = 256, num_workers: int = 4):
+        loader = DataLoader(base, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+        xs, ys = [], []
+        for x, y in loader:
+            xs.append(x.mean(dim=(-2, -1), keepdim=True).float())
+            ys.append(y.float())
+        self.x = torch.cat(xs)
+        self.y = torch.cat(ys)
+
+    def __len__(self) -> int:
+        return self.x.shape[0]
+
+    def __getitem__(self, i: int):
+        return self.x[i], self.y[i]

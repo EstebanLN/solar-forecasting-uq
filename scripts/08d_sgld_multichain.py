@@ -360,6 +360,12 @@ def main():
     DS = GraphSeqDataset if cfg["dataset"] == "graph" else PatchSeqDataset
     train_ds = DS(train_man, PATCHES_ROOT, normalizer)
     val_ds = DS(val_man, PATCHES_ROOT, normalizer)
+    if args.arch == "mlp":
+        # FlatMLP only consumes the spatial mean of each patch; cache it once
+        # so an epoch is seconds instead of ~500 s (see MeanPatchCache).
+        from solar_uq.data import MeanPatchCache
+        print("  [mlp] cacheando medias espaciales de los parches ...")
+        train_ds, val_ds = MeanPatchCache(train_ds), MeanPatchCache(val_ds)
     batch_size = int(best_params.get("batch_size", 32))
     train_loader = make_loader(train_ds, batch_size, shuffle=True, num_workers=args.num_workers, seed=args.seed, device=DEVICE)
     val_loader = make_loader(val_ds, batch_size, shuffle=False, num_workers=0, seed=args.seed, device=DEVICE)
