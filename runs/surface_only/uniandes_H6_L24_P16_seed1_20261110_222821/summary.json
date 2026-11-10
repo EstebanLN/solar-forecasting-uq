@@ -1,0 +1,57 @@
+{
+  "model": "surface_only_lstm",
+  "site": "uniandes",
+  "seed": 1,
+  "patch": 16,
+  "d_tab": 9,
+  "temporal": {
+    "horizon_hours": 1.0,
+    "history_steps": 24,
+    "horizon_steps_H": 6
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_params": {
+      "emb_dim": 128,
+      "hidden_t": 128,
+      "n_lstm_layers": 1,
+      "dropout": 0.2,
+      "lr": 0.0002050562812088636,
+      "weight_decay": 0.001,
+      "batch_size": 128
+    },
+    "best_val_rmse_day": 209.11310761808647
+  },
+  "baselines": {
+    "persistence_val": {
+      "n": 12436,
+      "rmse": 186.78888879318058,
+      "mae": 93.81208748793826,
+      "n_day": 5322,
+      "rmse_day": 282.470628754978,
+      "mae_day": 208.5904742577978,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12105,
+      "rmse": 198.87371393559732,
+      "mae": 98.8389893432466,
+      "n_day": 5385,
+      "rmse_day": 293.87888224007196,
+      "mae_day": 210.81610547818016,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 146.18734245793118,
+    "mae": 76.44100551881652,
+    "n_day": 5363,
+    "rmse_day": 216.26408120652303,
+    "mae_day": 158.83943473165792,
+    "day_threshold": 20.0,
+    "skill_vs_persistence": 0.26492375706690263,
+    "skill_day_vs_persistence": 0.2641047238302259
+  },
+  "train_seconds_total": 2511.6331396102905
+}
