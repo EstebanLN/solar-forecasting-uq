@@ -89,6 +89,9 @@ def parse_args() -> argparse.Namespace:
     # SGLD hyperparameters (same meaning as 08_sgld.py)
     p.add_argument("--sgld_lr", type=float, default=1e-7)
     p.add_argument("--sgld_lr_final", type=float, default=1e-8)
+    p.add_argument("--ticket", default=None,
+                   help="ticket_round{r}.pt from 14_lottery_ticket.py: warm-start from the pruned, "
+                        "trained subnetwork and sample only its surviving weights")
     p.add_argument("--sgld_schedule", default="poly", choices=["poly", "geom"])
     p.add_argument("--sgld_gamma", type=float, default=0.55)
     p.add_argument("--sgld_sigma2", type=float, default=1.0,
@@ -121,8 +124,18 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
     """Run one SGLD chain; return per-epoch monitored preds + scalar traces."""
     seed_everything(args.seed * 1000 + 17 * (chain_idx + 1))   # chain-specific RNG
     model = build_model(args.arch, best_params, args.patch, L, DEVICE)
-    state = torch.load(mean_ckpt_path, map_location=DEVICE, weights_only=True)
-    model.load_state_dict(state["model_state"] if "model_state" in state else state)
+    masks = None
+    if args.ticket:
+        # Pruned subnetwork: start from its trained weights and keep the removed
+        # ones at exactly zero, so the chain samples the posterior restricted to
+        # the surviving coordinates.
+        tk = torch.load(args.ticket, map_location=DEVICE, weights_only=False)
+        model.load_state_dict(tk["model_state"])
+        named = dict(model.named_parameters())
+        masks = [(named[n], m.to(DEVICE)) for n, m in tk["masks"].items()]
+    else:
+        state = torch.load(mean_ckpt_path, map_location=DEVICE, weights_only=True)
+        model.load_state_dict(state["model_state"] if "model_state" in state else state)
 
     l1_reg = float(best_params.get("l1_reg", 0.0))
     adam_wd = float(best_params.get("weight_decay", 1e-4))
@@ -155,6 +168,10 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
             if args.clip_grad_norm > 0:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
             opt.step()
+            if masks is not None:
+                with torch.no_grad():
+                    for p_, m_ in masks:
+                        p_.mul_(m_.to(p_.dtype))
             tl.append(mse.item())                         # log the raw MSE, comparable across runs
         mon_preds[ep] = _predict_subset(model, x_mon, normalizer, DEVICE)
         if ep % args.val_every == 0 or ep == args.epochs - 1:
@@ -282,7 +299,7 @@ def diagnose(args, chains, baseline_rmse_day, run_dir, n_mon, L, H, horizon_hour
                      "n_monitor": n_mon, "val_every": args.val_every,
                      "sgld_lr": args.sgld_lr, "sgld_lr_final": args.sgld_lr_final,
                      "sgld_schedule": args.sgld_schedule, "sgld_gamma": args.sgld_gamma,
-                     "warm_start_ckpt": mean_ckpt_path, "parallel": True},
+                     "warm_start_ckpt": mean_ckpt_path, "parallel": True}, "ticket": args.ticket,
         "diagnostics": {
             "pred_rhat_max": float(rhat.max()), "pred_rhat_median": float(np.median(rhat)),
             "pred_ess_min": float(ess.min()), "pred_ess_median": float(np.median(ess)),

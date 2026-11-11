@@ -1,0 +1,57 @@
+{
+  "model": "surface_only_lstm",
+  "site": "elpaso",
+  "seed": 13,
+  "patch": 16,
+  "d_tab": 9,
+  "temporal": {
+    "horizon_hours": 3.0,
+    "history_steps": 24,
+    "horizon_steps_H": 18
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_params": {
+      "emb_dim": 128,
+      "hidden_t": 128,
+      "n_lstm_layers": 2,
+      "dropout": 0.2,
+      "lr": 0.0028493739434033746,
+      "weight_decay": 0.001,
+      "batch_size": 32
+    },
+    "best_val_rmse_day": 154.28295051211606
+  },
+  "baselines": {
+    "persistence_val": {
+      "n": 16980,
+      "rmse": 325.4034371329444,
+      "mae": 211.58502326855125,
+      "n_day": 8270,
+      "rmse_day": 429.60580713678365,
+      "mae_day": 359.99160275695283,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17447,
+      "rmse": 314.8944902387177,
+      "mae": 206.87813718117727,
+      "n_day": 8657,
+      "rmse_day": 412.39159651553086,
+      "mae_day": 345.75723107312,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 17447,
+    "rmse": 93.75189041255308,
+    "mae": 46.77312429033119,
+    "n_day": 8657,
+    "rmse_day": 132.42427564798558,
+    "mae_day": 87.81424729526904,
+    "day_threshold": 20.0,
+    "skill_vs_persistence": 0.7022752276755284,
+    "skill_day_vs_persistence": 0.6788870656752142
+  },
+  "train_seconds_total": 4415.612023830414
+}
