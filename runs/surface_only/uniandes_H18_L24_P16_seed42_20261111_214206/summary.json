@@ -1,0 +1,81 @@
+{
+  "model": "surface_only_lstm",
+  "site": "uniandes",
+  "seed": 42,
+  "patch": 16,
+  "d_tab": 9,
+  "temporal": {
+    "horizon_hours": 3.0,
+    "history_steps": 24,
+    "horizon_steps_H": 18
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_params": {
+      "emb_dim": 192,
+      "hidden_t": 256,
+      "n_lstm_layers": 1,
+      "dropout": 0.0,
+      "lr": 0.0009136897714237599,
+      "weight_decay": 0.001,
+      "batch_size": 32
+    },
+    "best_val_rmse_day": 222.82777312151455
+  },
+  "baselines": {
+    "persistence_val": {
+      "n": 12424,
+      "rmse": 279.2358520044971,
+      "mae": 159.75912910495813,
+      "n_day": 5363,
+      "rmse_day": 388.4280430826495,
+      "mae_day": 303.88528883087827,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "final_val": {
+    "rmse_day": 225.00805417170852
+  },
+  "refit": {
+    "draws": 3,
+    "all_draws": [
+      {
+        "draw": 1,
+        "rng_seed": 1042,
+        "val_rmse_day": 226.59673872165172
+      },
+      {
+        "draw": 2,
+        "rng_seed": 2042,
+        "val_rmse_day": 225.00805417170852
+      },
+      {
+        "draw": 3,
+        "rng_seed": 3042,
+        "val_rmse_day": 225.63470100547957
+      }
+    ],
+    "kept_draw": 2
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 166.09399535134597,
+    "mae": 88.71798667955102,
+    "n_day": 5402,
+    "rmse_day": 245.04968713822882,
+    "mae_day": 184.99579589713815,
+    "day_threshold": 20.0,
+    "skill_vs_persistence": 0.4269979901853026,
+    "skill_day_vs_persistence": 0.39495827476296685
+  },
+  "train_seconds_total": 1089.777908563614
+}

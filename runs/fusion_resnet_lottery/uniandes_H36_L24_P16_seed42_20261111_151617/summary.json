@@ -1,0 +1,41 @@
+{
+  "method": "lottery_ticket",
+  "arch": "fusion_resnet",
+  "site": "uniandes",
+  "hours_ahead": 6,
+  "seed": 42,
+  "source_run": "uniandes_H36_L24_P16_seed42_20260827_033207",
+  "n_params_total": 1018433,
+  "n_params_prunable": 1013568,
+  "prune_frac": 0.2,
+  "persistence_test_rmse_day": 470.92567245567665,
+  "rounds": [
+    {
+      "round": 0,
+      "remaining_frac": 1.0,
+      "remaining_weights": 1013568,
+      "best_epoch": 7,
+      "val_rmse_day": 227.49915427357615,
+      "test_rmse_day": 233.51353087538922,
+      "test_skill_day": 0.5041393057683281
+    },
+    {
+      "round": 1,
+      "remaining_frac": 0.8000005919681757,
+      "remaining_weights": 810855,
+      "best_epoch": 1,
+      "val_rmse_day": 234.39316304609696,
+      "test_rmse_day": 236.72599287448324,
+      "test_skill_day": 0.497317715468648
+    },
+    {
+      "round": 2,
+      "remaining_frac": 0.6400004735745406,
+      "remaining_weights": 648684,
+      "best_epoch": 6,
+      "val_rmse_day": 230.08359169051855,
+      "test_rmse_day": 247.3468598542309,
+      "test_skill_day": 0.4747645449770833
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "method": "lottery_ticket",
+  "arch": "convgraph",
+  "site": "uniandes",
+  "hours_ahead": 6,
+  "seed": 42,
+  "source_run": "uniandes_H36_L24_P16_K8_seed42_20260921_102436",
+  "n_params_total": 1583041,
+  "n_params_prunable": 1575360,
+  "prune_frac": 0.2,
+  "persistence_test_rmse_day": 470.92567245567665,
+  "rounds": [
+    {
+      "round": 0,
+      "remaining_frac": 1.0,
+      "remaining_weights": 1575360,
+      "best_epoch": 6,
+      "val_rmse_day": 283.0609538890366,
+      "test_rmse_day": 287.5347222794167,
+      "test_skill_day": 0.38942652928636257
+    }
+  ]
+}

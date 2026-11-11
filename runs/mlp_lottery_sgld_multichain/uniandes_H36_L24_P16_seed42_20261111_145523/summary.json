@@ -1,0 +1,43 @@
+{
+  "arch": "mlp",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "n_chains_used": 4,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "protocol": {
+    "n_chains": 4,
+    "epochs": 2500,
+    "burn_in": 500,
+    "n_monitor": 64,
+    "val_every": 25,
+    "sgld_lr": 1e-08,
+    "sgld_lr_final": 1e-09,
+    "sgld_schedule": "poly",
+    "sgld_gamma": 0.55,
+    "warm_start_ckpt": "/srv/projects/Proyecto_e_ladino/runs/mlp_optuna/uniandes_H36_L24_P16_seed42_20260524_223803/best_model.pt",
+    "parallel": true
+  },
+  "ticket": "runs/mlp_lottery/uniandes_H36_L24_P16_seed42_20261110_231632/ticket_round13.pt",
+  "diagnostics": {
+    "pred_rhat_max": 1.9888231321099723,
+    "pred_rhat_median": 1.0242269112447158,
+    "pred_ess_min": 2.7372604803728113,
+    "pred_ess_median": 157.83315598173158,
+    "val_rmse_day_rhat": 1.0074622651320981,
+    "val_rmse_day_ess": 324.0,
+    "val_rmse_day_drift": -5.622983372660116,
+    "persistence_val_rmse_day": 462.17602240706213,
+    "all_rhat_below_1p1": false
+  },
+  "chain_seconds": [
+    6227.218183994293,
+    7017.6478135585785,
+    5848.040842533112,
+    5786.0833785533905
+  ]
+}

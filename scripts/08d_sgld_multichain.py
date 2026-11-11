@@ -57,6 +57,10 @@ from solar_uq.mcmc_diag import split_rhat, ess_bulk
 from importlib import import_module
 _m = import_module("08_sgld")
 ARCH_CFG = _m.ARCH_CFG
+# Architectures the legacy registry cannot build (two-input fusion models and
+# ConvGraph) come from solar_uq.zoo. Those yield (input_a, input_b, y) batches.
+from solar_uq import zoo
+ZOO_ONLY = [a for a in zoo.ARCHS if a not in ARCH_CFG]
 find_optuna_best_params = _m.find_optuna_best_params
 build_model = _m.build_model
 
@@ -64,7 +68,7 @@ build_model = _m.build_model
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Multi-chain SGLD + R-hat/ESS",
                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p.add_argument("--arch", required=True, choices=list(ARCH_CFG))
+    p.add_argument("--arch", required=True, choices=list(ARCH_CFG) + ZOO_ONLY)
     p.add_argument("--site", default="uniandes", choices=["uniandes", "elpaso"])
     p.add_argument("--hours_ahead", type=int, default=6, choices=[1, 3, 6])
     p.add_argument("--seed", type=int, default=42, help="Optuna source seed (warm-start checkpoint)")
@@ -89,6 +93,7 @@ def parse_args() -> argparse.Namespace:
     # SGLD hyperparameters (same meaning as 08_sgld.py)
     p.add_argument("--sgld_lr", type=float, default=1e-7)
     p.add_argument("--sgld_lr_final", type=float, default=1e-8)
+    p.add_argument("--k_neighbors", type=int, default=8, help="convgraph only")
     p.add_argument("--ticket", default=None,
                    help="ticket_round{r}.pt from 14_lottery_ticket.py: warm-start from the pruned, "
                         "trained subnetwork and sample only its surviving weights")
@@ -115,7 +120,10 @@ def parse_args() -> argparse.Namespace:
 @torch.no_grad()
 def _predict_subset(model, x_mon, normalizer, device):
     model.eval()
-    yhat = model(x_mon.to(device, non_blocking=True))
+    if isinstance(x_mon, (tuple, list)):
+        yhat = model(*[x.to(device, non_blocking=True) for x in x_mon])
+    else:
+        yhat = model(x_mon.to(device, non_blocking=True))
     return normalizer.denormalize(yhat.detach().cpu().numpy())
 
 
@@ -123,7 +131,12 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
               train_loader, val_loader, x_mon, normalizer, n_train, run_dir=None):
     """Run one SGLD chain; return per-epoch monitored preds + scalar traces."""
     seed_everything(args.seed * 1000 + 17 * (chain_idx + 1))   # chain-specific RNG
-    model = build_model(args.arch, best_params, args.patch, L, DEVICE)
+    two = getattr(args, "_two_input", False)
+    if args.arch in ZOO_ONLY:
+        model = zoo.build_model(args.arch, best_params, args.patch, L,
+                                getattr(args, "_d_tab", 0), args.k_neighbors).to(DEVICE)
+    else:
+        model = build_model(args.arch, best_params, args.patch, L, DEVICE)
     masks = None
     if args.ticket:
         # Pruned subnetwork: start from its trained weights and keep the removed
@@ -150,17 +163,19 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
     # Without this factor the sampled density is ~prior, not posterior.
     lik_scale = n_train / (2.0 * args.sgld_sigma2)
 
-    mon_preds = np.empty((args.epochs, x_mon.shape[0]), dtype=np.float64)
+    n_mon_ = (x_mon[0] if isinstance(x_mon, (tuple, list)) else x_mon).shape[0]
+    mon_preds = np.empty((args.epochs, n_mon_), dtype=np.float64)
     val_rmse_day = []   # (epoch_recorded, value)
     t0 = time.time()
     for ep in range(args.epochs):
         model.train()
         tl = []
-        for x_seq, y in train_loader:
-            x_seq = x_seq.to(DEVICE, non_blocking=True)
+        for batch in train_loader:
+            *xs, y = batch
+            xs = [x.to(DEVICE, non_blocking=True) for x in xs]
             y = y.to(DEVICE, non_blocking=True)
             opt.zero_grad(set_to_none=True)
-            mse = loss_fn(model(x_seq), y)              # mean MSE, normalised units
+            mse = loss_fn(model(*xs), y)                # mean MSE, normalised units
             loss = lik_scale * mse                        # -log likelihood over the dataset
             if l1_reg > 0.0:
                 loss = loss + l1_reg * sum(p.abs().sum() for p in model.parameters())
@@ -175,7 +190,7 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
             tl.append(mse.item())                         # log the raw MSE, comparable across runs
         mon_preds[ep] = _predict_subset(model, x_mon, normalizer, DEVICE)
         if ep % args.val_every == 0 or ep == args.epochs - 1:
-            vm = eval_model(model, val_loader, normalizer, args.day_threshold, DEVICE)
+            vm = eval_model(model, val_loader, normalizer, args.day_threshold, DEVICE, fusion=two)
             val_rmse_day.append((ep, float(vm["rmse_day"])))
             print(f"    [chain {chain_idx}] ep {ep:04d}/{args.epochs} "
                   f"train={np.mean(tl):.4f} val_rmse_day={vm['rmse_day']:.1f} "
@@ -317,7 +332,8 @@ def main():
     args = parse_args()
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     horizon_hours = {1: 1.0, 3: 3.0, 6: 6.0}[args.hours_ahead]
-    cfg = ARCH_CFG[args.arch]
+    cfg = ARCH_CFG.get(args.arch, {"v1": zoo.ARCHS.get(args.arch, {}).get("runs"),
+                                    "v2": zoo.ARCHS.get(args.arch, {}).get("runs"), "dataset": "zoo"})
 
     # ---- combine mode: no data/training, just load per-chain npz + diagnose ----
     if args.combine:
@@ -349,7 +365,13 @@ def main():
     assert SITE_DIR.exists() and PATCHES_ROOT.exists()
     preload_patch_cache(PATCHES_ROOT)
 
-    best_params, found_ckpt = find_optuna_best_params(OPTUNA_ROOT, args.site, horizon_hours, args.seed)
+    if args.arch in ZOO_ONLY:
+        cell = zoo.canonical_run(args.arch, args.site, args.hours_ahead, args.seed)
+        best_params, found_ckpt = cell["best_params"], (str(cell["ckpt"]) if cell["ckpt"] else None)
+    else:
+        best_params, found_ckpt = find_optuna_best_params(OPTUNA_ROOT, args.site, horizon_hours, args.seed)
+    if args.ticket and found_ckpt is None:
+        found_ckpt = args.ticket          # the ticket carries its own weights
     mean_ckpt_path = args.warm_start_ckpt or found_ckpt
     if mean_ckpt_path is None or not Path(mean_ckpt_path).exists():
         raise FileNotFoundError(
@@ -374,9 +396,18 @@ def main():
     baseline_val = eval_persistence(val_man, ground, args.day_threshold)
     normalizer = TargetNormalizer.from_train(train_man["y"].astype(float).to_numpy())
 
-    DS = GraphSeqDataset if cfg["dataset"] == "graph" else PatchSeqDataset
-    train_ds = DS(train_man, PATCHES_ROOT, normalizer)
-    val_ds = DS(val_man, PATCHES_ROOT, normalizer)
+    args._two_input = zoo.ARCHS.get(args.arch, {}).get("two_input", False)
+    if args.arch in ZOO_ONLY:
+        if args.debug:
+            raise SystemExit("--debug is not supported for zoo architectures")
+        D = zoo.build_data(args.arch, args.site, args.hours_ahead, args.seed, args.patch,
+                           args.k_neighbors, args.day_threshold)
+        train_ds, val_ds, normalizer, args._d_tab = D["train"], D["val"], D["normalizer"], D["d_tab"]
+        baseline_val = D["baseline_val"]
+    else:
+        DS = GraphSeqDataset if cfg["dataset"] == "graph" else PatchSeqDataset
+        train_ds = DS(train_man, PATCHES_ROOT, normalizer)
+        val_ds = DS(val_man, PATCHES_ROOT, normalizer)
     if args.arch == "mlp":
         # FlatMLP only consumes the spatial mean of each patch; cache it once
         # so an epoch is seconds instead of ~500 s (see MeanPatchCache).
@@ -388,7 +419,11 @@ def main():
     val_loader = make_loader(val_ds, batch_size, shuffle=False, num_workers=0, seed=args.seed, device=DEVICE)
 
     n_mon = min(args.n_monitor, len(val_ds))
-    x_mon = torch.stack([val_ds[i][0] for i in range(n_mon)], dim=0)
+    if args._two_input:
+        items = [val_ds[i] for i in range(n_mon)]
+        x_mon = tuple(torch.stack([it[k] for it in items], dim=0) for k in range(len(items[0]) - 1))
+    else:
+        x_mon = torch.stack([val_ds[i][0] for i in range(n_mon)], dim=0)
     print(f"  H={H} L={L} | warm-start={Path(mean_ckpt_path).name} | n_monitor={n_mon} "
           f"| persistence val_rmse_day={baseline_val['rmse_day']:.1f}", flush=True)
 

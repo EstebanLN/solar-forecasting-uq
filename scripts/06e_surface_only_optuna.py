@@ -52,6 +52,9 @@ def main() -> None:
                         "which is exactly the quantity this baseline exists to measure.")
     p.add_argument("--epochs", type=int, default=60)
     p.add_argument("--patience", type=int, default=8)
+    p.add_argument("--refit_draws", type=int, default=3,
+                   help="draws of the final retraining; the lowest validation RMSE_day is kept "
+                        "(same protocol as the satellite and fusion tuning scripts)")
     p.add_argument("--day_threshold", type=float, default=20.0)
     p.add_argument("--num_workers", type=int, default=2)
     p.add_argument("--runs_root", default=None)
@@ -163,10 +166,23 @@ def main() -> None:
     bp = study.best_params
     print(f"\n  best val RMSE_day={study.best_value:.2f} | {bp}")
 
-    seed_everything(args.seed)
-    model = SurfaceOnlyLSTM(d_tab=d_tab, emb_dim=bp["emb_dim"], hidden_t=bp["hidden_t"],
-                            n_lstm_layers=bp["n_lstm_layers"], dropout=bp["dropout"]).to(DEV)
-    fit(model, bp["lr"], bp["weight_decay"], bp["batch_size"], args.epochs, args.patience)
+    # Final retraining drawn several times, best on VALIDATION kept: the single
+    # draw this script used to report could collapse (Uniandes 3h seed 7 gave
+    # 0.355 against 0.40-0.42 for its sibling seeds). Same rule as
+    # 06_resnet/06_graphsage --refit_draws; the test split never decides.
+    # The study persists in SQLite, so re-running this script on a finished
+    # cell skips straight here: that is how existing cells get their draws.
+    model, best_val, refit_log = None, float("inf"), []
+    for draw in range(1, max(1, args.refit_draws) + 1):
+        seed_everything(args.seed + 1000 * draw)
+        cand = SurfaceOnlyLSTM(d_tab=d_tab, emb_dim=bp["emb_dim"], hidden_t=bp["hidden_t"],
+                               n_lstm_layers=bp["n_lstm_layers"], dropout=bp["dropout"]).to(DEV)
+        v = fit(cand, bp["lr"], bp["weight_decay"], bp["batch_size"], args.epochs, args.patience)
+        keep = v < best_val
+        print(f"  draw {draw}/{args.refit_draws}: val_rmse_day={v:.2f} -> {'KEEP' if keep else 'discard'}", flush=True)
+        refit_log.append({"draw": draw, "rng_seed": args.seed + 1000 * draw, "val_rmse_day": float(v)})
+        if keep:
+            model, best_val = cand, v
     tl = make_loader(test_ds, bp["batch_size"], shuffle=False, num_workers=0,
                      seed=args.seed, device=DEV)
     tm = eval_model(model, tl, normalizer, args.day_threshold, DEV)
@@ -184,6 +200,9 @@ def main() -> None:
         "optuna": {"n_trials": args.n_trials, "best_params": bp,
                    "best_val_rmse_day": study.best_value},
         "baselines": {"persistence_val": base_val, "persistence_test": base_test},
+        "final_val": {"rmse_day": float(best_val)},
+        "refit": {"draws": max(1, args.refit_draws), "all_draws": refit_log,
+                  "kept_draw": min(refit_log, key=lambda r: r["val_rmse_day"])["draw"]},
         "final_test": tm, "train_seconds_total": time.time() - t0,
     }, indent=2))
     print(f"Saved -> {rd}")
