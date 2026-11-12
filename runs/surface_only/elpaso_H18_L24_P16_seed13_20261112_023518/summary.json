@@ -1,0 +1,81 @@
+{
+  "model": "surface_only_lstm",
+  "site": "elpaso",
+  "seed": 13,
+  "patch": 16,
+  "d_tab": 9,
+  "temporal": {
+    "horizon_hours": 3.0,
+    "history_steps": 24,
+    "horizon_steps_H": 18
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_params": {
+      "emb_dim": 128,
+      "hidden_t": 128,
+      "n_lstm_layers": 2,
+      "dropout": 0.2,
+      "lr": 0.0028493739434033746,
+      "weight_decay": 0.001,
+      "batch_size": 32
+    },
+    "best_val_rmse_day": 154.28295051211606
+  },
+  "baselines": {
+    "persistence_val": {
+      "n": 16980,
+      "rmse": 325.4034371329444,
+      "mae": 211.58502326855125,
+      "n_day": 8270,
+      "rmse_day": 429.60580713678365,
+      "mae_day": 359.99160275695283,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17447,
+      "rmse": 314.8944902387177,
+      "mae": 206.87813718117727,
+      "n_day": 8657,
+      "rmse_day": 412.39159651553086,
+      "mae_day": 345.75723107312,
+      "day_threshold": 20.0
+    }
+  },
+  "final_val": {
+    "rmse_day": 155.90328918146147
+  },
+  "refit": {
+    "draws": 3,
+    "all_draws": [
+      {
+        "draw": 1,
+        "rng_seed": 1013,
+        "val_rmse_day": 155.90328918146147
+      },
+      {
+        "draw": 2,
+        "rng_seed": 2013,
+        "val_rmse_day": 156.30029048572092
+      },
+      {
+        "draw": 3,
+        "rng_seed": 3013,
+        "val_rmse_day": 158.27200388843883
+      }
+    ],
+    "kept_draw": 1
+  },
+  "final_test": {
+    "n": 17447,
+    "rmse": 94.02233995740879,
+    "mae": 51.55612581906472,
+    "n_day": 8657,
+    "rmse_day": 131.50338865244166,
+    "mae_day": 86.98135508700003,
+    "day_threshold": 20.0,
+    "skill_vs_persistence": 0.7014163700160925,
+    "skill_day_vs_persistence": 0.681120105832494
+  },
+  "train_seconds_total": 251.17451786994934
+}
