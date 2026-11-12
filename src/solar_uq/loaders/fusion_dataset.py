@@ -152,6 +152,52 @@ def _compute_medians(surface_df: pd.DataFrame, available_cols: List[str]) -> Dic
 # FusionPatchSeqDataset
 # ---------------------------------------------------------------------------
 
+def _precompute_fusion_index(ds) -> None:
+    """Per-sample patch locations and normalised tabular sequences, built once.
+
+    Profiling a fusion sample (2026-11-12): 10.8 ms, of which the patch read
+    from the in-RAM cache was 0.6 ms and the tabular vectors 3.0 ms; the rest
+    was per-timestep bookkeeping repeated on every access -- timestamp parsing,
+    path construction and a filesystem stat for each of the L history steps.
+    Every one of those depends on the timestamp only, so it is done here once
+    per DISTINCT timestamp, through the unchanged helpers.
+
+    What is cached: the patch path and slot of each history step, and the
+    sample's normalised tabular sequence. What is NOT cached: the patch arrays
+    themselves, which stay in the shared preload cache so memory is not
+    duplicated. __getitem__ still reads each frame through load_patch_npz and
+    applies the same nan_to_num and cast, so returned tensors are identical to
+    the uncached path (tests/test_fusion_cache.py asserts it).
+    """
+    memo: Dict[str, tuple] = {}
+    paths: list = []
+    tabs: list = []
+    for raw in ds.man["history_ts"].tolist():
+        locs, vecs = [], []
+        for ts_str in _parse_history_ts(raw):
+            hit = memo.get(ts_str)
+            if hit is None:
+                t = pd.to_datetime(ts_str, utc=True)
+                pth = patch_path_for_timestamp(t, ds.patches_root)
+                if not pth.exists():
+                    raise FileNotFoundError(f"Missing patch file: {pth}")
+                vec = _build_tab_vector(t, ds.surface_df, ds.available_cols,
+                                        ds.feature_cols, ds.tab_medians, ds.normalizer)
+                hit = (str(pth), slot_for_timestamp(t), vec)
+                memo[ts_str] = hit
+            locs.append((hit[0], hit[1]))
+            vecs.append(hit[2])
+        tab_seq = np.stack(vecs, axis=0)
+        if ds.normalize_tab and ds._tab_mean is not None:
+            tab_seq = (tab_seq - ds._tab_mean) / ds._tab_std
+        paths.append(locs)
+        tabs.append(tab_seq)
+    ds._locs = paths
+    ds._tab_cache = np.stack(tabs, axis=0) if tabs else None
+    ds._y_cache = np.array([ds.normalizer.normalize(float(v)) for v in ds.man["y"].astype(float)],
+                           dtype=np.float64)
+
+
 class FusionPatchSeqDataset(Dataset):
     """Augments PatchSeqDataset with surface tabular features per time step.
 
@@ -182,12 +228,15 @@ class FusionPatchSeqDataset(Dataset):
         feature_cols: Optional[List[str]] = None,
         tab_stats: Optional[Dict] = None,
         normalize_tab: bool = True,
+        precompute: bool = True,
     ) -> None:
         self.patches_root = Path(patches_root)
         self.man = filter_missing_patches(manifest, self.patches_root)
         self.normalizer = normalizer
         self.feature_cols: List[str] = list(feature_cols or DEFAULT_FEATURE_COLS)
         self.normalize_tab = normalize_tab
+        self._locs = None
+        self._precompute = precompute
 
         surface_df = _load_surface(Path(surface_parquet))
         missing_raw = set(self.feature_cols) - {"hour_of_day"} - set(surface_df.columns)
@@ -219,6 +268,8 @@ class FusionPatchSeqDataset(Dataset):
         else:
             self._tab_mean = None
             self._tab_std  = None
+        if self._precompute:
+            _precompute_fusion_index(self)
 
     # ------------------------------------------------------------------
 
@@ -231,6 +282,17 @@ class FusionPatchSeqDataset(Dataset):
         return len(self.man)
 
     def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        if self._locs is None:
+            return self._item_uncached(i)
+        frames = []
+        for pth, slot in self._locs[i]:
+            frame = load_patch_npz(pth)[slot]
+            frames.append(np.nan_to_num(frame, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32, copy=False))
+        return (torch.from_numpy(np.stack(frames, axis=0)),
+                torch.from_numpy(self._tab_cache[i].copy()),
+                torch.tensor(self._y_cache[i], dtype=torch.float32))
+
+    def _item_uncached(self, i: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         row = self.man.iloc[i]
         y_norm     = self.normalizer.normalize(float(row["y"]))
         history_ts = _parse_history_ts(row["history_ts"])
@@ -365,12 +427,15 @@ class FusionGraphSeqDataset(Dataset):
         feature_cols: Optional[List[str]] = None,
         tab_stats: Optional[Dict] = None,
         normalize_tab: bool = True,
+        precompute: bool = True,
     ) -> None:
         self.patches_root = Path(patches_root)
         self.man = filter_missing_patches(manifest, self.patches_root)
         self.normalizer = normalizer
         self.feature_cols: List[str] = list(feature_cols or DEFAULT_FEATURE_COLS)
         self.normalize_tab = normalize_tab
+        self._locs = None
+        self._precompute = precompute
 
         surface_df = _load_surface(Path(surface_parquet))
         missing_raw = set(self.feature_cols) - {"hour_of_day"} - set(surface_df.columns)
@@ -400,6 +465,8 @@ class FusionGraphSeqDataset(Dataset):
         else:
             self._tab_mean = None
             self._tab_std  = None
+        if self._precompute:
+            _precompute_fusion_index(self)
 
     @property
     def d_tab(self) -> int:
@@ -409,6 +476,19 @@ class FusionGraphSeqDataset(Dataset):
         return len(self.man)
 
     def __getitem__(self, i: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        if self._locs is None:
+            return self._item_uncached(i)
+        frames = []
+        for pth, slot in self._locs[i]:
+            frame = load_patch_npz(pth)[slot]
+            frame = np.nan_to_num(frame, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32, copy=False)
+            C, P1, P2 = frame.shape
+            frames.append(np.transpose(frame, (1, 2, 0)).reshape(P1 * P2, C))
+        return (torch.from_numpy(np.stack(frames, axis=0)),
+                torch.from_numpy(self._tab_cache[i].copy()),
+                torch.tensor(self._y_cache[i], dtype=torch.float32))
+
+    def _item_uncached(self, i: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         row = self.man.iloc[i]
         y_norm     = self.normalizer.normalize(float(row["y"]))
         history_ts = _parse_history_ts(row["history_ts"])
