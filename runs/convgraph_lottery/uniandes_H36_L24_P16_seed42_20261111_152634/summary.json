@@ -63,6 +63,51 @@
       "val_rmse_day": 273.6493169381022,
       "test_rmse_day": 284.09257838907286,
       "test_skill_day": 0.396735843880308
+    },
+    {
+      "round": 6,
+      "remaining_frac": 0.262144525695714,
+      "remaining_weights": 412972,
+      "best_epoch": 1,
+      "val_rmse_day": 276.14829299698795,
+      "test_rmse_day": 286.6912507121056,
+      "test_skill_day": 0.39121762205672006
+    },
+    {
+      "round": 7,
+      "remaining_frac": 0.20971587446678855,
+      "remaining_weights": 330378,
+      "best_epoch": 11,
+      "val_rmse_day": 281.164896942616,
+      "test_rmse_day": 279.1157648076059,
+      "test_skill_day": 0.40730399480636603
+    },
+    {
+      "round": 8,
+      "remaining_frac": 0.16777308043875686,
+      "remaining_weights": 264303,
+      "best_epoch": 3,
+      "val_rmse_day": 299.24225218475453,
+      "test_rmse_day": 330.86017860578596,
+      "test_skill_day": 0.29742590400627245
+    },
+    {
+      "round": 9,
+      "remaining_frac": 0.1342188452163315,
+      "remaining_weights": 211443,
+      "best_epoch": 5,
+      "val_rmse_day": 284.71081292524786,
+      "test_rmse_day": 288.57319553021136,
+      "test_skill_day": 0.387221354857499
+    },
+    {
+      "round": 10,
+      "remaining_frac": 0.10737545703839123,
+      "remaining_weights": 169155,
+      "best_epoch": 21,
+      "val_rmse_day": 282.0848438907715,
+      "test_rmse_day": 275.7332341519742,
+      "test_skill_day": 0.4144867220465125
     }
   ]
 }

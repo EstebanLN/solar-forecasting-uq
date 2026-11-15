@@ -1,0 +1,17 @@
+{
+  "run_name": "uniandes_H6_L24_P16_seed7_20261113_022231",
+  "arch": "resnet",
+  "site": "uniandes",
+  "seed": 7,
+  "horizon_hours": 1.0,
+  "source_mean_ckpt": "runs/resnet_lstm_optuna_v2/uniandes_H6_L24_P16_seed7_20261107_141555/best_model.pt",
+  "best_epoch": 6,
+  "train_seconds_total": 8259.486116409302,
+  "test": {
+    "gamma_nll": 0.3925385880394883,
+    "sigma_a_mean": 242.6258087158203,
+    "sigma_a_std": 101.61248016357422,
+    "abs_residual_mean": 202.14540100097656,
+    "corr_sigma_a_vs_abs_residual": 0.5579224937253671
+  }
+}
