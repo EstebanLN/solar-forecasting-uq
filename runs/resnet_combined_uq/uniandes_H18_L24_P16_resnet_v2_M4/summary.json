@@ -1,0 +1,75 @@
+{
+  "method": "combined_uq",
+  "arch": "resnet",
+  "site": "uniandes",
+  "optuna_version": "v2",
+  "temporal": {
+    "horizon_hours": 3.0,
+    "history_steps": 24,
+    "horizon_steps_H": 18
+  },
+  "ensemble_seeds": [
+    1,
+    7,
+    13,
+    42
+  ],
+  "variance_net_seeds": [
+    1,
+    7,
+    13,
+    42
+  ],
+  "baselines": {
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 12075,
+    "rmse": 186.16224598455472,
+    "mae": 131.74601468214584,
+    "n_day": 5402,
+    "rmse_day": 250.22771595486262,
+    "mae_day": 195.41282627327448,
+    "day_threshold": 20.0,
+    "skill_day_vs_persistence": 0.3821734247795594,
+    "sigma_epi_day_mean": 43.56560516357422,
+    "sigma_a_day_mean": 257.9196472167969,
+    "sigma_tot_day_mean": 264.827880859375,
+    "coverage_day_epistemic": {
+      "80": 0.21899296556830802,
+      "90": 0.2628656053313588,
+      "95": 0.29359496482784153
+    },
+    "coverage_day_aleatoric": {
+      "80": 0.8433913365420215,
+      "90": 0.9357645316549427,
+      "95": 0.9709366901147723
+    },
+    "coverage_day_combined": {
+      "80": 0.856904850055535,
+      "90": 0.9429840799703814,
+      "95": 0.9733432062199185
+    },
+    "sharpness_day_combined": {
+      "level": "90",
+      "interval_score_model": 977.228271484375,
+      "interval_score_constant_width": 1066.589599609375,
+      "interval_score_skill_vs_constant": 0.08378229841893026,
+      "constant_width": 412.63128662109375,
+      "mean_width": 435.60321044921875,
+      "width_cv": 0.27781039476394653,
+      "corr_sigma_vs_abs_error": 0.43158694082390053,
+      "r2_sigma_vs_abs_error": 0.186267287489733,
+      "corr_ceiling_if_perfectly_specified": 0.33395405875471396,
+      "corr_fraction_of_ceiling": 1.292354231097688
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "method": "combined_uq",
+  "arch": "resnet",
+  "site": "elpaso",
+  "optuna_version": "v2",
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "ensemble_seeds": [
+    1,
+    7,
+    13,
+    42
+  ],
+  "variance_net_seeds": [
+    1,
+    7,
+    13,
+    42
+  ],
+  "baselines": {
+    "persistence_test": {
+      "n": 17429,
+      "rmse": 493.3387930032827,
+      "mae": 362.90153252624935,
+      "n_day": 8757,
+      "rmse_day": 566.416419542736,
+      "mae_day": 483.8490059495261,
+      "day_threshold": 20.0
+    }
+  },
+  "final_test": {
+    "n": 17429,
+    "rmse": 196.27236811798758,
+    "mae": 133.64649286521296,
+    "n_day": 8757,
+    "rmse_day": 220.2867827555655,
+    "mae_day": 166.6747626909807,
+    "day_threshold": 20.0,
+    "skill_day_vs_persistence": 0.6110868697390498,
+    "sigma_epi_day_mean": 72.75627899169922,
+    "sigma_a_day_mean": 263.7981262207031,
+    "sigma_tot_day_mean": 277.0307922363281,
+    "coverage_day_epistemic": {
+      "80": 0.3210003425830764,
+      "90": 0.4085874157816604,
+      "95": 0.4788169464428457
+    },
+    "coverage_day_aleatoric": {
+      "80": 0.9043051273267101,
+      "90": 0.9586616421148795,
+      "95": 0.9783030718282517
+    },
+    "coverage_day_combined": {
+      "80": 0.9196071714057326,
+      "90": 0.9630010277492291,
+      "95": 0.9811579307982186
+    },
+    "sharpness_day_combined": {
+      "level": "90",
+      "interval_score_model": 979.1128540039062,
+      "interval_score_constant_width": 928.1640014648438,
+      "interval_score_skill_vs_constant": -0.05489207991115164,
+      "constant_width": 378.1608581542969,
+      "mean_width": 455.67523193359375,
+      "width_cv": 0.3322261571884155,
+      "corr_sigma_vs_abs_error": 0.3900457398232221,
+      "r2_sigma_vs_abs_error": 0.15213567915424467,
+      "corr_ceiling_if_perfectly_specified": 0.38512125788633406,
+      "corr_fraction_of_ceiling": 1.0127868348891338
+    }
+  }
+}
