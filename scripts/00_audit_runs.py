@@ -263,13 +263,15 @@ def audit_v2_coverage() -> None:
 
 def audit_nested_runs() -> None:
     """runs/<family>/<run>/summary.json is depth 3; anything deeper is a copy of a
-    run inside a run, unless it sits under a retired, underscore-prefixed group."""
+    run inside a run, unless it sits under a retired, underscore-prefixed group.
+    Families grouped one level further, runs/sgld_protocol/<model>/<run>/, are depth 4."""
     root = PROJECT_ROOT / "runs"
     if not root.exists():
         return
+    grouped = {"sgld_protocol"}
     for sj in sorted(root.rglob("summary.json")):
         rel = sj.relative_to(root)
-        if len(rel.parts) <= 3:
+        if len(rel.parts) <= (4 if rel.parts[0] in grouped else 3):
             continue
         if any(part.startswith("_") for part in rel.parts[:-1]):
             continue       # retired group, e.g. sarima/_superseded_static_forecast/<run>
