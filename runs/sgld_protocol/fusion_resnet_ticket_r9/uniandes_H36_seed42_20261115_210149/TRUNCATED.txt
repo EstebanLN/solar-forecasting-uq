@@ -1,0 +1,5 @@
+Truncated run. The four chains were killed externally on 2026-11-17 at 18:37:40
+(local machine, shared), at epochs 1425-1475 of the 2500 the protocol asks for.
+--combine ran on the partial traces (3700 post-burn-in draws). The verdict (no
+convergence: split-R-hat max 2.12, bulk-ESS median 17, +21.8 W/m^2 drift) stands
+only as provisional; the full 2500-epoch run is queued on the compute server.

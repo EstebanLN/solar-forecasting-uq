@@ -1,0 +1,43 @@
+{
+  "arch": "fusion_resnet",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "n_chains_used": 4,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "protocol": {
+    "n_chains": 4,
+    "epochs": 2500,
+    "burn_in": 500,
+    "n_monitor": 64,
+    "val_every": 25,
+    "sgld_lr": 1e-08,
+    "sgld_lr_final": 1e-09,
+    "sgld_schedule": "poly",
+    "sgld_gamma": 0.55,
+    "warm_start_ckpt": "/srv/projects/Proyecto_e_ladino/runs/fusion_resnet_lstm/uniandes_H36_L24_P16_seed42_20261115_032908/best_model.pt",
+    "parallel": true
+  },
+  "ticket": "runs/fusion_resnet_lottery/uniandes_H36_L24_P16_seed42_20261111_151617/ticket_round9.pt",
+  "diagnostics": {
+    "pred_rhat_max": 2.123058514250692,
+    "pred_rhat_median": 1.145068811925121,
+    "pred_ess_min": 2.849479172640083,
+    "pred_ess_median": 17.400550837720466,
+    "val_rmse_day_rhat": 1.3246894056969565,
+    "val_rmse_day_ess": 4.4337917521594985,
+    "val_rmse_day_drift": 21.783147091520533,
+    "persistence_val_rmse_day": 462.17602240706213,
+    "all_rhat_below_1p1": false
+  },
+  "chain_seconds": [
+    179256.35096883774,
+    180390.3380563259,
+    178376.88358092308,
+    175727.22832608223
+  ]
+}
