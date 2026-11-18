@@ -33,10 +33,31 @@ ssh "$HOST" "cd $RDIR && find runs -name summary.json | sed 's|^runs/||' | sort"
 printf '  aqui: %s corridas | servidor: %s corridas\n' \
   "$(wc -l < "$TMP/local.txt")" "$(wc -l < "$TMP/remote.txt")"
 
-comm -13 "$TMP/local.txt" "$TMP/remote.txt" | sed 's|/summary.json$||' > "$TMP/missing.txt"
+comm -13 "$TMP/local.txt" "$TMP/remote.txt" | sed 's|/summary.json$||' > "$TMP/new.txt"
+# Corridas presentes en los dos lados cuyo summary.json difiere: siguieron
+# creciendo en el servidor despues de una sincronizacion anterior (p. ej. la poda
+# agrega un ticket por ronda). Antes se ignoraban.
+comm -12 "$TMP/local.txt" "$TMP/remote.txt" > "$TMP/common.txt"
+(while read -r f; do md5sum "runs/$f"; done < "$TMP/common.txt") | sed 's| runs/| |' | sort -k2 > "$TMP/lcommon.md5"
+ssh "$HOST" "cd $RDIR/runs && xargs -d '\n' md5sum 2>/dev/null | sort -k2" < "$TMP/common.txt" > "$TMP/rcommon.md5"
+join -1 2 -2 2 "$TMP/lcommon.md5" "$TMP/rcommon.md5" | awk '$2!=$3 {print $1}' > "$TMP/diff.txt"
+# Distinto no implica que el servidor tenga lo nuevo: aqui se corrigen summaries
+# (p. ej. la auditoria del 2026-10-27 relativizo rutas). Solo se trae si el del
+# servidor es MAS RECIENTE; si no, se informa y no se toca.
+: > "$TMP/changed.txt"
+if [ -s "$TMP/diff.txt" ]; then
+  ssh "$HOST" "cd $RDIR/runs && xargs -d '\n' stat -c '%Y %n'" < "$TMP/diff.txt" | sort -k2 > "$TMP/rtime.txt"
+  (while read -r f; do stat -c '%Y %n' "runs/$f"; done < "$TMP/diff.txt") | sed 's| runs/| |' | sort -k2 > "$TMP/ltime.txt"
+  join -1 2 -2 2 "$TMP/ltime.txt" "$TMP/rtime.txt" | while read -r f lt rt; do
+    if [ "$rt" -gt "$lt" ]; then echo "${f%/summary.json}" >> "$TMP/changed.txt"
+    else echo "  (aqui es mas reciente, no se toca) ${f%/summary.json}"; fi
+  done
+fi
+cat "$TMP/new.txt" "$TMP/changed.txt" > "$TMP/missing.txt"
 n=$(wc -l < "$TMP/missing.txt")
 if [ "$n" -eq 0 ]; then echo "  nada que traer"; exit 0; fi
-echo "=== solo en el servidor ($n) ==="; sed 's/^/  /' "$TMP/missing.txt"
+[ -s "$TMP/new.txt" ] && { echo "=== solo en el servidor ($(wc -l < "$TMP/new.txt")) ==="; sed 's/^/  /' "$TMP/new.txt"; }
+[ -s "$TMP/changed.txt" ] && { echo "=== cambiaron en el servidor ($(wc -l < "$TMP/changed.txt")) ==="; sed 's/^/  /' "$TMP/changed.txt"; }
 
 if [ "$APPLY" -eq 0 ]; then
   echo
@@ -55,6 +76,7 @@ while IFS= read -r run <&3; do
   echo "--- $run"
   mkdir -p "runs/$run"
   # Trailing slash on BOTH sides, no --relative: contents land directly in place.
+  # sin --delete: nunca borra lo que solo exista aqui
   if ! rsync -a "$HOST:$RDIR/runs/$run/" "runs/$run/" < /dev/null; then
     echo "  rsync fallo" >&2; fail=1; continue
   fi
@@ -62,11 +84,12 @@ while IFS= read -r run <&3; do
   ssh -n "$HOST" "cd $RDIR/runs/$run && find . -type f -exec md5sum {} + | sort -k2" \
     > "$TMP/rsum" 2>/dev/null
   (cd "runs/$run" && find . -type f -exec md5sum {} + | sort -k2) > "$TMP/lsum" 2>/dev/null
-  if diff -q "$TMP/rsum" "$TMP/lsum" >/dev/null 2>&1; then
+  # Verifica que cada archivo del servidor llego identico (aqui puede haber extras)
+  if [ -s "$TMP/rsum" ] && [ -z "$(comm -23 <(sort "$TMP/rsum") <(sort "$TMP/lsum"))" ]; then
     echo "  OK  $(wc -l < "$TMP/lsum") archivo(s) verificados por checksum"
   else
     echo "  VERIFICACION FALLIDA:" >&2
-    diff "$TMP/rsum" "$TMP/lsum" | head -6 >&2
+    comm -23 <(sort "$TMP/rsum") <(sort "$TMP/lsum") | head -6 >&2
     fail=1
   fi
   # The nesting pathology that started this: a run inside a run.
