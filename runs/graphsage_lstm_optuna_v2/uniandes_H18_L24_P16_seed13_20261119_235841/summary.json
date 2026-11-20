@@ -1,0 +1,152 @@
+{
+  "run_name": "uniandes_H18_L24_P16_seed13_20261119_235841",
+  "study_name": "graphsage_lstm_uniandes_h3_s13_P16",
+  "site": "uniandes",
+  "device": "cuda",
+  "seed": 13,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/uniandes/h3",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/uniandes/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_uniandes.parquet",
+    "run_dir": "runs/graphsage_lstm_optuna_v2/uniandes_H18_L24_P16_seed13_20261119_235841"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 160,
+      "col": 49
+    },
+    "n_nodes": 256,
+    "n_edges": 2048,
+    "channels": 16,
+    "graph_type": "knn weighted (1/distance)",
+    "k_neighbors": 8
+  },
+  "target_norm": {
+    "y_mean_train": 176.12705206594896,
+    "y_std_train": 279.60664470861093,
+    "y_percentiles_train": [
+      0.0,
+      1.45,
+      614.2736,
+      846.2329999999998,
+      1086.98496
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 54507,
+      "rmse": 297.47920806960843,
+      "mae": 176.6130889610509,
+      "n_day": 24893,
+      "rmse_day": 406.97961339298257,
+      "mae_day": 319.8906504639858,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 12424,
+      "rmse": 279.2358520044971,
+      "mae": 159.75912910495813,
+      "n_day": 5363,
+      "rmse_day": 388.4280430826495,
+      "mae_day": 303.88528883087827,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 12093,
+      "rmse": 289.8663399192236,
+      "mae": 166.1633237410072,
+      "n_day": 5413,
+      "rmse_day": 405.0128725291247,
+      "mae_day": 313.1511483465731,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_trial_number": 42,
+    "best_value_val_rmse_day": 251.39774746932483,
+    "best_params": {
+      "hidden_g": 192,
+      "n_sage_layers": 3,
+      "hidden_t": 192,
+      "n_lstm_layers": 1,
+      "input_bn": true,
+      "concat_agg": false,
+      "dropout_head": 0.2,
+      "k_neighbors": 8,
+      "lr": 0.0006928798434926854,
+      "weight_decay": 1.1390678582752799e-06,
+      "l1_reg": 0.0,
+      "batch_size": 8
+    }
+  },
+  "refit": {
+    "draws": 3,
+    "kept_draw": 3,
+    "epochs": 30,
+    "patience": 8,
+    "all_draws": [
+      {
+        "draw": 1,
+        "rng_seed": 1013,
+        "val_rmse_day": 255.12572327788757,
+        "best_epoch": 11,
+        "gap_pct_vs_search": 1.482899447624378
+      },
+      {
+        "draw": 2,
+        "rng_seed": 2013,
+        "val_rmse_day": 260.84777603950005,
+        "best_epoch": 6,
+        "gap_pct_vs_search": 3.7589949254928383
+      },
+      {
+        "draw": 3,
+        "rng_seed": 3013,
+        "val_rmse_day": 253.87283934136573,
+        "best_epoch": 14,
+        "gap_pct_vs_search": 0.9845322390340483
+      }
+    ]
+  },
+  "best_model": {
+    "arch": "GraphSAGE_LSTM (improved)",
+    "best_epoch": 14,
+    "train_seconds_total": 9304.779807329178,
+    "n_params": 488865,
+    "best_ckpt_path": "runs/graphsage_lstm_optuna_v2/uniandes_H18_L24_P16_seed13_20261119_235841/best_model.pt",
+    "final_val": {
+      "n": 12407,
+      "rmse": 170.29980865018146,
+      "mae": 101.77455114501599,
+      "n_day": 5356,
+      "rmse_day": 253.87283934136573,
+      "mae_day": 195.82050881588788,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.39012197958219863,
+      "skill_day_vs_persistence": 0.346409601823352
+    },
+    "final_test": {
+      "n": 12075,
+      "rmse": 174.21131772575458,
+      "mae": 104.86279759061509,
+      "n_day": 5402,
+      "rmse_day": 254.43030854410375,
+      "mae_day": 192.28260681621236,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.3989943165725933,
+      "skill_day_vs_persistence": 0.3717969827593396
+    }
+  }
+}
