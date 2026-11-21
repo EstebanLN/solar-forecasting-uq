@@ -1,0 +1,43 @@
+{
+  "arch": "fusion_graphsage",
+  "site": "uniandes",
+  "seed": 42,
+  "optuna_version": "v2",
+  "n_chains_used": 4,
+  "temporal": {
+    "horizon_hours": 6.0,
+    "history_steps": 24,
+    "horizon_steps_H": 36
+  },
+  "protocol": {
+    "n_chains": 4,
+    "epochs": 2500,
+    "burn_in": 500,
+    "n_monitor": 64,
+    "val_every": 25,
+    "sgld_lr": 1e-08,
+    "sgld_lr_final": 1e-09,
+    "sgld_schedule": "poly",
+    "sgld_gamma": 0.55,
+    "warm_start_ckpt": "/home/estebanladino/Documents/solar-forecasting-uq/runs/fusion_graphsage_lstm/uniandes_H36_L24_P16_seed42_20260903_120913/best_model.pt",
+    "parallel": true
+  },
+  "ticket": "runs/fusion_graphsage_lottery/uniandes_H36_L24_P16_seed42_20261111_154642/ticket_round9.pt",
+  "diagnostics": {
+    "pred_rhat_max": 1.61045730480734,
+    "pred_rhat_median": 1.2785971162227971,
+    "pred_ess_min": 3.239331590355218,
+    "pred_ess_median": 7.065639006324493,
+    "val_rmse_day_rhat": 1.5637643820727247,
+    "val_rmse_day_ess": 8.328392603259495,
+    "val_rmse_day_drift": 20.780231625210547,
+    "persistence_val_rmse_day": 462.17602240706213,
+    "all_rhat_below_1p1": false
+  },
+  "chain_seconds": [
+    685349.3653774261,
+    685802.2156836987,
+    684807.5901405811,
+    684016.597590208
+  ]
+}
