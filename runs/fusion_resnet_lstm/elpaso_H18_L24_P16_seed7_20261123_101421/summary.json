@@ -1,0 +1,146 @@
+{
+  "run_name": "elpaso_H18_L24_P16_seed7_20261123_101421",
+  "study_name": "fusion_resnet_lstm_elpaso_h3_s7_P16",
+  "site": "elpaso",
+  "device": "cuda",
+  "seed": 7,
+  "debug": false,
+  "day_threshold": 20.0,
+  "data_paths": {
+    "site_dir": "/srv/projects/Proyecto_e_ladino/data/datasets/manifest_v1/elpaso/h3",
+    "patches_root": "/srv/projects/Proyecto_e_ladino/data/patches_v1/elpaso/P16",
+    "ground_path": "/srv/projects/Proyecto_e_ladino/data/ground_aligned/ground_10min_utc_elpaso.parquet",
+    "run_dir": "/srv/projects/Proyecto_e_ladino/runs/fusion_resnet_lstm/elpaso_H18_L24_P16_seed7_20261123_101421"
+  },
+  "temporal": {
+    "freq_min": 10,
+    "history_steps_L": 24,
+    "horizon_steps_H": 18,
+    "history_hours": 4.0,
+    "horizon_hours": 3.0
+  },
+  "spatial": {
+    "grid_size": 256,
+    "patch": 16,
+    "site_center_rc": {
+      "row": 91,
+      "col": 53
+    },
+    "channels": 16
+  },
+  "target_norm": {
+    "y_mean_train": 249.3215610018153,
+    "y_std_train": 328.35273081445825,
+    "y_percentiles_train": [
+      0.0,
+      38.8848,
+      814.5668600000001,
+      930.4496399999998,
+      1056.4468600000005
+    ]
+  },
+  "baselines": {
+    "persistence_train": {
+      "n": 67757,
+      "rmse": 306.7099757436928,
+      "mae": 192.30243141372847,
+      "n_day": 36657,
+      "rmse_day": 385.3087776024662,
+      "mae_day": 297.8185196251739,
+      "day_threshold": 20.0
+    },
+    "persistence_val": {
+      "n": 16980,
+      "rmse": 325.4034371329444,
+      "mae": 211.58502326855125,
+      "n_day": 8270,
+      "rmse_day": 429.60580713678365,
+      "mae_day": 359.99160275695283,
+      "day_threshold": 20.0
+    },
+    "persistence_test": {
+      "n": 17447,
+      "rmse": 314.8944902387177,
+      "mae": 206.87813718117727,
+      "n_day": 8657,
+      "rmse_day": 412.39159651553086,
+      "mae_day": 345.75723107312,
+      "day_threshold": 20.0
+    }
+  },
+  "optuna": {
+    "n_trials": 75,
+    "best_trial_number": 54,
+    "best_value_val_rmse_day": 153.76061267785593,
+    "best_params": {
+      "base": 16,
+      "emb_dim": 64,
+      "hidden_t": 192,
+      "n_lstm_layers": 2,
+      "dropout": 0.3,
+      "lr": 0.0006353056285593707,
+      "weight_decay": 3.35934542148159e-05,
+      "l1_reg": 1e-05,
+      "batch_size": 64,
+      "tab_hidden": 128
+    }
+  },
+  "refit": {
+    "draws": 3,
+    "kept_draw": 1,
+    "epochs": 30,
+    "patience": 8,
+    "all_draws": [
+      {
+        "draw": 1,
+        "rng_seed": 1007,
+        "val_rmse_day": 156.84654572516862,
+        "best_epoch": 4,
+        "gap_pct_vs_search": 2.0069723927141445
+      },
+      {
+        "draw": 2,
+        "rng_seed": 2007,
+        "val_rmse_day": 159.90684649789864,
+        "best_epoch": 2,
+        "gap_pct_vs_search": 3.997274537998683
+      },
+      {
+        "draw": 3,
+        "rng_seed": 3007,
+        "val_rmse_day": 161.4084802806158,
+        "best_epoch": 2,
+        "gap_pct_vs_search": 4.973879506309546
+      }
+    ]
+  },
+  "best_model": {
+    "arch": "SmallResNetEncoder + LayerNorm + LSTM + MLP head",
+    "best_epoch": 4,
+    "train_seconds_total": 1165.0215599536896,
+    "n_params": 722401,
+    "best_ckpt_path": "/srv/projects/Proyecto_e_ladino/runs/fusion_resnet_lstm/elpaso_H18_L24_P16_seed7_20261123_101421/best_model.pt",
+    "final_val": {
+      "n": 16980,
+      "rmse": 113.16318739313894,
+      "mae": 62.265446064637885,
+      "n_day": 8270,
+      "rmse_day": 156.84654572516862,
+      "mae_day": 116.83545072341052,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.6522372707854789,
+      "skill_day_vs_persistence": 0.6349058995023562
+    },
+    "final_test": {
+      "n": 17447,
+      "rmse": 95.69861333735007,
+      "mae": 50.06077772638904,
+      "n_day": 8657,
+      "rmse_day": 134.1397640433937,
+      "mae_day": 89.97975868752995,
+      "day_threshold": 20.0,
+      "skill_vs_persistence": 0.6960930841793967,
+      "skill_day_vs_persistence": 0.6747272127347008
+    }
+  }
+}
