@@ -1,0 +1,29 @@
+# Run the experiments in the frozen image, with the data mounted from the host.
+#
+#   docker compose -f docker/compose.yaml run --rm solar python docker/smoke_test.py
+#   docker compose -f docker/compose.yaml run --rm solar \
+#       python scripts/06_resnet_lstm_optuna.py --site elpaso --hours_ahead 6 --seed 42 --fusion
+#
+# mem_limit caps the container's RAM. Keep it well below the host's total on a shared
+# machine (AIA Blanco has 31 GB and other users).
+services:
+  solar:
+    image: solar-uq:2026.11
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    working_dir: /workspace
+    user: "${UID:-1000}:${GID:-1000}"
+    mem_limit: 15g
+    shm_size: 4g          # DataLoader workers share batches through /dev/shm
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ../data:/workspace/data:ro
+      - ../runs:/workspace/runs
+      - ../logs:/workspace/logs
