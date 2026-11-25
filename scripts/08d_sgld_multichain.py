@@ -60,6 +60,7 @@ ARCH_CFG = _m.ARCH_CFG
 # Architectures the legacy registry cannot build (two-input fusion models and
 # ConvGraph) come from solar_uq.zoo. Those yield (input_a, input_b, y) batches.
 from solar_uq import zoo
+from solar_uq import lora
 ZOO_ONLY = [a for a in zoo.ARCHS if a not in ARCH_CFG]
 find_optuna_best_params = _m.find_optuna_best_params
 build_model = _m.build_model
@@ -97,6 +98,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--ticket", default=None,
                    help="ticket_round{r}.pt from 14_lottery_ticket.py: warm-start from the pruned, "
                         "trained subnetwork and sample only its surviving weights")
+    p.add_argument("--lora_rank", type=int, default=0,
+                   help=">0: freeze the whole warm-started model and sample with SGLD only "
+                        "LoRA adapters of this rank on its last --lora_layers Linear layers "
+                        "(advisor, 2026-11-25). 0 = sample the weights themselves")
+    p.add_argument("--lora_layers", type=int, default=2,
+                   help="how many of the last nn.Linear layers get an adapter (2 = the head)")
+    p.add_argument("--lora_alpha", type=float, default=None,
+                   help="LoRA scale numerator; default = rank, i.e. scale 1")
     p.add_argument("--sgld_schedule", default="poly", choices=["poly", "geom"])
     p.add_argument("--sgld_gamma", type=float, default=0.55)
     p.add_argument("--sgld_sigma2", type=float, default=1.0,
@@ -150,12 +159,25 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
         state = torch.load(mean_ckpt_path, map_location=DEVICE, weights_only=True)
         model.load_state_dict(state["model_state"] if "model_state" in state else state)
 
+    lora_info = None
+    if args.lora_rank > 0:
+        # Everything frozen except the adapters (advisor, 2026-11-25). B starts at 0, so
+        # the chain starts exactly at the warm-start function.
+        lora_info = lora.apply_lora(model, args.lora_rank, args.lora_layers, args.lora_alpha)
+        model.to(DEVICE)
+        sampled = lora.lora_parameters(model)
+        print(f"    [chain {chain_idx}] LoRA r={args.lora_rank} on {lora_info} | sampled params "
+              f"{sum(p.numel() for p in sampled)} of {sum(p.numel() for p in model.parameters())}",
+              flush=True)
+    else:
+        sampled = list(model.parameters())
+
     l1_reg = float(best_params.get("l1_reg", 0.0))
     adam_wd = float(best_params.get("weight_decay", 1e-4))
     sgld_wd = (adam_wd if args.sgld_prior_precision == 100.0 else args.sgld_prior_precision)
 
     total_steps = args.epochs * max(1, len(train_loader))
-    opt = SGLD(model.parameters(), lr=args.sgld_lr, weight_decay=sgld_wd,
+    opt = SGLD(sampled, lr=args.sgld_lr, weight_decay=sgld_wd,
                lr_final=args.sgld_lr_final, total_steps=total_steps,
                schedule=args.sgld_schedule, gamma=args.sgld_gamma)
     loss_fn = nn.MSELoss()
@@ -169,6 +191,8 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
     t0 = time.time()
     for ep in range(args.epochs):
         model.train()
+        if lora_info is not None:
+            lora.freeze_norm_stats(model)
         tl = []
         for batch in train_loader:
             *xs, y = batch
@@ -178,10 +202,10 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
             mse = loss_fn(model(*xs), y)                # mean MSE, normalised units
             loss = lik_scale * mse                        # -log likelihood over the dataset
             if l1_reg > 0.0:
-                loss = loss + l1_reg * sum(p.abs().sum() for p in model.parameters())
+                loss = loss + l1_reg * sum(p.abs().sum() for p in sampled)
             loss.backward()
             if args.clip_grad_norm > 0:
-                torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
+                torch.nn.utils.clip_grad_norm_(sampled, args.clip_grad_norm)
             opt.step()
             if masks is not None:
                 with torch.no_grad():
@@ -315,6 +339,8 @@ def diagnose(args, chains, baseline_rmse_day, run_dir, n_mon, L, H, horizon_hour
                      "sgld_lr": args.sgld_lr, "sgld_lr_final": args.sgld_lr_final,
                      "sgld_schedule": args.sgld_schedule, "sgld_gamma": args.sgld_gamma,
                      "warm_start_ckpt": mean_ckpt_path, "parallel": True}, "ticket": args.ticket,
+        "lora": ({"rank": args.lora_rank, "n_last_linear": args.lora_layers,
+                  "alpha": args.lora_alpha or args.lora_rank} if args.lora_rank > 0 else None),
         "diagnostics": {
             "pred_rhat_max": float(rhat.max()), "pred_rhat_median": float(np.median(rhat)),
             "pred_ess_min": float(ess.min()), "pred_ess_median": float(np.median(ess)),

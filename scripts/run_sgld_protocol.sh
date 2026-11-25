@@ -2,6 +2,7 @@
 # The SGLD protocol, in one place, so every replication is symmetric.
 #
 #   bash scripts/run_sgld_protocol.sh <arch> <site> <hours> <seed> [ticket_round]
+#   LORA_RANK=8 bash scripts/run_sgld_protocol.sh <arch> <site> <hours> <seed>
 #
 # Every architecture, site, horizon and seed is sampled with the SAME settings
 # below. A ticket round selects a lottery-ticket subnetwork from
@@ -18,6 +19,11 @@
 # Chains run as separate processes (08d --chain_only) sharing one run
 # directory, each admitted when there is VRAM, and are combined at the end
 # (08d --combine). Sequentially a fusion model would take about 17 days.
+#
+# LoRA (advisor, 2026-11-25): with LORA_RANK set, the warm-started model (dense, or
+# the ticket if a round is given) is frozen and SGLD samples only rank-r adapters on
+# its last two Linear layers (the prediction head). Same chains, epochs, step sizes
+# and prior as every other run, so the comparison isolates what is sampled.
 #
 # Safety: waits for free VRAM, then runs a short smoke test (2 chains, 8
 # epochs) and launches the real run only if the smoke test wrote its
@@ -36,6 +42,11 @@ if [ -n "$ROUND" ]; then
   [ -f "$T/ticket_round${ROUND}.pt" ] || { echo "!!! no existe $T/ticket_round${ROUND}.pt"; exit 1; }
   TICKET_ARG="--ticket $T/ticket_round${ROUND}.pt"; TAG="ticket_r${ROUND}"
 fi
+LORA_ARG=""
+if [ -n "${LORA_RANK:-}" ] && [ "${LORA_RANK}" != 0 ]; then
+  LORA_ARG="--lora_rank $LORA_RANK"
+  [ "$TAG" = dense ] && TAG="lora_r${LORA_RANK}" || TAG="${TAG}_lora_r${LORA_RANK}"
+fi
 ROOT=runs/sgld_protocol/${ARCH}_${TAG}
 LOG=logs/sgld_protocol_${ARCH}_${TAG}_${SITE}_h${H}_s${SEED}
 
@@ -45,7 +56,7 @@ gpu_wait 4000 604800 || exit 1
 if [ "${SKIP_SMOKE:-0}" != 1 ]; then
   echo "=== smoke $ARCH $TAG $SITE h$H s$SEED $(date +%F_%T) ==="
   .venv/bin/python -u scripts/08d_sgld_multichain.py --arch $ARCH --site $SITE --hours_ahead $H --seed $SEED \
-    --n_chains 2 --epochs 8 --burn_in 2 --val_every 1 --n_monitor 16 $SGLD $TICKET_ARG \
+    --n_chains 2 --epochs 8 --burn_in 2 --val_every 1 --n_monitor 16 $SGLD $TICKET_ARG $LORA_ARG \
     --runs_root /tmp/sgld_smoke_${ARCH}_${TAG}_$$ > ${LOG}_smoke.log 2>&1
   if ! ls /tmp/sgld_smoke_${ARCH}_${TAG}_$$/*/summary.json > /dev/null 2>&1; then
     echo "!!! la prueba corta fallo, no lanzo la corrida real: ver ${LOG}_smoke.log"; exit 1
@@ -56,7 +67,7 @@ fi
 
 RUN_DIR=$ROOT/${SITE}_H$((H*6))_seed${SEED}_$(date -u +%Y%m%d_%H%M%S)
 mkdir -p "$RUN_DIR"
-COMMON="--arch $ARCH --site $SITE --hours_ahead $H --seed $SEED --n_chains $N_CHAINS --epochs $EPOCHS --burn_in $BURN_IN $SGLD $TICKET_ARG --run_dir $RUN_DIR"
+COMMON="--arch $ARCH --site $SITE --hours_ahead $H --seed $SEED --n_chains $N_CHAINS --epochs $EPOCHS --burn_in $BURN_IN $SGLD $TICKET_ARG $LORA_ARG --run_dir $RUN_DIR"
 echo "=== corrida real en $RUN_DIR $(date +%F_%T) ==="
 for c in $(seq 0 $((N_CHAINS-1))); do
   gpu_wait 4000 604800 || exit 1
