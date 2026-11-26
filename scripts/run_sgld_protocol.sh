@@ -50,7 +50,7 @@ fi
 ROOT=runs/sgld_protocol/${ARCH}_${TAG}
 LOG=logs/sgld_protocol_${ARCH}_${TAG}_${SITE}_h${H}_s${SEED}
 
-ram_wait 12000 200 86400 || exit 1
+ram_wait ${RAM_MIN:-12000} 200 86400 || exit 1
 gpu_wait 4000 604800 || exit 1
 
 if [ "${SKIP_SMOKE:-0}" != 1 ]; then
@@ -71,7 +71,7 @@ COMMON="--arch $ARCH --site $SITE --hours_ahead $H --seed $SEED --n_chains $N_CH
 echo "=== corrida real en $RUN_DIR $(date +%F_%T) ==="
 for c in $(seq 0 $((N_CHAINS-1))); do
   gpu_wait 4000 604800 || exit 1
-  ram_wait 12000 200 86400 || exit 1
+  ram_wait ${RAM_MIN:-12000} 200 86400 || exit 1
   echo "--> cadena $c $(date +%F_%T)"
   .venv/bin/python -u scripts/08d_sgld_multichain.py $COMMON --chain_only $c > ${LOG}_chain$c.log 2>&1 &
   sleep 1200          # deja que la cadena construya datos y reserve VRAM antes de medir la siguiente
