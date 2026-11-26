@@ -106,6 +106,10 @@ def parse_args() -> argparse.Namespace:
                    help="how many of the last nn.Linear layers get an adapter (2 = the head)")
     p.add_argument("--lora_alpha", type=float, default=None,
                    help="LoRA scale numerator; default = rank, i.e. scale 1")
+    p.add_argument("--chain_data_order", action="store_true",
+                   help="give every chain its own minibatch order. Without it all chains see "
+                        "the same shuffles (the loader is seeded with --seed), which correlates "
+                        "them and can make R-hat look better than it is (found 2026-11-26)")
     p.add_argument("--sgld_schedule", default="poly", choices=["poly", "geom"])
     p.add_argument("--sgld_gamma", type=float, default=0.55)
     p.add_argument("--sgld_sigma2", type=float, default=1.0,
@@ -140,6 +144,8 @@ def run_chain(chain_idx, args, best_params, mean_ckpt_path, L, DEVICE,
               train_loader, val_loader, x_mon, normalizer, n_train, run_dir=None):
     """Run one SGLD chain; return per-epoch monitored preds + scalar traces."""
     seed_everything(args.seed * 1000 + 17 * (chain_idx + 1))   # chain-specific RNG
+    if args.chain_data_order:
+        train_loader.generator.manual_seed(args.seed * 1000 + 17 * (chain_idx + 1))
     two = getattr(args, "_two_input", False)
     if args.arch in ZOO_ONLY:
         model = zoo.build_model(args.arch, best_params, args.patch, L,
@@ -338,7 +344,8 @@ def diagnose(args, chains, baseline_rmse_day, run_dir, n_mon, L, H, horizon_hour
                      "n_monitor": n_mon, "val_every": args.val_every,
                      "sgld_lr": args.sgld_lr, "sgld_lr_final": args.sgld_lr_final,
                      "sgld_schedule": args.sgld_schedule, "sgld_gamma": args.sgld_gamma,
-                     "warm_start_ckpt": mean_ckpt_path, "parallel": True}, "ticket": args.ticket,
+                     "warm_start_ckpt": mean_ckpt_path, "parallel": True,
+                     "chain_data_order": bool(args.chain_data_order)}, "ticket": args.ticket,
         "lora": ({"rank": args.lora_rank, "n_last_linear": args.lora_layers,
                   "alpha": args.lora_alpha or args.lora_rank} if args.lora_rank > 0 else None),
         "diagnostics": {
